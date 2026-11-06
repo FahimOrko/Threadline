@@ -43,3 +43,16 @@ next-env.d.ts
 
 # negative pattern keeps the example env file tracked
 !.env.example
+
+
+# claude code (personal settings only, skills and commands stay tracked)
+.claude/settings.local.json
+
+# playwright mcp output
+.playwright-mcp/
+
+
+# design skills (large, reinstall via docs/runbooks/install-design-skills.md)
+.agents/
+.claude/skills/design-taste-frontend
+.claude/skills/minimalist-ui
