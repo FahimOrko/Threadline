@@ -25,15 +25,15 @@
 
 - [x] 5.1 Add the needed shadcn components via the CLI (toggle group or tabs, sheet or collapsible); verify files appear under `src/components/ui/`
 - [x] 5.2 Replace the starter page and metadata: `/` redirects to `/dashboard`, add empty `/dashboard`, `/impact`, `/story` pages with titles; verify each URL renders its title
-- [ ] 5.3 Build the header (customer and baseline placeholders, role toggle wired to the store) in the root layout; verify the toggle changes role and survives reload without a hydration warning
+- [x] 5.3 Build the header (customer and baseline placeholders, role toggle wired to the store) in the root layout; verify the toggle changes role and survives reload without a hydration warning
 - [x] 5.4 Build the view switcher with active state; verify switching changes the route and highlight, and direct links to each view work
-- [ ] 5.5 Build the collapsible empty AI sidebar in the layout; verify it collapses, expands and stays open across view changes
-- [ ] 5.6 Run `npm run dev` end to end against the spec scenarios (views, sidebar, role and reload); verify `npm run build`, `npm run lint`, `npm test` pass
+- [x] 5.5 Build the collapsible empty AI sidebar in the layout; verify it collapses, expands and stays open across view changes
+- [x] 5.6 Run `npm run dev` end to end against the spec scenarios (views, sidebar, role and reload); verify `npm run build`, `npm run lint`, `npm test` pass
 
 ## 6. Deploy (manual checkpoint for the user)
 
-- [ ] 6.1 User: link the repo to Vercel, set `OPENROUTER_API_KEY`, `OPENROUTER_MODELS`, `AI_MAX_TOOL_STEPS`, deploy; verify the Vercel URL shows the same shell and the role toggle survives reload
+- [x] 6.1 User: link the repo to Vercel, set `OPENROUTER_API_KEY`, `OPENROUTER_MODELS`, `AI_MAX_TOOL_STEPS`, deploy; verify the Vercel URL shows the same shell and the role toggle survives reload
 
 ## 7. Wrap-up
 
-- [ ] 7.1 Add an ADR, convention or runbook if this change needs one (for example the `src/` move or the deploy steps learned) and update the ADR index; verify the index lists any new ADR
+- [x] 7.1 Add an ADR, convention or runbook if this change needs one (for example the `src/` move or the deploy steps learned) and update the ADR index; verify the index lists any new ADR
