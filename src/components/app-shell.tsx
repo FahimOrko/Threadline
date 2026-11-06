@@ -3,10 +3,11 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { PanelRightClose, PanelRightOpen } from "lucide-react";
+import { CaretDoubleLeft, CaretDoubleRight } from "@phosphor-icons/react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Separator } from "@/components/ui/separator";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { useRoleStore, type Role } from "@/store/role-store";
 
 const views = [
@@ -46,6 +47,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <ToggleGroupItem value="kam">KAM</ToggleGroupItem>
             <ToggleGroupItem value="customer">Customer</ToggleGroupItem>
           </ToggleGroup>
+          <ThemeToggle />
           <Button
             variant="ghost"
             size="icon"
@@ -53,7 +55,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             aria-expanded={sidebarOpen}
             onClick={() => setSidebarOpen((o) => !o)}
           >
-            {sidebarOpen ? <PanelRightClose /> : <PanelRightOpen />}
+            {sidebarOpen ? <CaretDoubleRight /> : <CaretDoubleLeft />}
           </Button>
         </div>
       </header>

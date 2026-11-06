@@ -13,6 +13,9 @@ Read before coding, together with `docs/adr/README.md`. Add a new convention her
 ## UI
 - Before building UI, read `docs/design.md` and check `src/components` for an existing component.
 - Every new reusable component is added to the `/design` gallery and to `docs/design.md` in the same change.
+- Nothing outside `src/app/design/` imports the `/design` sample data (ADR 0010). `npm run check:design-imports` enforces it.
+- Numbers use Geist Mono with tabular figures (the `.num` class). Icons come from Phosphor only.
+- Colours come from theme tokens in `globals.css`, never hard-coded. A new token needs light and dark values and a pair in `scripts/check-contrast.ts`.
 
 ## Numbers and provenance
 - No number is computed outside `src/lib/engine` (ADR 0005).

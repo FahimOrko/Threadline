@@ -15,3 +15,5 @@ Template: Title, Status (accepted / superseded), Date, Context, Decision, Conseq
 | [0007](0007-spec-vision-vs-built.md) | Product spec is the vision, `openspec/specs/` is built truth | accepted | Planned and built never mix |
 | [0008](0008-src-directory-layout.md) | Code lives in `src/` | accepted | `@/` alias maps to `./src/*` |
 | [0009](0009-app-name-threadline.md) | App name is Threadline | accepted | Replaces the working title "Customer Value Review" |
+| [0010](0010-design-sample-data-exception.md) | Sample data exists only inside /design | accepted | Labelled strings, never imported elsewhere |
+| [0011](0011-theme-tokens-icons.md) | Theme, tokens and icons | accepted | next-themes, CSS-variable tokens, Phosphor, contrast script |

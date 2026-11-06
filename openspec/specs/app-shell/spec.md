@@ -6,11 +6,15 @@ Gives users one frame around every view: a header, a way to switch between the t
 ## Requirements
 
 ### Requirement: Header placeholders
-The app SHALL show a header on every view with placeholders for the customer picker and baseline, and the role toggle.
+The app SHALL show a header on every view with placeholders for the customer picker and baseline, the role toggle, and a theme toggle that switches between dark and light.
 
 #### Scenario: Header visible on all views
 - **WHEN** the user opens any of the three views
-- **THEN** the header with customer, baseline and role toggle placeholders is shown
+- **THEN** the header with customer, baseline, role toggle and theme toggle is shown
+
+#### Scenario: Switch theme from header
+- **WHEN** the user activates the theme toggle
+- **THEN** the app switches to the other theme immediately
 
 ### Requirement: View switching
 The app SHALL offer a view switcher for Dashboard, Impact World and Story, and SHALL show the page of the chosen view with the active view highlighted.
