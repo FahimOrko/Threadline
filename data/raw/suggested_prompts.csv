@@ -1,0 +1,23 @@
+Lindström x Since AI Hackathon 2026,Unnamed: 1
+Customer Value & Sustainability Review - Synthetic Builder-Ready Data Pack,
+,
+Purpose,"Structurally representative synthetic data for prototyping a multi-site customer value dashboard, sustainability review, AI insights and customer-ready report."
+Data status,"100% synthetic/illustrative. No row represents a real customer, wearer, asset, contract, laundry performance result or approved sustainability claim."
+Primary use case,"Annual customer review or steering-committee discussion: show value created, compare circular service with a selected baseline, identify site/product opportunities and recommend next actions."
+Main fictional customer,"NorthStar Foods Group: 24 delivery sites across Finland, Sweden and Poland, suitable for customer-level consolidation and site drill-down."
+Default comparison,Outsourced local laundry. Home washing and in-house laundry are included as alternatives.
+Repair assumption,For prototype logic only: one completed repair postpones one replacement event. Results must be labelled estimated and sensitivity-tested.
+Waste allocation,"Laundry-level waste is allocated to customer/site using the share of washed kilograms. This is an estimate, not directly measured customer waste."
+Join keys,"customer_id, site_id, laundry_id, product_id, month and asset_id. See Data_Dictionary and Quick_Start."
+Recommended build,Dashboard + customer-level/site drill-down + prompt-driven priority view + AI observations + PowerPoint/PDF export.
+Do not do,"Do not present synthetic outputs as real Lindström/customer performance, audited figures or approved claims."
+,
+,
+Source structures used,
+Allocated pieces,Structure informed by Allocated pieces Tableau.xlsx
+Washing percentage,Structure informed by Washing %.xlsx
+Service cycles,Structure informed by End to end delivery Tableau report.xlsx
+Repairs,Structure informed by Repairs table.xlsx
+Laundry comparison,Factors/scenario structure informed by Workwear laundry Environmental Impact Comparison (T2 2026).xlsx
+Textile waste,Treatment route structure informed by Textile Waste kg.xlsx
+Washed kg,Laundry/month volume structure informed by WWS Washed Kg 2025.xlsx

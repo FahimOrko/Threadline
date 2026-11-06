@@ -1,0 +1,5 @@
+laundry_id,laundry_name,country,country_code,note
+L001,Aurora Helsinki WWS,Finland,FI,Synthetic WWS laundry A
+L002,Aurora Turku WWS,Finland,FI,Synthetic WWS laundry B
+L003,Nordic Malmö WWS,Sweden,SE,Synthetic WWS laundry C
+L004,Vistula Warsaw WWS,Poland,PL,Synthetic WWS laundry D

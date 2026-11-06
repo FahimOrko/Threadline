@@ -1,0 +1,9 @@
+assumption_id,assumption,value_or_rule,rationale,category,confidence,treatment
+A001,Default comparison baseline,Outsourced local laundry,Local laundry is the default; user may select home or in-house.,Business decision,Medium,Editable
+A002,Repair handprint,1 completed repair postpones 1 replacement event,Prototype assumption; not an audited avoided-purchase claim.,Handprint,Low-Medium,Sensitivity-test
+A003,Waste attribution,Laundry waste allocated by customer share of washed kg,Source waste is laundry-level; customer result is estimated.,Waste,Medium,Required disclosure
+A004,Waste baseline,100% mixed-waste treatment in baseline,Illustrative linear scenario; adjust by market where evidence exists.,Handprint,Low-Medium,Editable
+A005,Product footprint,Synthetic kgCO2e values by product,"Structurally representative only, not approved product footprints.",Product,Low,Replace for production
+A006,Customer hierarchy,Synthetic parent customer/site hierarchy,Hackathon demonstrates value of hierarchy; does not solve enterprise master data.,Architecture,High,Prototype
+A007,Industry emphasis,Rules use customer industry and stated priority,Industry rules guide display; they do not provide legal advice.,Personalization,Medium,Review
+A008,Data status,Every output retains source/status label,"Measured, calculated, allocated, estimated and synthetic must remain visible.",Credibility,High,Mandatory

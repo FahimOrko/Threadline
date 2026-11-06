@@ -1,0 +1,14 @@
+metric,value,unit,status/interpretation
+Customer,NorthStar Foods Group,,Synthetic example
+Reporting year,2025,year,
+Delivery sites,24,sites,Master data
+Active wearers (Dec),28367,wearers,Summed across product rows; builders should deduplicate/define KPI carefully
+Garments allocated (Dec),31743,pieces,Synthetic
+Washed kg 2025,502074.7000000002,kg,Synthetic
+Repairs 2025,15233,repairs,Synthetic
+Replacements postponed,15233,events,Estimated assumption
+Water saving vs local,1406482.5999999992,litres,Allocated estimate
+Emission saving vs local,255073.1000000002,kgCO2e,Allocated estimate
+Textile waste attributed,16797.109999999982,kg,Allocated estimate
+Service requests,515,requests,Synthetic
+Suggested action,Review sites with low active-assets-to-allocation ratio and prioritize water efficiency in the annual review.,,"AI/rules example, not a calculated fact"

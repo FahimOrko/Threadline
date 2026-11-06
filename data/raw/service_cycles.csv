@@ -1,0 +1,35 @@
+site_id,customer_id,site_name,country,city,site_type,primary_laundry_id,data_status
+S001,CUST001,NorthStar Helsinki,Finland,Helsinki,Office & Operations,L001,SYNTHETIC
+S002,CUST001,NorthStar Turku,Finland,Turku,Production Plant,L001,SYNTHETIC
+S003,CUST001,NorthStar Tampere,Finland,Tampere,Distribution Center,L001,SYNTHETIC
+S004,CUST001,NorthStar Oulu,Finland,Oulu,Office & Operations,L001,SYNTHETIC
+S005,CUST001,NorthStar Lahti,Finland,Lahti,Office & Operations,L001,SYNTHETIC
+S006,CUST001,NorthStar Kuopio,Finland,Kuopio,Production Plant,L001,SYNTHETIC
+S007,CUST001,NorthStar Vaasa,Finland,Vaasa,Production Plant,L001,SYNTHETIC
+S008,CUST001,NorthStar Pori,Finland,Pori,Distribution Center,L001,SYNTHETIC
+S009,CUST001,NorthStar Jyväskylä,Finland,Jyväskylä,Production Plant,L001,SYNTHETIC
+S010,CUST001,NorthStar Kotka,Finland,Kotka,Office & Operations,L001,SYNTHETIC
+S011,CUST001,NorthStar Lappeenranta,Finland,Lappeenranta,Production Plant,L001,SYNTHETIC
+S012,CUST001,NorthStar Seinäjoki,Finland,Seinäjoki,Distribution Center,L001,SYNTHETIC
+S013,CUST001,NorthStar Malmö,Sweden,Malmö,Office & Operations,L003,SYNTHETIC
+S014,CUST001,NorthStar Gothenburg,Sweden,Gothenburg,Office & Operations,L003,SYNTHETIC
+S015,CUST001,NorthStar Stockholm,Sweden,Stockholm,Distribution Center,L003,SYNTHETIC
+S016,CUST001,NorthStar Uppsala,Sweden,Uppsala,Production Plant,L003,SYNTHETIC
+S017,CUST001,NorthStar Örebro,Sweden,Örebro,Office & Operations,L003,SYNTHETIC
+S018,CUST001,NorthStar Västerås,Sweden,Västerås,Production Plant,L003,SYNTHETIC
+S019,CUST001,NorthStar Warsaw,Poland,Warsaw,Office & Operations,L004,SYNTHETIC
+S020,CUST001,NorthStar Poznań,Poland,Poznań,Office & Operations,L004,SYNTHETIC
+S021,CUST001,NorthStar Wrocław,Poland,Wrocław,Distribution Center,L004,SYNTHETIC
+S022,CUST001,NorthStar Gdańsk,Poland,Gdańsk,Office & Operations,L004,SYNTHETIC
+S023,CUST001,NorthStar Kraków,Poland,Kraków,Distribution Center,L004,SYNTHETIC
+S024,CUST001,NorthStar Łódź,Poland,Łódź,Office & Operations,L004,SYNTHETIC
+S025,CUST002,Apex Malmö,Sweden,Malmö,Service Center,L003,SYNTHETIC
+S026,CUST002,Apex Gothenburg,Sweden,Gothenburg,Manufacturing Plant,L003,SYNTHETIC
+S027,CUST002,Apex Stockholm,Sweden,Stockholm,Manufacturing Plant,L003,SYNTHETIC
+S028,CUST002,Apex Örebro,Sweden,Örebro,Manufacturing Plant,L003,SYNTHETIC
+S029,CUST002,Apex Västerås,Sweden,Västerås,Manufacturing Plant,L003,SYNTHETIC
+S030,CUST002,Apex Uppsala,Sweden,Uppsala,Manufacturing Plant,L003,SYNTHETIC
+S031,CUST003,Mediora Warsaw,Poland,Warsaw,Hospital,L004,SYNTHETIC
+S032,CUST003,Mediora Kraków,Poland,Kraków,Hospital,L004,SYNTHETIC
+S033,CUST003,Mediora Gdańsk,Poland,Gdańsk,Central Laundry Hub,L004,SYNTHETIC
+S034,CUST003,Mediora Poznań,Poland,Poznań,Central Laundry Hub,L004,SYNTHETIC
