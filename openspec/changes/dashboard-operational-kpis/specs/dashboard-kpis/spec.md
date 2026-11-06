@@ -3,7 +3,7 @@
 ## ADDED Requirements
 
 ### Requirement: Operational cards
-The dashboard SHALL show one card each for Delivery sites, Active wearers, Garments in circulation, Repairs, Replacements postponed, Service requests and Service requests per 100 wearers for the selected customer, full year 2025, each with value, unit, provenance chip and Show math.
+The dashboard SHALL show one card each for Delivery sites, Active wearers, Garments in circulation, Repairs, Replacements postponed, Service requests and Service requests per 100 wearers (Dec) for the selected customer, full year 2025, each with value, unit, provenance chip and Show math.
 
 #### Scenario: NorthStar cards
 - **WHEN** the user opens the dashboard for NorthStar Foods Group
@@ -13,20 +13,24 @@ The dashboard SHALL show one card each for Delivery sites, Active wearers, Garme
 - **WHEN** the user opens Show math on Active wearers
 - **THEN** it explains why the figure differs from the pack's 28 367
 
+#### Scenario: Per 100 wearers explanation
+- **WHEN** the user opens Show math on the per-100-wearers card
+- **THEN** it states that the full-year service-request count is divided by the December wearers
+
 #### Scenario: Another customer
 - **WHEN** the user selects another customer
 - **THEN** every card shows that customer's values and name
 
 ### Requirement: Site table
-The dashboard SHALL show a table of the selected customer's sites with active wearers, garments in circulation, repairs and service requests per site for 2025, and SHALL NOT link rows to a drill-down page.
+The dashboard SHALL show a table of the selected customer's sites with active wearers, garments in circulation, repairs and service requests per site for 2025, and SHALL NOT link rows to a drill-down page. Each numeric column SHALL have its own ProvenanceChip in its header and its own Show math.
 
 #### Scenario: Rows
 - **WHEN** the user opens the dashboard for NorthStar Foods Group
 - **THEN** the table has 24 rows, one per site, and the columns for garments in circulation and service requests sum to 31 743 and 515
 
-#### Scenario: Table provenance
+#### Scenario: Column provenance
 - **WHEN** the table is shown
-- **THEN** it carries a ProvenanceChip for the figures and a way to see their formula
+- **THEN** the active-wearers header carries a CALCULATED chip, the other three numeric headers carry MEASURED chips, and each header's Show math lists that column's formula and inputs
 
 ### Requirement: Same content for both roles
 The operational cards and the site table SHALL be identical in the KAM and Customer roles.

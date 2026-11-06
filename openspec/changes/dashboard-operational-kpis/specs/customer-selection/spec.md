@@ -23,6 +23,10 @@ When `?customer=` holds a value that matches no customer, the app SHALL show Nor
 - **WHEN** the user opens the dashboard with `?customer=NOPE`
 - **THEN** the dashboard shows NorthStar Foods Group with a notice that "NOPE" is not a known customer
 
+#### Scenario: Picker agrees with the page
+- **WHEN** the address holds an unknown customer value
+- **THEN** the header picker shows NorthStar Foods Group, the same customer as the page
+
 #### Scenario: Known value shows no notice
 - **WHEN** the user opens the dashboard with a valid customer id
 - **THEN** no notice is shown

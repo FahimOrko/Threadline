@@ -4,6 +4,8 @@
 
 Today: `generatedSource` holds four sheets; `replacementsPostponed(data, { customerId, period })` is the only engine function; `/dashboard` hard-codes `CUST001`; `AppShell` is a client component with a disabled "Customer: not selected" button. `Fact.scope` carries only the customer. See proposal.md for motivation.
 
+Checked in the bundled Next docs: a layout does not re-render on navigation and cannot read `searchParams`; a page receives `searchParams` as a `Promise` and awaits it; `useSearchParams` is a Client Component hook, and in a prerendered route it client-renders up to the nearest Suspense boundary, so wrap its consumer in `<Suspense>`.
+
 ## Goals / Non-Goals
 
 **Goals:**
@@ -17,23 +19,23 @@ Today: `generatedSource` holds four sheets; `replacementsPostponed(data, { custo
 
 ## Decisions
 
-1. **Customer lives in the URL (`?customer=`), read in the server page.** The page stays a server component and links are shareable. Alternative: a Zustand store like the role toggle; rejected because the page would need client-side data. Unknown values resolve through one small pure function (`src/lib/customer.ts`, no numbers) that returns the customer plus the rejected value, and the page renders a notice from that.
-2. **Header gets the customer list from the server.** The root layout loads `generatedSource`, passes `{ id, name }[]` to `AppShell`. The picker is a native, token-styled `<select>` with a visible label, so keyboard and screen-reader behaviour comes free; no new dependency and no new reusable component. Changing it navigates to the same path with the new `?customer=`. The view links keep the current `?customer=`. Reading the param in the client shell uses `useSearchParams`, which needs a Suspense boundary; confirm in the bundled Next docs before coding.
-3. **Period stays a constant (2025-01 to 2025-12) in one place** and every engine call takes it as an argument, so a later period picker changes the caller only.
-4. **"Latest month" is `period.to`.** Active wearers and Garments in circulation read that month only; the Fact's inputs name it.
-5. **Active wearers rule** (max across product rows per site, then sum) is a single helper reused by the customer Fact and the per-site rows, so the table cannot drift from the card. Show math carries a plain sentence on the 28,367 vs 9,607 difference; the number 28,367 is text in the explanation, not a computed value. ADR 0015 records the rule.
-6. **Per-site rows are one engine call** returning raw numbers plus a single provenance block for the whole table. Rationale: ADR 0004 needs provenance on every displayed value, but 24 x 4 chips would be noise. Alternative: a Fact per cell; rejected as 96 Facts with identical provenance.
-7. **SiteTable takes rows and a provenance block, formats via `src/lib/format`,** and renders ProvenanceChip and ShowMath once. Its /design fixture is a fixed labelled string set (ADR 0010).
-8. **Per-100-wearers is its own Fact** with method CALCULATED, built from the Service requests and Active wearers Facts' values, so the formula and inputs are explicit. Division by zero yields 0 with an input line saying the rate is undefined.
-9. **Operational Facts are a plain array** from `operationalFacts`; the page maps it to `FactStatCard`. Order is fixed by the engine.
+1. **The server page reads `?customer=` and passes the customer down.** The page awaits `searchParams`, calls `resolveCustomer` (pure, `src/lib/customer.ts`, no numbers) and hands the resolved customer, plus any rejected value for the notice, to the cards and the table. Alternative: a Zustand store like the role toggle; rejected because the page would need client-side data.
+2. **The header is a client component and still reads the URL, because the layout cannot.** The root layout passes `{ id, name }[]` to `AppShell`. A small client part inside a Suspense boundary reads `useSearchParams`, runs the same `resolveCustomer` so the picker shows the same customer the page shows (including the fallback), and keeps `?customer=` on the view links. The picker only navigates: it never fetches or computes. The Suspense fallback shows a disabled picker.
+3. **Picker is the shadcn Select primitive** (`npx shadcn add select`, base-nova style on `@base-ui/react`), with a visible label. It is a reusable component, so it goes to `/design` Controls and `docs/design.md` in this change. Alternative: native `<select>`; rejected by the owner for consistent styling.
+4. **Period stays a constant (2025-01 to 2025-12) in one place** and every engine call takes it as an argument, so a later period picker changes the caller only.
+5. **"Latest month" is `period.to`.** Active wearers and Garments in circulation read that month only; the Fact's inputs name it.
+6. **Active wearers rule** (max across product rows per site, then sum) is a single helper reused by the customer Fact and the per-site rows, so the table cannot drift from the card. Show math carries a plain sentence on the 28,367 vs 9,607 difference; 28,367 is text in the explanation, not a computed value. ADR 0015 records the rule.
+7. **Per-site rows are one engine call returning raw numbers plus one provenance block per numeric column** (wearers CALCULATED; garments, repairs, requests MEASURED), so each column header carries a chip and Show math and every displayed value has provenance (ADR 0004). Alternative: one chip for the whole table; rejected by the owner because wearers and the other columns differ in method.
+8. **SiteTable takes rows and per-column provenance blocks,** formats via `src/lib/format`, and renders a ProvenanceChip and ShowMath in each numeric header. Chips are at least 11rem wide (design.md), so the table scrolls horizontally on narrow screens rather than squeezing a chip. Its /design fixture is a fixed labelled string set (ADR 0010).
+9. **Per-100-wearers is its own Fact** labelled "per 100 wearers (Dec)", method CALCULATED, built from the full-year Service requests value and the December Active wearers value. Its formula and inputs say a full-year count is divided by December wearers, which is a deliberate approximation. Zero wearers yields 0 with an input line saying the rate is undefined.
+10. **Operational Facts are a plain array** from `operationalFacts`; the page maps it to `FactStatCard`. Order is fixed by the engine.
+11. **`washing_pct` is validated and kept in the generated JSON, unused.** A comment at the schema field and a line in the rebuild runbook say its definition is unclear and it must not appear in claims until Lindström confirms.
 
 ## Risks / Trade-offs
 
-- [Active wearers for a period longer than a month reads one month] → Fact label and inputs name the month; ADR 0015 states it; a later period picker revisits it.
-- [`useSearchParams` in the shell can opt pages out of static rendering] → the dashboard is already dynamic (reads `?customer=`); wrap in Suspense per the Next docs.
+- [Active wearers and the per-100 rate mix a Dec snapshot with a full-year count] → labels and Show math say so; ADR 0015 states it; a later period picker revisits it.
+- [`useSearchParams` in the shell client-renders its subtree] → confined to a small component inside Suspense; the dashboard is already dynamic because it awaits `searchParams`.
+- [Picker and page disagree on an unknown value] → both call the same `resolveCustomer`; a test asserts it.
+- [Four chips plus Show math in one table header row are wide] → horizontal scroll, checked in the running app at narrow widths (task 4.2, 5.2).
 - [Other customers may have sites without activity rows] → rows with zeros and a test.
-- [`service_activity` has fields we ignore (`washing_pct` is unreliable per the data-quality notes)] → schema validates them strictly but no Fact uses them.
-
-## Open Questions
-
-- Whether `washing_pct` should be kept in the generated JSON or dropped; harmless either way, decided when writing the schema.
+- [shadcn CLI writes files into `src/components/ui`] → review the diff; keep token colours only.

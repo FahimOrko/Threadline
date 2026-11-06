@@ -6,12 +6,13 @@ The dashboard shows one KPI for one hard-coded customer. Slice 3 (core dashboard
 
 ## What Changes
 
-- Pipeline loads `service_activity` (strict schema, header checked against the data dictionary, ADR 0012) into `data/generated/`.
-- Engine adds one Fact per KPI: Delivery sites, Active wearers, Garments in circulation, Repairs, Service requests, Service requests per 100 wearers, plus a thin `operationalFacts(data, scope)` that returns the list together with the existing Replacements postponed.
+- Pipeline loads `service_activity` (dictionary sheet `Service_Activity`, strict schema, header checked, ADR 0012) into `data/generated/`. `washing_pct` stays in the JSON, unused, with a note that its definition is unclear.
+- Engine adds one Fact per KPI: Delivery sites, Active wearers, Garments in circulation, Repairs, Service requests, Service requests per 100 wearers (Dec), plus a thin `operationalFacts(data, scope)` that returns the list together with the existing Replacements postponed.
 - Active wearers = latest month in the period (Dec 2025), maximum across product rows per site, then summed over sites. NorthStar: 9,607. Show math states that the pack's `sample_output.csv` shows 28,367 because it sums across product rows, which double-counts people.
-- Dashboard renders the Facts as `FactStatCard`s for the selected customer, full year 2025. No period picker.
-- Header customer picker replaces the "Customer: not selected" placeholder and sets `?customer=`. An unknown value falls back to NorthStar with a visible notice, never a crash.
-- New reusable `SiteTable` component (wearers, garments, repairs, service requests per site; no drill-down links), added to `/design` with a labelled fixture and to `docs/design.md`.
+- Service requests per 100 wearers is labelled "per 100 wearers (Dec)"; Show math explains it divides the full-year count by the December wearers.
+- Dashboard renders the Facts as `FactStatCard`s for the selected customer, full year 2025. No period picker. The server page reads `searchParams`, resolves the customer and passes it down.
+- Header customer picker replaces the "Customer: not selected" placeholder. It is the shadcn Select primitive, added to `/design` and `docs/design.md`, and it only navigates to `?customer=`. An unknown value falls back to NorthStar with a visible notice, never a crash.
+- New reusable `SiteTable` (wearers, garments, repairs, service requests per site; no drill-down links) with one ProvenanceChip and one Show math per numeric column header (wearers CALCULATED, the others MEASURED), added to `/design` with a labelled fixture and to `docs/design.md`.
 - Last task records the ADR, convention and runbook updates and the ADR index.
 - No role-dependent content: KAM and Customer see the same cards.
 
@@ -23,15 +24,15 @@ Out of scope: money cards, percentages, footprint, baseline selector, site drill
 - `customer-selection`: which customer the app shows, chosen in the header, carried in the URL, with a safe fallback for unknown values.
 
 ### Modified Capabilities
-- `kpi-engine`: adds the operational KPI Facts and their rules.
+- `kpi-engine`: adds the operational KPI Facts, per-site rows and their rules.
 - `data-pipeline`: adds the `service_activity` sheet to the scope of sheets.
 - `dashboard-kpis`: the dashboard shows the operational cards and the site table for the selected customer.
 - `app-shell`: the header customer placeholder becomes a working picker.
-- `design-system`: adds the SiteTable component to the base set and the gallery.
+- `design-system`: adds the SiteTable and Select components.
 
 ## Impact
 
-- Code: `src/lib/data/` (schema, pipeline, generated source), `src/lib/engine/`, `src/app/dashboard/page.tsx`, `src/app/layout.tsx` and `src/components/app-shell.tsx` (customer list passed from the server), new `src/components/site-table.tsx`, `/design` page and sample folder.
-- Docs: `docs/design.md`, `docs/conventions.md`, `docs/runbooks/rebuild-data.md`, new ADR and `docs/adr/README.md`.
-- Tests: Vitest for schema, pipeline, each engine function and the fallback logic; existing engine test file's sheet list grows.
-- No new dependencies.
+- Code: `src/lib/data/` (schema, pipeline, generated source), `src/lib/engine/`, `src/lib/customer.ts`, `src/app/dashboard/page.tsx`, `src/app/layout.tsx` and `src/components/app-shell.tsx` (customer list passed from the server), new `src/components/ui/select.tsx` and `src/components/site-table.tsx`, `/design` page and sample folder.
+- Docs: `docs/design.md`, `docs/conventions.md`, `docs/runbooks/rebuild-data.md`, new ADRs and `docs/adr/README.md`.
+- Tests: Vitest for schema, pipeline, each engine function, the fallback logic and the new components.
+- New dependency: none expected; the shadcn Select sits on the already installed `@base-ui/react`. The shadcn CLI adds `ui/select.tsx` during apply.
