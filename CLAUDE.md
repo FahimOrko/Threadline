@@ -2,7 +2,7 @@
 
 ## Project rules
 
-- `docs/product-spec.md` is the vision, `openspec/specs/` is what is built. Never edit `docs/product-spec.md` unless Fahim asks.
+- `docs/product-spec.md` is the vision, `openspec/specs/` is what is built. Never edit `docs/product-spec.md` unless the user asks.
 - Before coding, read `docs/conventions.md` and `docs/adr/README.md`.
 - No numbers computed outside `src/lib/engine`.
 - Every displayed value carries provenance.
