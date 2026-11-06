@@ -11,5 +11,10 @@
 ## Rebuild
 
 1. Run `npm run data:build`.
-2. Read the one-line summary per file and `data/generated/data-quality.json`: rows read, valid, invalid with reasons, and the repairs cross-check.
+2. Read the one-line summary per file (repairs, sites, customers, assumptions, serviceActivity) and `data/generated/data-quality.json`: rows read, valid, invalid with reasons, and the repairs cross-check.
 3. Run `npm test` and `npm run build`. Tests run the pipeline on `data/raw/` themselves and do not need `data/generated/`.
+
+## Known data caveats
+
+- `washing_pct` in `service_activity` is loaded into `data/generated/serviceActivity.json` but unused: it is mostly above 100% and its definition is unclear. Keep it out of claims until Lindström confirms.
+- `serviceActivity.json` holds 1,248 rows; expect `valid 1248, invalid 0` on the pack.

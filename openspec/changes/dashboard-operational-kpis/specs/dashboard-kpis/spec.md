@@ -22,7 +22,7 @@ The dashboard SHALL show one card each for Delivery sites, Active wearers, Garme
 - **THEN** every card shows that customer's values and name
 
 ### Requirement: Site table
-The dashboard SHALL show a table of the selected customer's sites with active wearers, garments in circulation, repairs and service requests per site for 2025, and SHALL NOT link rows to a drill-down page. Each numeric column SHALL have its own ProvenanceChip in its header and its own Show math.
+The dashboard SHALL show a table of the selected customer's sites with active wearers, garments in circulation, repairs and service requests per site for 2025, and SHALL NOT link rows to a drill-down page. Each numeric column SHALL have its own compact ProvenanceChip in its header and its own Show math, and Show math SHALL state the column's full method and source.
 
 #### Scenario: Rows
 - **WHEN** the user opens the dashboard for NorthStar Foods Group
@@ -30,7 +30,11 @@ The dashboard SHALL show a table of the selected customer's sites with active we
 
 #### Scenario: Column provenance
 - **WHEN** the table is shown
-- **THEN** the active-wearers header carries a CALCULATED chip, the other three numeric headers carry MEASURED chips, and each header's Show math lists that column's formula and inputs
+- **THEN** the active-wearers header carries a compact CALCULATED chip, the other three numeric headers carry compact MEASURED chips, and each header's Show math lists that column's method, source, formula and inputs
+
+#### Scenario: Header chip by keyboard
+- **WHEN** the user tabs to a header chip
+- **THEN** a tooltip shows the full method and source and the column's Show math control is reachable next
 
 ### Requirement: Same content for both roles
 The operational cards and the site table SHALL be identical in the KAM and Customer roles.

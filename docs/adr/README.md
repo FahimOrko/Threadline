@@ -19,3 +19,5 @@ Template: Title, Status (accepted / superseded), Date, Context, Decision, Conseq
 | [0011](0011-theme-tokens-icons.md) | Theme, tokens and icons | accepted | next-themes, CSS-variable tokens, Phosphor, contrast script |
 | [0012](0012-header-mismatch-fails-build.md) | A column mismatch fails the data build | accepted | CSV headers are compared as a set with the dictionary sheet |
 | [0013](0013-generated-data-built-not-committed.md) | Generated data is built, not committed | accepted | `predev` and `prebuild` run `data:build`; `data/generated/` is ignored |
+| [0014](0014-selected-customer-lives-in-the-url.md) | The selected customer lives in the URL | accepted | `?customer=` read by the server page; header mirrors it; unknown falls back to NorthStar |
+| [0015](0015-active-wearers-latest-month-max-per-site.md) | Active wearers: latest-month maximum per site | accepted | Avoids the double count in the pack's 28 367; December snapshot |

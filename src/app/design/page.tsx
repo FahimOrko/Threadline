@@ -1,10 +1,12 @@
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Badge } from "@/components/badge";
 import { FactStatCard } from "@/components/fact-stat-card";
 import { Panel } from "@/components/panel";
 import { ProvenanceChip } from "@/components/provenance-chip";
+import { SiteTable, SiteTableSkeleton } from "@/components/site-table";
 import { SectionHeader } from "@/components/section-header";
 import { ShowMath } from "@/components/show-math";
 import { StatCard } from "@/components/stat-card";
@@ -12,7 +14,7 @@ import { EmptyState, ErrorState, StatCardSkeleton } from "@/components/states";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Tooltip } from "@/components/tooltip";
 import { METHODS, SOURCES } from "@/lib/provenance";
-import { SAMPLE_LABEL, sampleFact, sampleMath, sampleStats, stressChip } from "./_sample/data";
+import { SAMPLE_LABEL, sampleFact, sampleMath, sampleStats, sampleSiteTable, stressChip } from "./_sample/data";
 
 const sections = ["Tokens", "Provenance", "Data display", "Controls", "States", "Effects"];
 const tokenNames = [
@@ -70,6 +72,36 @@ export default function DesignPage() {
             <ProvenanceChip key={s} methods={["CALCULATED"]} source={s} />
           ))}
           <ProvenanceChip methods={["ALLOCATED", "ESTIMATED"]} source="SYNTHETIC_TEAM" />
+        </div>
+        <div className="space-y-2">
+          <h3 className="text-sm font-medium">Compact chip</h3>
+          <p className="max-w-[65ch] text-sm text-muted-foreground">
+            Method glyphs only, same tint as the full chip. The full text is the accessible name and shows in a tooltip on hover and keyboard focus. Source appears in the tooltip and in Show math.
+          </p>
+          <div className="flex flex-wrap items-center gap-6">
+            {[
+              { methods: ["CALCULATED"], source: "SYNTHETIC" },
+              { methods: ["ESTIMATED"], source: "SYNTHETIC" },
+              { methods: ["ALLOCATED", "ESTIMATED"], source: "SYNTHETIC_TEAM" },
+            ].map((c) => (
+              <div key={c.methods.join()} className="flex flex-col items-start gap-1">
+                <ProvenanceChip methods={c.methods as never} source={c.source as never} />
+                <ProvenanceChip compact methods={c.methods as never} source={c.source as never} />
+              </div>
+            ))}
+          </div>
+          <h4 className="text-sm font-medium">Stress test</h4>
+          <p className="max-w-[65ch] text-sm text-muted-foreground">
+            Longest method combination and longest source, full and compact, in an 11rem frame and a 320px frame.
+          </p>
+          <div className="flex flex-wrap items-start gap-4">
+            {["w-44", "w-[320px] max-w-full"].map((w) => (
+              <div key={w} className={`${w} space-y-2 rounded-lg border border-dashed p-2`}>
+                <ProvenanceChip methods={[...stressChip.methods]} source={stressChip.source} />
+                <ProvenanceChip compact methods={[...stressChip.methods]} source={stressChip.source} />
+              </div>
+            ))}
+          </div>
         </div>
         <Panel className="space-y-2">
           <SampleLabel />
@@ -136,6 +168,24 @@ export default function DesignPage() {
             </div>
           </div>
         </div>
+        <div className="space-y-2">
+          <h3 className="text-sm font-medium">SiteTable</h3>
+          <p className="max-w-[65ch] text-sm text-muted-foreground">
+            One row per site. Each numeric header has a compact chip and its own Show math, because the columns differ in method. Scrolls sideways when narrow.
+          </p>
+          <SiteTable table={sampleSiteTable} />
+          <h4 className="text-sm font-medium">Show math open in a header (popover)</h4>
+          <p className="max-w-[65ch] text-sm text-muted-foreground">
+            In table headers Show math is a popover anchored at the header, so the table never reflows. One open at a time; Esc and an outside click close it.
+          </p>
+          <div className="min-h-80">
+            <SiteTable table={sampleSiteTable} openColumn="requests" />
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <SiteTable table={{ ...sampleSiteTable, rows: [] }} />
+            <SiteTableSkeleton />
+          </div>
+        </div>
         <div className="flex flex-wrap items-center gap-2">
           <Badge>Default</Badge>
           <Badge variant="accent">Accent</Badge>
@@ -156,6 +206,35 @@ export default function DesignPage() {
           <Tooltip label="Short hint on hover and focus">
             <Button variant="outline">Tooltip</Button>
           </Tooltip>
+        </div>
+        <div className="space-y-2">
+          <h3 className="text-sm font-medium">Select</h3>
+          <div className="flex min-h-44 flex-wrap items-start gap-6">
+            {[
+              { name: "Closed", props: {} },
+              { name: "Open", props: { defaultOpen: true } },
+              { name: "Disabled", props: { disabled: true } },
+            ].map(({ name, props }) => (
+              <div key={name} className="flex flex-col gap-1">
+                <span id={`sel-${name}`} className="text-sm text-muted-foreground">
+                  {name}
+                </span>
+                <Select
+                  defaultValue="a"
+                  items={[{ value: "a", label: "Option A" }, { value: "b", label: "Option B" }]}
+                  {...props}
+                >
+                  <SelectTrigger size="sm" aria-labelledby={`sel-${name}`}>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent alignItemWithTrigger={false}>
+                    <SelectItem value="a">Option A</SelectItem>
+                    <SelectItem value="b">Option B</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            ))}
+          </div>
         </div>
         <ToggleGroup aria-label="Example toggle" variant="outline" spacing={0} defaultValue={["a"]}>
           <ToggleGroupItem value="a">Option A</ToggleGroupItem>

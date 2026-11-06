@@ -2,7 +2,8 @@
 import assumptions from "../../../data/generated/assumptions.json";
 import customers from "../../../data/generated/customers.json";
 import repairs from "../../../data/generated/repairs.json";
+import serviceActivity from "../../../data/generated/serviceActivity.json";
 import sites from "../../../data/generated/sites.json";
 import { jsonDataSource } from "./source";
 
-export const generatedSource = jsonDataSource({ repairs, sites, customers, assumptions });
+export const generatedSource = jsonDataSource({ repairs, sites, customers, assumptions, serviceActivity });

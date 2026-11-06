@@ -12,7 +12,8 @@ The dashboard shows one KPI for one hard-coded customer. Slice 3 (core dashboard
 - Service requests per 100 wearers is labelled "per 100 wearers (Dec)"; Show math explains it divides the full-year count by the December wearers.
 - Dashboard renders the Facts as `FactStatCard`s for the selected customer, full year 2025. No period picker. The server page reads `searchParams`, resolves the customer and passes it down.
 - Header customer picker replaces the "Customer: not selected" placeholder. It is the shadcn Select primitive, added to `/design` and `docs/design.md`, and it only navigates to `?customer=`. An unknown value falls back to NorthStar with a visible notice, never a crash.
-- New reusable `SiteTable` (wearers, garments, repairs, service requests per site; no drill-down links) with one ProvenanceChip and one Show math per numeric column header (wearers CALCULATED, the others MEASURED), added to `/design` with a labelled fixture and to `docs/design.md`.
+- ProvenanceChip gets a compact variant: method glyph in the certainty tint only, full text in a tooltip and an accessible label, focusable with the tooltip on focus. Shown in `/design` next to the full chip (with the stress case) and in `docs/design.md`.
+- New reusable `SiteTable` (wearers, garments, repairs, service requests per site; no drill-down links) with one compact ProvenanceChip and one Show math per numeric column header (wearers CALCULATED, the others MEASURED), added to `/design` with a labelled fixture and to `docs/design.md`. Show math states each column's full method and source.
 - Last task records the ADR, convention and runbook updates and the ADR index.
 - No role-dependent content: KAM and Customer see the same cards.
 
@@ -29,6 +30,7 @@ Out of scope: money cards, percentages, footprint, baseline selector, site drill
 - `dashboard-kpis`: the dashboard shows the operational cards and the site table for the selected customer.
 - `app-shell`: the header customer placeholder becomes a working picker.
 - `design-system`: adds the SiteTable and Select components.
+- `provenance-display`: adds the compact chip variant.
 
 ## Impact
 

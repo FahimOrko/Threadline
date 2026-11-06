@@ -53,8 +53,27 @@ export const assumptionSchema = z.strictObject({
   treatment: text,
 });
 
+export const serviceActivitySchema = z.strictObject({
+  month,
+  customer_id: text,
+  site_id: text,
+  laundry_id: text,
+  product_id: text,
+  active_wearers: count,
+  allocated_pieces: count,
+  active_assets_scanned: count,
+  washed_pieces: count,
+  packed_pieces: count,
+  // Loaded but unused: mostly above 100% and its definition is unclear. Keep it out of claims until Lindström confirms.
+  washing_pct: num,
+  customer_washed_kg: num,
+  service_requests: count,
+  data_status: text,
+});
+
 export type Repair = z.infer<typeof repairSchema>;
 export type Site = z.infer<typeof siteSchema>;
+export type ServiceActivity = z.infer<typeof serviceActivitySchema>;
 export type Customer = z.infer<typeof customerSchema>;
 export type Assumption = z.infer<typeof assumptionSchema>;
 
@@ -63,6 +82,7 @@ export type AppData = {
   sites: Site[];
   customers: Customer[];
   assumptions: Assumption[];
+  serviceActivity: ServiceActivity[];
 };
 
 /** Sheet name (as in data_dictionary.csv) to schema; the file is `<sheet lower-case>.csv`. */
@@ -71,4 +91,5 @@ export const SHEETS = {
   Sites: { key: "sites", schema: siteSchema },
   Customers: { key: "customers", schema: customerSchema },
   Assumptions: { key: "assumptions", schema: assumptionSchema },
+  Service_Activity: { key: "serviceActivity", schema: serviceActivitySchema },
 } as const;

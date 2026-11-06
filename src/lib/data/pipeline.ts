@@ -94,7 +94,7 @@ export function buildData(files: Record<string, string>): { data: AppData; repor
   });
   if (problems.length) throw new HeaderMismatchError(problems);
 
-  const data = { repairs: [], sites: [], customers: [], assumptions: [] } as AppData;
+  const data = { repairs: [], sites: [], customers: [], assumptions: [], serviceActivity: [] } as AppData;
   const report: QualityReport = { files: {} };
   for (const p of parsed) {
     const { def, res } = p!;

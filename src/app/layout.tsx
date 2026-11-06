@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AppShell } from "@/components/app-shell";
 import { ThemeProvider } from "@/components/theme-provider";
+import { generatedSource } from "@/lib/data/generated";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -19,7 +20,8 @@ export const metadata: Metadata = {
   description: "Annual value review for Lindström customers",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const { customers } = await generatedSource.load();
   return (
     <html
       lang="en"
@@ -27,7 +29,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col"><ThemeProvider>
-          <AppShell>{children}</AppShell>
+          <AppShell customers={customers.map((c) => ({ customer_id: c.customer_id, name: c.customer_name }))}>
+            {children}
+          </AppShell>
         </ThemeProvider></body>
     </html>
   );

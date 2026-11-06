@@ -44,7 +44,7 @@ Update this list with every new reusable component.
 | Toggle, ToggleGroup | `src/components/ui/toggle*.tsx` | Role toggle |
 | ThemeProvider | `src/components/theme-provider.tsx` | `next-themes`, class on `<html>`, dark default |
 | ThemeToggle | `src/components/theme-toggle.tsx` | Dark and light switch in the header |
-| ProvenanceChip | `src/components/provenance-chip.tsx` | Method and source with glyph, least-certain-wins tint. Never wider than its container: method and source wrap onto separate lines, each label stays on one line. Narrowest supported container: 11rem |
+| ProvenanceChip | `src/components/provenance-chip.tsx` | Method and source with glyph, least-certain-wins tint. Never wider than its container: method and source wrap onto separate lines, each label stays on one line. Narrowest supported container: 11rem. `compact` variant: method glyphs only in the same tint, a focusable button whose accessible name and tooltip (hover and focus) read "Method, Source"; use where the full chip would not fit, e.g. table headers, and put the full text in Show math |
 | ShowMath | `src/components/show-math.tsx` | Formula, inputs, assumption IDs, baseline, range, thread line |
 | Panel | `src/components/panel.tsx` | Bordered container, 8px radius |
 | SectionHeader | `src/components/section-header.tsx` | Title, optional description and actions |
@@ -52,6 +52,9 @@ Update this list with every new reusable component.
 | Tooltip | `src/components/tooltip.tsx` | Short hint on hover and focus |
 | StatCard | `src/components/stat-card.tsx` | Label, mono value, ProvenanceChip slot |
 | FactStatCard | `src/components/fact-stat-card.tsx` | Maps an engine Fact to StatCard, ProvenanceChip and ShowMath. Formats via `src/lib/format`; low/high read "not yet modelled" when the Fact has none |
+| SiteTable, SiteTableSkeleton | `src/components/site-table.tsx` | One row per site; each numeric header has a compact ProvenanceChip and its own Show math (columns differ in method). Header Show math opens as a popover so the table never reflows; fits 1280px without scrolling and scrolls sideways only below about 40rem. Empty state built in |
+| Popover, ShowMathPopover | `src/components/ui/popover.tsx`, `src/components/show-math.tsx` | shadcn Popover on base-ui. `ShowMathPopover` is ShowMath as a floating panel for table headers (inline `ShowMath` stays on cards). One open at a time, closes on Esc and outside click, never changes layout |
+| Select | `src/components/ui/select.tsx` | shadcn Select on base-ui. Needs a visible label wired with `aria-labelledby`. Used for the header customer picker |
 | StatCardSkeleton, EmptyState, ErrorState | `src/components/states.tsx` | Loading matches StatCard layout, empty says what to do, error is inline |
 
 ## Contrast

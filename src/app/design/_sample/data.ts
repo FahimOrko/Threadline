@@ -1,7 +1,7 @@
 // Sample data for the /design gallery only. Not engine output, never computed.
 // Nothing outside src/app/design/ may import this folder (npm run check:design-imports).
 import type { ShowMathProps } from "@/components/show-math";
-import type { Fact } from "@/lib/engine";
+import type { Fact, SiteRows } from "@/lib/engine";
 
 export const SAMPLE_LABEL = "sample data, not engine output";
 
@@ -45,4 +45,24 @@ export const sampleFact: Fact = {
   period: { from: "2025-01", to: "2025-12" },
   baseline: null,
   range: { low: null, base: 12480, high: null },
+};
+
+// Fixture for SiteTable. Not engine output.
+const sampleColumn = (label: string, unit: string, methods: SiteRows["columns"]["wearers"]["methods"], formula: string) => ({
+  label, unit, methods, source: "SYNTHETIC" as const, formula, inputs: [], assumptionIds: [], confidence: "Not rated (no assumption applies)",
+});
+export const sampleSiteTable: SiteRows = {
+  scope: { customerId: "SAMPLE", customerName: "Sample customer" },
+  period: { from: "2025-01", to: "2025-12" },
+  rows: [
+    { siteId: "X1", siteName: "Sample site A", wearers: 640, garments: 1820, repairs: 312, requests: 21 },
+    { siteId: "X2", siteName: "Sample site B", wearers: 410, garments: 1190, repairs: 205, requests: 14 },
+    { siteId: "X3", siteName: "Sample site C", wearers: 0, garments: 0, repairs: 0, requests: 0 },
+  ],
+  columns: {
+    wearers: sampleColumn("Active wearers", "wearers", ["CALCULATED"], "sample: maximum across product rows per site"),
+    garments: sampleColumn("Garments in circulation", "pieces", ["MEASURED"], "sample: sum of allocated pieces"),
+    repairs: sampleColumn("Repairs", "repairs", ["MEASURED"], "sample: sum of repair counts"),
+    requests: sampleColumn("Service requests", "requests", ["MEASURED"], "sample: sum of service requests"),
+  },
 };
