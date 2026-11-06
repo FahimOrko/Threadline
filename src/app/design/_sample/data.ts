@@ -12,15 +12,26 @@ export const sampleStats = [
   { label: "Trees equivalent", value: "310", unit: "trees", methods: ["ILLUSTRATIVE"], source: "PUBLIC_REFERENCE" },
 ] as const;
 
-export const sampleMath: ShowMathProps = {
-  formula: "saving = baseline cost - service cost",
+// Worst case for ShowMathPopover: the most rows plus a long note (mirrors the Active wearers popover shape).
+export const sampleMathWorstCase: ShowMathProps = {
+  formula: "sample = per site the maximum across product rows, summed over sites, for 2025-12",
   inputs: [
-    { label: "Baseline cost", value: "96 400 EUR" },
-    { label: "Service cost", value: "58 200 EUR" },
+    { label: "Customer", value: "Sample customer with a long name" },
+    { label: "Period", value: "2025-01 to 2025-12" },
+    { label: "Month used", value: "2025-12" },
+    { label: "Service-activity rows in that month", value: "72" },
+    { label: "Sum across product rows (pack method, not used)", value: "28 367 wearers" },
+    { label: "Confidence", value: "Not rated (no assumption applies)" },
+  ],
+  notes: [
+    {
+      label: "Why it differs from the pack",
+      text: "Sample note: the pack sums a value across product rows, so one person wearing several products is counted several times. This sample takes the maximum across product rows per site, then sums sites.",
+    },
   ],
   assumptionIds: ["A-04", "A-11"],
-  baseline: "Local laundry",
-  range: { low: "31 900", base: "38 200", high: "44 600" },
+  baseline: "not applicable",
+  range: { low: "not yet modelled", base: "9 607", high: "not yet modelled" },
 };
 
 // Worst case for ProvenanceChip: four methods and the longest source label.

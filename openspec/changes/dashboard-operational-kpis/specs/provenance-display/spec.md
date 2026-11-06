@@ -13,6 +13,18 @@ A Show math control SHALL open a popover that lists the formula, inputs, assumpt
 - **WHEN** the user focuses the control and presses Enter
 - **THEN** the popover opens, the control reports its expanded state to assistive technology, and Esc closes it and returns focus to the control
 
+#### Scenario: Popover layout
+- **WHEN** a Show math popover is open
+- **THEN** it is about 30rem wide but never wider than the viewport, the formula spans the full width in the mono face, rows use a one-third label and two-thirds value grid, and long explanatory text appears as a note across the full width below the rows in the sans face
+
+#### Scenario: Mono only for numbers
+- **WHEN** a row value is a name or plain words such as "NorthStar Foods Group" or "not yet modelled"
+- **THEN** it is shown in the sans face, while numbers, formulas and IDs stay mono
+
+#### Scenario: Stays on screen
+- **WHEN** the popover opens from a trigger near the edge of a narrow window
+- **THEN** it stays fully inside the viewport
+
 #### Scenario: Outside click and one at a time
 - **WHEN** a popover is open and the user clicks outside it or opens another Show math
 - **THEN** it closes, so only one is open at a time

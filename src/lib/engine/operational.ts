@@ -70,10 +70,11 @@ export function activeWearers(data: OperationalData, scope: OperationalScope): F
       { label: "Sum across product rows (pack method, not used)", value: packSum, unit: "wearers" },
       {
         label: "Why it differs from the pack",
+        note: true,
         value:
           "The pack's sample_output.csv sums active wearers across product rows, so one person wearing several products is counted several times. This KPI takes the maximum across product rows per site, then sums sites.",
       },
-      ...(rows.length === 0 ? [{ label: "Note", value: "No service-activity rows found for this customer and month" }] : []),
+      ...(rows.length === 0 ? [{ label: "Note", note: true as const, value: "No service-activity rows found for this customer and month" }] : []),
     ],
   });
 }
@@ -142,10 +143,11 @@ export function serviceRequestsPer100Wearers(data: OperationalData, scope: Opera
       { label: "Active wearers (Dec)", value: wearers, unit: "wearers" },
       {
         label: "Note",
+        note: true,
         value:
           "Divides the full-year service-request count by the December wearers, so it is an approximation, not a rate for one period.",
       },
-      ...(wearers === 0 ? [{ label: "Undefined", value: "The rate is undefined without wearers; shown as 0" }] : []),
+      ...(wearers === 0 ? [{ label: "Undefined", note: true as const, value: "The rate is undefined without wearers; shown as 0" }] : []),
     ],
   });
 }

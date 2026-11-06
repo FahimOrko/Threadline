@@ -41,6 +41,12 @@ Read first: `docs/conventions.md`, `docs/adr/README.md` (ADRs 0002, 0004, 0005, 
 - [x] 4c.2 Update `/design` (open Show math popover in the Provenance panel, FactStatCard text) and `docs/design.md` (drop the ShowMath row, ShowMathPopover is the only pattern). Verify: `/design` renders; `npm run check:design-imports` passes.
 - [x] 4c.3 Check in a real browser: card popovers open and close with mouse, Enter and Esc; card heights do not change; both themes; no console errors. Verify: observations recorded in the final report.
 
+## 4d. Show math popover layout (added after review)
+
+- [x] 4d.1 Make the popover `min(30rem, 100vw - 2rem)` wide, rows a 1/3 and 2/3 grid, formula full width mono, long text as `notes` (sans, full width below the rows), mono only for numbers, formulas and IDs; add the optional `note` flag to engine inputs and mark the long explanations. Verify: `tests/provenance.test.tsx`, `tests/fact-stat-card.test.tsx` and `tests/operational.test.ts` cover notes, fonts and the grid.
+- [x] 4d.2 Show the Active-wearers-shaped worst case open in `/design` and update `docs/design.md`. Verify: `/design` renders it.
+- [x] 4d.3 Check in a real browser at 1280px and narrow widths, both themes: nothing wraps awkwardly and the popover stays on screen. Verify: observations in the final report.
+
 ## 5. Dashboard page
 
 - [x] 5.1 Rewrite `src/app/dashboard/page.tsx` as an async server component: await `searchParams`, call `resolveCustomer`, show the fallback notice when a value was rejected, keep the period constant in one place, render `operationalFacts` through `FactStatCard` and `operationalSiteRows` through `SiteTable`. No arithmetic in the page. Verify: `npm run build` passes and `npm run lint` is clean.

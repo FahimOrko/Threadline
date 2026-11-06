@@ -5,35 +5,55 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 
 export type ShowMathProps = {
   formula: string;
+  /** Short label and value rows. */
   inputs: { label: string; value: string }[];
+  /** Long explanatory text: shown full width below the rows, in the sans font. */
+  notes?: { label: string; text: string }[];
   assumptionIds: string[];
   baseline: string;
   range: { low: string; base: string; high: string };
 };
 
+// Mono is for numbers, formulas and IDs; plain words (names, methods, "not yet modelled") stay sans.
+const hasDigit = (v: string) => /\d/.test(v);
+const Value = ({ children }: { children: string }) => (
+  <dd className={`min-w-0 break-words ${hasDigit(children) ? "num" : ""}`}>{children}</dd>
+);
+
 const triggerClass =
   "inline-flex items-center gap-1 rounded-md text-xs text-primary outline-none hover:underline focus-visible:ring-3 focus-visible:ring-ring/50";
 
-function ShowMathBody({ formula, inputs, assumptionIds, baseline, range }: ShowMathProps) {
+function ShowMathBody({ formula, inputs, notes = [], assumptionIds, baseline, range }: ShowMathProps) {
   return (
     <>
-      <p className="num">{formula}</p>
-      <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1">
+      <p className="num break-words">{formula}</p>
+      <dl className="grid grid-cols-[1fr_2fr] gap-x-3 gap-y-1">
         {inputs.map((i) => (
           <div key={i.label} className="contents">
-            <dt className="text-muted-foreground">{i.label}</dt>
-            <dd className="num">{i.value}</dd>
+            <dt className="min-w-0 text-muted-foreground">{i.label}</dt>
+            <Value>{i.value}</Value>
           </div>
         ))}
-        <dt className="text-muted-foreground">Assumptions</dt>
-        <dd className="num">{assumptionIds.join(", ") || "none"}</dd>
-        <dt className="text-muted-foreground">Baseline</dt>
-        <dd>{baseline}</dd>
-        <dt className="text-muted-foreground">Range</dt>
-        <dd className="num">
-          {range.low} / {range.base} / {range.high}
+        <dt className="min-w-0 text-muted-foreground">Assumptions</dt>
+        <dd className="num min-w-0 break-words">{assumptionIds.join(", ") || "none"}</dd>
+        <dt className="min-w-0 text-muted-foreground">Baseline</dt>
+        <Value>{baseline}</Value>
+        <dt className="min-w-0 text-muted-foreground">Range</dt>
+        <dd className="flex min-w-0 flex-wrap gap-x-1.5">
+          {[range.low, range.base, range.high].map((v, i) => (
+            <span key={i} className={`whitespace-nowrap ${hasDigit(v) ? "num" : ""}`}>
+              {v}
+              {i < 2 ? " /" : ""}
+            </span>
+          ))}
         </dd>
       </dl>
+      {notes.map((n) => (
+        <div key={n.label} data-slot="show-math-note" className="space-y-0.5 border-t pt-2">
+          <p className="text-xs text-muted-foreground">{n.label}</p>
+          <p className="text-sm">{n.text}</p>
+        </div>
+      ))}
     </>
   );
 }
@@ -54,7 +74,7 @@ export function ShowMathPopover({
           <CaretRight aria-hidden size={12} />
           Show math
         </PopoverTrigger>
-        <PopoverContent align={align} className="w-80 space-y-2 border-l-2 border-l-primary text-left">
+        <PopoverContent align={align} className="w-[min(30rem,calc(100vw-2rem))] space-y-2 border-l-2 border-l-primary text-left">
           <ShowMathBody {...props} />
         </PopoverContent>
       </Popover>

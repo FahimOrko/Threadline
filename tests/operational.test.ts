@@ -41,7 +41,7 @@ describe("NorthStar acceptance values (sample_output.csv)", () => {
     expect(f.value).toBe(9607);
     expect(f.methods).toEqual(["CALCULATED"]);
     expect(f.inputs).toContainEqual({ label: "Sum across product rows (pack method, not used)", value: 28367, unit: "wearers" });
-    expect(f.inputs.some((i) => i.label === "Why it differs from the pack")).toBe(true);
+    expect(f.inputs.find((i) => i.label === "Why it differs from the pack")?.note).toBe(true);
     expect(f.inputs).toContainEqual({ label: "Month used", value: "2025-12" });
   });
   it("garments in circulation 31 743", () => expect(garmentsInCirculation(data, north).value).toBe(31743));
@@ -56,7 +56,9 @@ describe("NorthStar acceptance values (sample_output.csv)", () => {
     expect(f.value).toBeCloseTo((515 / 9607) * 100, 10);
     expect(f.label).toContain("per 100 wearers (Dec)");
     expect(f.methods).toEqual(["CALCULATED"]);
-    expect(f.inputs.find((i) => i.label === "Note")?.value).toMatch(/full-year .* December wearers/);
+    const note = f.inputs.find((i) => i.label === "Note");
+    expect(note?.value).toMatch(/full-year .* December wearers/);
+    expect(note?.note).toBe(true);
   });
 });
 

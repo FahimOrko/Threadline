@@ -14,7 +14,7 @@ import { EmptyState, ErrorState, StatCardSkeleton } from "@/components/states";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Tooltip } from "@/components/tooltip";
 import { METHODS, SOURCES } from "@/lib/provenance";
-import { SAMPLE_LABEL, sampleFact, sampleMath, sampleStats, sampleSiteTable, stressChip } from "./_sample/data";
+import { SAMPLE_LABEL, sampleFact, sampleMathWorstCase, sampleStats, sampleSiteTable, stressChip } from "./_sample/data";
 
 const sections = ["Tokens", "Provenance", "Data display", "Controls", "States", "Effects"];
 const tokenNames = [
@@ -105,8 +105,12 @@ export default function DesignPage() {
         </div>
         <Panel className="space-y-2">
           <SampleLabel />
-          <div className="min-h-72">
-            <ShowMathPopover {...sampleMath} defaultOpen />
+          <h3 className="text-sm font-medium">Show math popover, worst case</h3>
+          <p className="max-w-[65ch] text-sm text-muted-foreground">
+            About 30rem wide, never wider than the viewport. Rows are a 1/3 label and 2/3 value grid; the formula and long notes span the full width, notes in the sans font. Mono is for numbers, formulas and IDs.
+          </p>
+          <div className="min-h-[34rem]">
+            <ShowMathPopover {...sampleMathWorstCase} defaultOpen />
           </div>
         </Panel>
       </section>

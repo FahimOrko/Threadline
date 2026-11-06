@@ -13,7 +13,8 @@ export type Fact = {
   assumptionIds: string[];
   confidence: string;
   formula: string;
-  inputs: { label: string; value: number | string; unit?: string }[];
+  /** `note` marks long explanatory text; the UI shows it as a full-width note, not a row. */
+  inputs: { label: string; value: number | string; unit?: string; note?: true }[];
   scope: { customerId: string; customerName: string };
   period: Period;
   baseline: string | null;

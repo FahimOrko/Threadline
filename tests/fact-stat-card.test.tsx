@@ -41,4 +41,12 @@ describe("FactStatCard", () => {
     expect(t).toContain("not applicable");
     expect(t.match(/not yet modelled/g)).toHaveLength(2);
   });
+  it("shows an input marked note as a full-width note, not a row", async () => {
+    const withNote: Fact = { ...fact, inputs: [...fact.inputs, { label: "Why", value: "Long words.", note: true }] };
+    render(<FactStatCard fact={withNote} />);
+    await userEvent.click(screen.getByRole("button", { name: /show math/i }));
+    const note = (await screen.findByText("Long words.")).closest("[data-slot=show-math-note]");
+    expect(note).toBeTruthy();
+    expect(document.querySelector("dl")!.textContent).not.toContain("Why");
+  });
 });

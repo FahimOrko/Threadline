@@ -76,6 +76,27 @@ describe("ShowMathPopover", () => {
     await waitFor(() => expect(screen.queryByText("A-1")).toBeNull());
     expect(btn.getAttribute("aria-expanded")).toBe("false");
   });
+  it("shows notes full width below the rows in the sans font, and keeps mono for numbers", async () => {
+    const user = userEvent.setup();
+    render(
+      <ShowMathPopover
+        {...props}
+        inputs={[{ label: "Customer", value: "NorthStar" }, { label: "Rows", value: "72" }]}
+        notes={[{ label: "Why it differs", text: "A long explanation in words." }]}
+      />,
+    );
+    await user.click(screen.getByRole("button", { name: /show math/i }));
+    const note = (await screen.findByText("A long explanation in words.")).closest("[data-slot=show-math-note]")!;
+    expect(note.querySelector(".num")).toBeNull(); // sans
+    expect(note.closest("dl")).toBeNull(); // not a row
+    const dl = document.querySelector("dl")!;
+    expect(dl.compareDocumentPosition(note) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy(); // below the rows
+    expect(screen.getByText("72").className).toContain("num");
+    expect(screen.getByText("NorthStar").className).not.toContain("num");
+    expect(screen.getByText("a x b").className).toContain("num"); // formula stays mono
+    expect(dl.className).toContain("grid-cols-[1fr_2fr]"); // 1/3 label, 2/3 value
+    expect(document.querySelector("[data-slot=popover-content]")!.className).toContain("min(30rem,calc(100vw-2rem))");
+  });
   it("closes on an outside click", async () => {
     const user = userEvent.setup();
     render(<ShowMathPopover {...props} />);

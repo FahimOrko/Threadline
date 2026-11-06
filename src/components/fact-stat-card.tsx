@@ -21,12 +21,15 @@ export function FactStatCard({ fact }: { fact: Fact }) {
         inputs={[
           { label: "Customer", value: fact.scope.customerName },
           { label: "Period", value: formatPeriod(fact.period) },
-          ...fact.inputs.map((i) => ({
-            label: i.label,
-            value: typeof i.value === "number" ? formatQuantity(i.value, i.unit) : i.value,
-          })),
+          ...fact.inputs
+            .filter((i) => !i.note)
+            .map((i) => ({
+              label: i.label,
+              value: typeof i.value === "number" ? formatQuantity(i.value, i.unit) : i.value,
+            })),
           { label: "Confidence", value: fact.confidence },
         ]}
+        notes={fact.inputs.filter((i) => i.note).map((i) => ({ label: i.label, text: String(i.value) }))}
         assumptionIds={fact.assumptionIds}
         baseline={fact.baseline ?? "not applicable"}
         range={{
