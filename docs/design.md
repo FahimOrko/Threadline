@@ -5,7 +5,7 @@ Read before building UI, together with `docs/conventions.md`. Every new reusable
 ## Principles
 
 - **Calm data, effects elsewhere.** Data views are flat and quiet. Motion, glow and scene art appear only in Story and Impact World.
-- **The thread.** A value is linked to its method, source and formula. The accent-coloured thread line in the ShowMath panel is the signature element.
+- **The thread.** A value is linked to its method, source and formula. The accent-coloured thread line on the Show math popover is the signature element.
 - **Certainty is visible.** Neutral chips mean measured or calculated. Pale amber means less certain. A value with several methods takes the tint of its least certain one. Colour is never the only signal: every chip has a label and a glyph.
 - **Dark by default, light for projectors.** Both themes use the same token names and both must pass contrast checks.
 - **One of each.** One accent (teal), one icon family (Phosphor, regular weight), one radius scale, one type pair.
@@ -45,15 +45,14 @@ Update this list with every new reusable component.
 | ThemeProvider | `src/components/theme-provider.tsx` | `next-themes`, class on `<html>`, dark default |
 | ThemeToggle | `src/components/theme-toggle.tsx` | Dark and light switch in the header |
 | ProvenanceChip | `src/components/provenance-chip.tsx` | Method and source with glyph, least-certain-wins tint. Never wider than its container: method and source wrap onto separate lines, each label stays on one line. Narrowest supported container: 11rem. `compact` variant: method glyphs only in the same tint, a focusable button whose accessible name and tooltip (hover and focus) read "Method, Source"; use where the full chip would not fit, e.g. table headers, and put the full text in Show math |
-| ShowMath | `src/components/show-math.tsx` | Formula, inputs, assumption IDs, baseline, range, thread line |
 | Panel | `src/components/panel.tsx` | Bordered container, 8px radius |
 | SectionHeader | `src/components/section-header.tsx` | Title, optional description and actions |
 | Badge | `src/components/badge.tsx` | Small status label |
 | Tooltip | `src/components/tooltip.tsx` | Short hint on hover and focus |
 | StatCard | `src/components/stat-card.tsx` | Label, mono value, ProvenanceChip slot |
-| FactStatCard | `src/components/fact-stat-card.tsx` | Maps an engine Fact to StatCard, ProvenanceChip and ShowMath. Formats via `src/lib/format`; low/high read "not yet modelled" when the Fact has none |
+| FactStatCard | `src/components/fact-stat-card.tsx` | Maps an engine Fact to StatCard, ProvenanceChip and ShowMathPopover. Formats via `src/lib/format`; low/high read "not yet modelled" when the Fact has none |
 | SiteTable, SiteTableSkeleton | `src/components/site-table.tsx` | One row per site; each numeric header has a compact ProvenanceChip and its own Show math (columns differ in method). Header Show math opens as a popover so the table never reflows; fits 1280px without scrolling and scrolls sideways only below about 40rem. Empty state built in |
-| Popover, ShowMathPopover | `src/components/ui/popover.tsx`, `src/components/show-math.tsx` | shadcn Popover on base-ui. `ShowMathPopover` is ShowMath as a floating panel for table headers (inline `ShowMath` stays on cards). One open at a time, closes on Esc and outside click, never changes layout |
+| Popover, ShowMathPopover | `src/components/ui/popover.tsx`, `src/components/show-math.tsx` | shadcn Popover on base-ui. `ShowMathPopover` is the only Show math pattern (cards and table headers): formula, inputs, assumption IDs, baseline, range, accent thread line as the left border. One open at a time, closes on Esc and outside click, never changes layout. `align` places it under the trigger |
 | Select | `src/components/ui/select.tsx` | shadcn Select on base-ui. Needs a visible label wired with `aria-labelledby`. Used for the header customer picker |
 | StatCardSkeleton, EmptyState, ErrorState | `src/components/states.tsx` | Loading matches StatCard layout, empty says what to do, error is inline |
 

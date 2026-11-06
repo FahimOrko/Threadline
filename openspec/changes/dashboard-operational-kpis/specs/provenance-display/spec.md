@@ -1,5 +1,22 @@
 # Spec Delta
 
+## MODIFIED Requirements
+
+### Requirement: Show math panel
+A Show math control SHALL open a popover that lists the formula, inputs, assumption IDs, baseline and low/base/high range of a value, and SHALL link them to the value with a thread line in the accent colour. Show math SHALL always open as a popover, on cards and in table headers alike, and SHALL NOT change the size or layout of what it sits in.
+
+#### Scenario: Open the math
+- **WHEN** the user activates a value's "show math" control
+- **THEN** a popover opens showing formula, inputs, assumption IDs, baseline and range, and the card or table around it keeps its size
+
+#### Scenario: Keyboard access
+- **WHEN** the user focuses the control and presses Enter
+- **THEN** the popover opens, the control reports its expanded state to assistive technology, and Esc closes it and returns focus to the control
+
+#### Scenario: Outside click and one at a time
+- **WHEN** a popover is open and the user clicks outside it or opens another Show math
+- **THEN** it closes, so only one is open at a time
+
 ## ADDED Requirements
 
 ### Requirement: Compact provenance chip

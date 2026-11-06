@@ -1,12 +1,12 @@
 import { ProvenanceChip } from "@/components/provenance-chip";
-import { ShowMath } from "@/components/show-math";
+import { ShowMathPopover } from "@/components/show-math";
 import { StatCard } from "@/components/stat-card";
 import type { Fact } from "@/lib/engine";
 import { formatNumber, formatPeriod, formatQuantity } from "@/lib/format";
 
 const NOT_MODELLED = "not yet modelled";
 
-// The only place a Fact becomes StatCard, ProvenanceChip and ShowMath props.
+// The only place a Fact becomes StatCard, ProvenanceChip and ShowMathPopover props.
 export function FactStatCard({ fact }: { fact: Fact }) {
   const { range } = fact;
   return (
@@ -16,7 +16,7 @@ export function FactStatCard({ fact }: { fact: Fact }) {
       unit={fact.unit}
       provenance={<ProvenanceChip methods={fact.methods} source={fact.source} />}
     >
-      <ShowMath
+      <ShowMathPopover
         formula={fact.formula}
         inputs={[
           { label: "Customer", value: fact.scope.customerName },

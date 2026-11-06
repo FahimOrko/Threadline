@@ -184,6 +184,7 @@ Routes (proposal):
   - Signals plus at least 3 rule-based observations
 - **Slice 6: AI chat sidebar**
   - AI assistant with tool calls into the engine, context-aware
+  - Requirement (backlog from Slice 3): on small screens the sidebar is an overlay, so it never squeezes the main area (today a 320px sidebar leaves the main area 0px wide at a 360px viewport)
 - **Slice 7: Review Prep**
   - AI pre-analysis, suggestions list, KAM curation, priorities
 - **Slice 8: Story player**

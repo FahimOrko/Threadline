@@ -44,11 +44,11 @@ The app SHALL provide a Select built on the shadcn Select primitive, with a visi
 - **THEN** it is listed in the component table of `docs/design.md`
 
 ### Requirement: Show math popover
-Show math in table headers SHALL open as a popover built on the shadcn Popover primitive, SHALL be keyboard operable, and SHALL show the same content as inline Show math. Show math on stat cards SHALL stay inline.
+Show math SHALL be a single popover component built on the shadcn Popover primitive, used on stat cards and in table headers, keyboard operable. No inline-expanding Show math SHALL exist.
 
 #### Scenario: Open and close
-- **WHEN** the user activates a header's Show math, then presses Esc or clicks outside
-- **THEN** the popover opens over the page without moving any table cell and then closes
+- **WHEN** the user activates a card's or a header's Show math, then presses Esc or clicks outside
+- **THEN** the popover opens over the page without changing the card or table size and then closes
 
 #### Scenario: One at a time
 - **WHEN** a popover is open and the user opens another header's Show math
@@ -56,4 +56,4 @@ Show math in table headers SHALL open as a popover built on the shadcn Popover p
 
 #### Scenario: In the gallery
 - **WHEN** the user opens `/design`
-- **THEN** the SiteTable is shown with a popover open, and the Popover is listed in `docs/design.md`
+- **THEN** a Show math popover is shown open next to the SiteTable with a popover open, and the Popover is listed in `docs/design.md`

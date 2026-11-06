@@ -1,9 +1,9 @@
 // @vitest-environment jsdom
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it } from "vitest";
 import { ProvenanceChip } from "@/components/provenance-chip";
-import { ShowMath } from "@/components/show-math";
+import { ShowMathPopover } from "@/components/show-math";
 import { chipTone } from "@/lib/provenance";
 
 afterEach(cleanup);
@@ -54,7 +54,7 @@ describe("ProvenanceChip layout", () => {
   });
 });
 
-describe("ShowMath", () => {
+describe("ShowMathPopover", () => {
   const props = {
     formula: "a x b",
     inputs: [{ label: "a", value: "1" }],
@@ -62,18 +62,27 @@ describe("ShowMath", () => {
     baseline: "Local laundry",
     range: { low: "1", base: "2", high: "3" },
   };
-  it("toggles with Enter and reports aria-expanded", async () => {
+  it("opens with Enter, reports aria-expanded, and closes with Esc", async () => {
     const user = userEvent.setup();
-    render(<ShowMath {...props} />);
+    render(<ShowMathPopover {...props} />);
     const btn = screen.getByRole("button", { name: /show math/i });
     expect(btn.getAttribute("aria-expanded")).toBe("false");
     expect(screen.queryByText("A-1")).toBeNull();
     btn.focus();
     await user.keyboard("{Enter}");
+    expect(await screen.findByText("A-1")).toBeTruthy();
     expect(btn.getAttribute("aria-expanded")).toBe("true");
-    expect(screen.getByText("A-1")).toBeTruthy();
-    await user.keyboard("{Enter}");
+    await user.keyboard("{Escape}");
+    await waitFor(() => expect(screen.queryByText("A-1")).toBeNull());
     expect(btn.getAttribute("aria-expanded")).toBe("false");
+  });
+  it("closes on an outside click", async () => {
+    const user = userEvent.setup();
+    render(<ShowMathPopover {...props} />);
+    await user.click(screen.getByRole("button", { name: /show math/i }));
+    expect(await screen.findByText("A-1")).toBeTruthy();
+    await user.click(document.body);
+    await waitFor(() => expect(screen.queryByText("A-1")).toBeNull());
   });
 });
 

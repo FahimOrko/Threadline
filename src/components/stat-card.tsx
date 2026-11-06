@@ -1,6 +1,6 @@
 import { Panel } from "@/components/panel";
 
-// Slots: `provenance` takes a ProvenanceChip, children take a ShowMath.
+// Slots: `provenance` takes a ProvenanceChip, children take a ShowMathPopover.
 export function StatCard({
   label,
   value,

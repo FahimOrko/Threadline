@@ -36,6 +36,7 @@ export function SiteTable({ table, openColumn }: { table: SiteRows; openColumn?:
                     </span>
                     <ProvenanceChip compact methods={c.methods} source={c.source} />
                     <ShowMathPopover
+                      align="end"
                       defaultOpen={openColumn === k}
                       formula={c.formula}
                       inputs={[

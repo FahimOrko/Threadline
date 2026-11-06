@@ -28,9 +28,10 @@ describe("FactStatCard", () => {
     expect(container.textContent).toContain("Synthetic");
   });
   it("opens Show math with formula, inputs, assumption and a missing range", async () => {
-    const { container } = render(<FactStatCard fact={fact} />);
+    render(<FactStatCard fact={fact} />);
     await userEvent.click(screen.getByRole("button", { name: /show math/i }));
-    const t = container.textContent ?? "";
+    await screen.findByText("sum of repair_count");
+    const t = document.body.textContent ?? "";
     expect(t).toContain("sum of repair_count");
     expect(t).toContain("NorthStar Foods Group");
     expect(t).toContain("2025-01 to 2025-12");

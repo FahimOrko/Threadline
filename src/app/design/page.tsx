@@ -8,7 +8,7 @@ import { Panel } from "@/components/panel";
 import { ProvenanceChip } from "@/components/provenance-chip";
 import { SiteTable, SiteTableSkeleton } from "@/components/site-table";
 import { SectionHeader } from "@/components/section-header";
-import { ShowMath } from "@/components/show-math";
+import { ShowMathPopover } from "@/components/show-math";
 import { StatCard } from "@/components/stat-card";
 import { EmptyState, ErrorState, StatCardSkeleton } from "@/components/states";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -105,7 +105,9 @@ export default function DesignPage() {
         </div>
         <Panel className="space-y-2">
           <SampleLabel />
-          <ShowMath {...sampleMath} />
+          <div className="min-h-72">
+            <ShowMathPopover {...sampleMath} defaultOpen />
+          </div>
         </Panel>
       </section>
 
@@ -127,7 +129,7 @@ export default function DesignPage() {
         <div className="space-y-2">
           <h3 className="text-sm font-medium">FactStatCard</h3>
           <p className="max-w-[65ch] text-sm text-muted-foreground">
-            Maps an engine Fact to StatCard, ProvenanceChip and ShowMath. Low and high read &quot;not yet modelled&quot; until sensitivity exists.
+            Maps an engine Fact to StatCard, ProvenanceChip and ShowMathPopover. Low and high read &quot;not yet modelled&quot; until sensitivity exists.
           </p>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <FactStatCard fact={sampleFact} />

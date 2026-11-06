@@ -35,6 +35,12 @@ Read first: `docs/conventions.md`, `docs/adr/README.md` (ADRs 0002, 0004, 0005, 
 - [x] 4b.2 Show the table with an open popover in `/design` and list Popover and ShowMathPopover in `docs/design.md`. Verify: `/design` renders it; `npm run check:design-imports` passes.
 - [x] 4b.3 Check in a real browser at 1280px: the table has no horizontal scroll, all four numeric columns are visible, the popover opens, closes on Esc and outside click, and does not move the table.
 
+## 4c. One Show math pattern (added after review)
+
+- [x] 4c.1 Remove the inline `ShowMath`; `ShowMathPopover` (default `align="start"`, table headers pass `end`) is the only Show math. Use it in `FactStatCard`; update the ShowMath tests (open with Enter, Esc, outside click) and the FactStatCard test. Verify: `npm test` passes.
+- [x] 4c.2 Update `/design` (open Show math popover in the Provenance panel, FactStatCard text) and `docs/design.md` (drop the ShowMath row, ShowMathPopover is the only pattern). Verify: `/design` renders; `npm run check:design-imports` passes.
+- [x] 4c.3 Check in a real browser: card popovers open and close with mouse, Enter and Esc; card heights do not change; both themes; no console errors. Verify: observations recorded in the final report.
+
 ## 5. Dashboard page
 
 - [x] 5.1 Rewrite `src/app/dashboard/page.tsx` as an async server component: await `searchParams`, call `resolveCustomer`, show the fallback notice when a value was rejected, keep the period constant in one place, render `operationalFacts` through `FactStatCard` and `operationalSiteRows` through `SiteTable`. No arithmetic in the page. Verify: `npm run build` passes and `npm run lint` is clean.
