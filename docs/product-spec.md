@@ -519,7 +519,8 @@ All data is 2025, monthly, 100% synthetic.
   - Story JSON generated as a structured object validated against the Story Zod schema
   - Version pinned in package.json and recorded in an ADR, with a link to the matching docs in CLAUDE.md, so agents do not mix syntax from other major versions
 - **OpenRouter free models only**, no paid fallback
-  - Model ID in an env var (`OPENROUTER_MODEL`) so a different free model can be switched in seconds if one is slow or down
+  - Model IDs in an env var (`OPENROUTER_MODELS`): a comma-separated priority list of free models, all ending in `:free`. Passed to OpenRouter's `models` array or tried in order, so a slow or down model falls through to the next, and the list can be changed in seconds.
+  - `AI_MAX_TOOL_STEPS` (default 3) caps tool-call steps per request, to protect the 20 requests/minute free limit
   - Pick models that support tool calling
   - Free models have rate limits and can be unavailable. Rule-based observations and the template story keep the demo working without the AI.
 
@@ -689,7 +690,7 @@ All data is 2025, monthly, 100% synthetic.
 - Seed ADRs 0001 to 0007, the ADR index, `docs/conventions.md` and the seed runbooks
 - Base dependencies: zod, zustand, papaparse, tsx and vitest (dev). Add others (recharts, three, framer-motion, AI SDK, pptxgenjs) in the slice that needs them
 - npm scripts: `data:build`, `test`, `dev`, `build`
-- `.env.example` with `OPENROUTER_API_KEY` and `OPENROUTER_MODEL`, real values only in `.env.local` and Vercel
+- `.env.example` with `OPENROUTER_API_KEY`, `OPENROUTER_MODELS` and `AI_MAX_TOOL_STEPS`, real values only in `.env.local` and Vercel
 - App shell with shadcn components: header (customer picker, baseline, toggle placeholders), view switcher, empty collapsible sidebar, empty view pages
 - Zustand store with `role` and persist working
 - Link the repo to Vercel and deploy the empty shell
