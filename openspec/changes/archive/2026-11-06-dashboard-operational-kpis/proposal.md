@@ -38,3 +38,15 @@ Out of scope: money cards, percentages, footprint, baseline selector, site drill
 - Docs: `docs/design.md`, `docs/conventions.md`, `docs/runbooks/rebuild-data.md`, new ADRs and `docs/adr/README.md`.
 - Tests: Vitest for schema, pipeline, each engine function, the fallback logic and the new components.
 - New dependency: none expected; the shadcn Select sits on the already installed `@base-ui/react`. The shadcn CLI adds `ui/select.tsx` during apply.
+
+## Done when
+
+- `npm run data:build` loads `service_activity` (1,248 rows, 0 invalid) and a header mismatch fails the build.
+- NorthStar shows 24 sites, 9,607 active wearers (Show math explains the pack's 28,367), 31,743 garments, 15,233 repairs, 15,233 replacements postponed, 515 service requests and the per-100-wearers (Dec) rate, each with provenance and Show math.
+- The 24 site rows sum to 9,607, 31,743, 15,233 and 515; headers carry per-column compact chips (wearers CALCULATED, others MEASURED); rows have no drill-down links; the table fits 1280px without horizontal scroll.
+- The header picker sets `?customer=`; an unknown value shows NorthStar with a notice and the picker agrees; view links keep the customer; the period is fixed at 2025.
+- Show math is one popover pattern on cards and table headers, opens and closes by mouse, Enter, Esc and outside click without changing layout, and stays on screen.
+- Cards and table are identical in the KAM and Customer roles; the browser never fetches the generated JSON.
+- Select, compact chip (with stress case), SiteTable and the popover are in `/design` and `docs/design.md`.
+- ADRs 0014 and 0015, the ADR index, conventions and the rebuild runbook are updated.
+- `npm run data:build`, `npm test`, `npm run lint`, `npm run build`, both `check:*` scripts and `openspec validate --strict` pass.
