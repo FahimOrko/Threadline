@@ -1,4 +1,4 @@
-# Lindström Customer Value Review: Product Spec
+# Threadline: Product Spec
 
 Single source of truth for the build. Since AI Hackathon 2026, Turku, 6 to 8 Nov. Solo build with Next.js, npm, Claude Code and OpenSpec.
 
@@ -6,7 +6,7 @@ Single source of truth for the build. Since AI Hackathon 2026, Turku, 6 to 8 Nov
 
 ## TL;DR (read this first)
 
-- **What we build**: a web app that turns Lindström's scattered, multi-site customer data into one clear "value we created for you" story for annual steering-committee meetings.
+- **What we build**: Threadline, a web app that turns Lindström's scattered, multi-site customer data into one clear "value we created for you" story for annual steering-committee meetings.
 - **Who uses it**: the Key Account Manager (KAM) prepares and presents. The customer can explore the same page during or after the meeting. A simple toggle in the header switches between the two views, no logins or permissions.
 - **AI first, KAM decides**: the data is already there before the meeting. The AI analyses it, flags problems and suggests what belongs in the review. The KAM keeps, drops, edits or adds points.
 - **Layout**: one app with an AI chat sidebar on the right and three switchable views: **Dashboard**, **Impact World** (3D) and **Story**.
@@ -29,6 +29,7 @@ Single source of truth for the build. Since AI Hackathon 2026, Turku, 6 to 8 Nov
 - The KAM workflow (AI suggests, KAM decides)
 - Demo story
 - App layout and views
+- Design system
 - Scope and slices
 - Data
 - Provenance model
@@ -146,6 +147,22 @@ Routes (proposal):
 
 ---
 
+## Design system
+
+> **In short:** One distinctive, futurist look with calm, minimal data views. `docs/design.md` holds the rules and `/design` shows every component live.
+
+- **Direction**: futurist and distinctive, not generic. Data views (Dashboard, Review Prep, Methodology, Data readiness) stay calm and minimal. Visual effects (motion, glow, 3D, scene art) appear only in Story and Impact World.
+- **`docs/design.md`**: principles, design tokens (palette, type, spacing, radius) and the component list. Agents read it before building UI.
+- **`/design` route**: a living gallery of every reusable component, in all its states. It is the visual source of truth and the first place to check a component before building a new one.
+- **Rule**: every new reusable component is added to `/design` and to `docs/design.md` in the same change.
+- **Skills**
+  - `minimalist-ui`: data views and structure
+  - `design-taste-frontend`: palette, type tokens, anti-generic rules and its browser checker
+  - Ignore the marketing-page parts of `design-taste-frontend` (one section per screen, hero layouts, photographs, closing footer). This is an app, not a landing page.
+  - Install steps: `docs/runbooks/install-design-skills.md`
+
+---
+
 ## Scope and slices
 
 > **In short:** Slice 0 is setup. Then one end-to-end slice at a time. Story comes before Impact World because the exported review is a mandatory deliverable.
@@ -153,33 +170,36 @@ Routes (proposal):
 ### MVP slices (in build order)
 
 - **Slice 0: project setup** (see the setup section)
-- **Slice 1: data pipeline plus one KPI end to end**
+- **Slice 1: design foundation**
+  - `docs/design.md`, design tokens, base components and the `/design` gallery (see Design system)
+  - Why before data: every later slice builds UI from these components
+- **Slice 2: data pipeline plus one KPI end to end**
   - CSV to validated JSON, engine, one KPI card on the dashboard with provenance chip and "show math"
   - Why first: proves the whole pipeline, every later slice reuses it
-- **Slice 2: core dashboard**
+- **Slice 3: core dashboard**
   - Core KPIs, money and percentage cards, footprint including delivery, customer overview and site drill-down
-- **Slice 3: baseline and sensitivity**
+- **Slice 4: baseline and sensitivity**
   - Baseline selector and low/base/high, all values recompute
-- **Slice 4: garment signals and observation rules**
+- **Slice 5: garment signals and observation rules**
   - Signals plus at least 3 rule-based observations
-- **Slice 5: AI chat sidebar**
+- **Slice 6: AI chat sidebar**
   - AI assistant with tool calls into the engine, context-aware
-- **Slice 6: Review Prep**
+- **Slice 7: Review Prep**
   - AI pre-analysis, suggestions list, KAM curation, priorities
-- **Slice 7: Story player**
+- **Slice 8: Story player**
   - Story generation, data-bound tokens, visual-novel player
-- **Slice 8: data overlay and control panel**
+- **Slice 9: data overlay and control panel**
   - Edits stored in the browser, live updates across views and the story
-- **Slice 9: exports**
+- **Slice 10: exports**
   - PDF (print route) and PPTX (pptxgenjs) from the story JSON
-- **Slice 10: Impact World**
+- **Slice 11: Impact World**
   - Tanks first, then the other zones
-- **Slice 11: Methodology and Data readiness pages**
+- **Slice 12: Methodology and Data readiness pages**
 
 ### Later scope
 
 - Month replay / time-skip simulation with alerts into a draft-email inbox
-- Dummy scenario injection presets (if not done in Slice 8)
+- Dummy scenario injection presets (if not done in Slice 9)
 - Extended KPI catalogue
 - Site map of Finland coloured by risk
 - Prior-year dummy data for year-over-year trends

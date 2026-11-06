@@ -28,7 +28,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen flex-col">
       <header className="flex flex-wrap items-center gap-3 border-b px-4 py-2">
-        <span className="font-semibold">Customer Value Review</span>
+        <span className="font-semibold">Threadline</span>
         <Button variant="outline" size="sm" disabled>
           Customer: not selected
         </Button>

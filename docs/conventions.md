@@ -10,6 +10,10 @@ Read before coding, together with `docs/adr/README.md`. Add a new convention her
 ## Naming
 - Files and folders: kebab-case. React components: PascalCase exports. Zustand stores: `use<Name>Store`.
 
+## UI
+- Before building UI, read `docs/design.md` and check `src/components` for an existing component.
+- Every new reusable component is added to the `/design` gallery and to `docs/design.md` in the same change.
+
 ## Numbers and provenance
 - No number is computed outside `src/lib/engine` (ADR 0005).
 - Every displayed value carries provenance: method and source (ADR 0004).

@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Customer Value Review",
+  title: "Threadline",
   description: "Annual value review for Lindström customers",
 };
 

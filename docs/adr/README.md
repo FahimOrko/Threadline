@@ -14,3 +14,4 @@ Template: Title, Status (accepted / superseded), Date, Context, Decision, Conseq
 | [0006](0006-ai-sdk-openrouter-free.md) | Vercel AI SDK with OpenRouter free models | accepted | Free models only, version pinned, key server-only |
 | [0007](0007-spec-vision-vs-built.md) | Product spec is the vision, `openspec/specs/` is built truth | accepted | Planned and built never mix |
 | [0008](0008-src-directory-layout.md) | Code lives in `src/` | accepted | `@/` alias maps to `./src/*` |
+| [0009](0009-app-name-threadline.md) | App name is Threadline | accepted | Replaces the working title "Customer Value Review" |
