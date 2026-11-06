@@ -1,7 +1,10 @@
-user_type,prompt,expected_output
-KAM,Show the value created for NorthStar Foods Group in 2025.,Executive value summary
-KAM,Focus on water and emissions for the food-industry sites.,Priority-personalized dashboard
-KAM,Which sites have the greatest textile-allocation optimization potential?,Outlier analysis
-Customer,How can we improve our performance next year?,Recommendations and steering questions
-Customer,Compare our circular service with local laundry.,Baseline comparison
-KAM,Prepare five discussion points for the annual steering committee.,Customer-ready narrative
+industry,priority_rank,priority_theme,dashboard_emphasis
+Food & Beverage,1,Hygiene and compliance,"Show service continuity, food-industry garment control and hygiene-related performance."
+Food & Beverage,2,Water efficiency,Prioritize water use/savings and washed-kg efficiency.
+Food & Beverage,3,Service reliability,"Highlight turnaround, service-request-free days and delivery performance."
+Manufacturing,1,Cost and allocation efficiency,"Highlight unused allocation, garments per wearer and optimization potential."
+Manufacturing,2,Repair and lifetime,"Highlight repairs, postponed replacements and circularity value."
+Manufacturing,3,Safety and availability,Highlight product/service reliability and exception signals.
+Healthcare,1,Hygiene and traceability,"Prioritize garment flow, service-cycle completion and traceability."
+Healthcare,2,Service continuity,Highlight turnaround and reliable availability.
+Healthcare,3,Compliance-ready evidence,"Highlight transparent sources, data quality and reporting boundaries."

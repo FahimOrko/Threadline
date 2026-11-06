@@ -1,9 +1,7 @@
-assumption_id,assumption,value_or_rule,rationale,category,confidence,treatment
-A001,Default comparison baseline,Outsourced local laundry,Local laundry is the default; user may select home or in-house.,Business decision,Medium,Editable
-A002,Repair handprint,1 completed repair postpones 1 replacement event,Prototype assumption; not an audited avoided-purchase claim.,Handprint,Low-Medium,Sensitivity-test
-A003,Waste attribution,Laundry waste allocated by customer share of washed kg,Source waste is laundry-level; customer result is estimated.,Waste,Medium,Required disclosure
-A004,Waste baseline,100% mixed-waste treatment in baseline,Illustrative linear scenario; adjust by market where evidence exists.,Handprint,Low-Medium,Editable
-A005,Product footprint,Synthetic kgCO2e values by product,"Structurally representative only, not approved product footprints.",Product,Low,Replace for production
-A006,Customer hierarchy,Synthetic parent customer/site hierarchy,Hackathon demonstrates value of hierarchy; does not solve enterprise master data.,Architecture,High,Prototype
-A007,Industry emphasis,Rules use customer industry and stated priority,Industry rules guide display; they do not provide legal advice.,Personalization,Medium,Review
-A008,Data status,Every output retains source/status label,"Measured, calculated, allocated, estimated and synthetic must remain visible.",Credibility,High,Mandatory
+product_id,product_name,product_group,avg_weight_kg,synthetic_product_footprint_kgco2e,synthetic_purchase_cost_eur,material_note
+P1001,Work Jacket Standard,Jackets,0.85,18.5,54,poly-cotton
+P1002,Work Trouser Standard,Trousers,0.62,13.2,39,poly-cotton
+P1003,High-Visibility Jacket,Hi-Vis,0.95,24.8,78,polyester blend
+P1004,Food Industry Coat,Food Industry,0.55,11.4,34,poly-cotton
+P1005,Healthcare Tunic,Healthcare,0.38,8.2,28,poly-cotton
+P1006,Protective Coverall,Coveralls,1.15,29.0,92,poly-cotton

@@ -1,10 +1,4 @@
-industry,priority_rank,priority_theme,dashboard_emphasis
-Food & Beverage,1,Hygiene and compliance,"Show service continuity, food-industry garment control and hygiene-related performance."
-Food & Beverage,2,Water efficiency,Prioritize water use/savings and washed-kg efficiency.
-Food & Beverage,3,Service reliability,"Highlight turnaround, service-request-free days and delivery performance."
-Manufacturing,1,Cost and allocation efficiency,"Highlight unused allocation, garments per wearer and optimization potential."
-Manufacturing,2,Repair and lifetime,"Highlight repairs, postponed replacements and circularity value."
-Manufacturing,3,Safety and availability,Highlight product/service reliability and exception signals.
-Healthcare,1,Hygiene and traceability,"Prioritize garment flow, service-cycle completion and traceability."
-Healthcare,2,Service continuity,Highlight turnaround and reliable availability.
-Healthcare,3,Compliance-ready evidence,"Highlight transparent sources, data quality and reporting boundaries."
+customer_id,customer_name,industry,segment,hq_country,priority_topics,data_status
+CUST001,NorthStar Foods Group,Food & Beverage,Strategic High Value,Finland,Water efficiency|Hygiene|Service continuity|Scope 3 evidence,SYNTHETIC
+CUST002,Apex Industrial Systems,Manufacturing,High Value,Sweden,Cost optimization|Garment utilization|Repair|Safety,SYNTHETIC
+CUST003,Mediora Health Network,Healthcare,High Value,Poland,Hygiene|Compliance|Traceability|Service reliability,SYNTHETIC

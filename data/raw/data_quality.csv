@@ -1,4 +1,8 @@
-baseline_id,baseline_name,selection_status,water_l_per_kg,energy_kwh_per_kg,process_kgco2e_per_kg,delivery_kgco2e_per_kg,mixed_waste_share,assumption_note
-B_LOCAL,Outsourced local laundry,DEFAULT,9.5,1.05,0.62,0.035,1,No systematic repair; textile waste assumed mixed waste. Values illustrative.
-B_HOME,Home washing,OPTION,20.0,1.18,0.78,0.0,1,53% load-utilization concept; no centralized delivery; no systematic repair. Values illustrative.
-B_INHOUSE,In-house customer laundry,OPTION,12.5,1.12,0.68,0.015,1,Customer-operated laundry scenario; no systematic repair. Values illustrative.
+dataset,fields,status,confidence,note
+Customers,customer_id/site_id/industry,SYNTHETIC,High,Complete fictional master data
+Service_Activity,wearers/allocation/washing,SYNTHETIC_STRUCTURAL,Medium,Patterns informed by available Tableau structures
+Service_Cycles,scan timestamps/cycle hours,SYNTHETIC_STRUCTURAL,Medium,No personal or real asset identifiers
+Repairs,repair count/type/product/site,SYNTHETIC_STRUCTURAL,Medium,Granularity validated by report structure
+Laundry_Resources,water/energy/emissions,SYNTHETIC_FACTOR,Medium,Scenario values patterned on calculator structure
+Waste_Circularity,treatment routes,SYNTHETIC_STRUCTURAL,Medium,Laundry-level allocation logic retained
+Customer_Impacts,allocated footprint/handprint,CALCULATED_ESTIMATE,Low-Medium,Depends on baseline and allocation assumptions

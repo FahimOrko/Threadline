@@ -1,8 +1,7 @@
-dataset,fields,status,confidence,note
-Customers,customer_id/site_id/industry,SYNTHETIC,High,Complete fictional master data
-Service_Activity,wearers/allocation/washing,SYNTHETIC_STRUCTURAL,Medium,Patterns informed by available Tableau structures
-Service_Cycles,scan timestamps/cycle hours,SYNTHETIC_STRUCTURAL,Medium,No personal or real asset identifiers
-Repairs,repair count/type/product/site,SYNTHETIC_STRUCTURAL,Medium,Granularity validated by report structure
-Laundry_Resources,water/energy/emissions,SYNTHETIC_FACTOR,Medium,Scenario values patterned on calculator structure
-Waste_Circularity,treatment routes,SYNTHETIC_STRUCTURAL,Medium,Laundry-level allocation logic retained
-Customer_Impacts,allocated footprint/handprint,CALCULATED_ESTIMATE,Low-Medium,Depends on baseline and allocation assumptions
+step,builder_action,key_sheets,output
+1,Load master data and choose customer/site hierarchy.,"Customers, Sites, Products, Laundries",Customer context
+2,"Aggregate operational data by customer, site, product and month.","Service_Activity, Service_Cycles, Repairs",Operational KPIs
+3,Calculate footprint and handprint with selected baseline.,"Laundry_Resources, Waste_Circularity, Baselines, Customer_Impacts",Transparent impacts
+4,Use industry and user prompt to prioritize content.,"Industry_Priorities, Suggested_Prompts",Dynamic dashboard
+5,"Generate observations and actions, retaining data status.","Data_Quality, Assumptions",Credible recommendations
+6,Export customer-ready annual review.,Sample_Output plus dashboard,PowerPoint/PDF
