@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Badge } from "@/components/badge";
+import { FactStatCard } from "@/components/fact-stat-card";
 import { Panel } from "@/components/panel";
 import { ProvenanceChip } from "@/components/provenance-chip";
 import { SectionHeader } from "@/components/section-header";
@@ -11,7 +12,7 @@ import { EmptyState, ErrorState, StatCardSkeleton } from "@/components/states";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Tooltip } from "@/components/tooltip";
 import { METHODS, SOURCES } from "@/lib/provenance";
-import { SAMPLE_LABEL, sampleMath, sampleStats, stressChip } from "./_sample/data";
+import { SAMPLE_LABEL, sampleFact, sampleMath, sampleStats, stressChip } from "./_sample/data";
 
 const sections = ["Tokens", "Provenance", "Data display", "Controls", "States", "Effects"];
 const tokenNames = [
@@ -90,6 +91,15 @@ export default function DesignPage() {
               provenance={<ProvenanceChip methods={[...s.methods]} source={s.source} />}
             />
           ))}
+        </div>
+        <div className="space-y-2">
+          <h3 className="text-sm font-medium">FactStatCard</h3>
+          <p className="max-w-[65ch] text-sm text-muted-foreground">
+            Maps an engine Fact to StatCard, ProvenanceChip and ShowMath. Low and high read &quot;not yet modelled&quot; until sensitivity exists.
+          </p>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <FactStatCard fact={sampleFact} />
+          </div>
         </div>
         <div className="space-y-2">
           <h3 className="text-sm font-medium">Stress test</h3>

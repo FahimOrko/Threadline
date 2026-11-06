@@ -6,6 +6,7 @@ Read before coding, together with `docs/adr/README.md`. Add a new convention her
 - Code lives in `src/`: `app/` (routes), `components/` (`ui` is shadcn), `lib/`, `store/`. Import with the `@/` alias.
 - `lib/engine` computes numbers, `lib/data` loads and validates data, `lib/ai` holds AI client, tools and prompts.
 - Source CSVs in `data/raw/`, generated JSON in `data/generated/`, tests in `tests/`.
+- `data/generated/` is built by `predev` and `prebuild` and never committed (ADR 0013). Load it only in server components, through `src/lib/data/generated.ts`.
 
 ## Naming
 - Files and folders: kebab-case. React components: PascalCase exports. Zustand stores: `use<Name>Store`.
@@ -20,6 +21,7 @@ Read before coding, together with `docs/adr/README.md`. Add a new convention her
 ## Numbers and provenance
 - No number is computed outside `src/lib/engine` (ADR 0005).
 - Every displayed value carries provenance: method and source (ADR 0004).
+- The engine is pure and isomorphic: data in as an argument, no `fs` or server-only imports, raw numbers and a unit out. Display strings come from `src/lib/format`.
 - The AI never writes digits; it uses fact tokens.
 
 ## Testing

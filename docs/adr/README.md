@@ -17,3 +17,5 @@ Template: Title, Status (accepted / superseded), Date, Context, Decision, Conseq
 | [0009](0009-app-name-threadline.md) | App name is Threadline | accepted | Replaces the working title "Customer Value Review" |
 | [0010](0010-design-sample-data-exception.md) | Sample data exists only inside /design | accepted | Labelled strings, never imported elsewhere |
 | [0011](0011-theme-tokens-icons.md) | Theme, tokens and icons | accepted | next-themes, CSS-variable tokens, Phosphor, contrast script |
+| [0012](0012-header-mismatch-fails-build.md) | A column mismatch fails the data build | accepted | CSV headers are compared as a set with the dictionary sheet |
+| [0013](0013-generated-data-built-not-committed.md) | Generated data is built, not committed | accepted | `predev` and `prebuild` run `data:build`; `data/generated/` is ignored |

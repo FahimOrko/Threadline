@@ -1,0 +1,29 @@
+import { describe, expect, it } from "vitest";
+import { repairSchema } from "@/lib/data/schemas";
+
+const row = {
+  month: "2025-01", customer_id: "CUST001", site_id: "S001", product_id: "P1002", laundry_id: "L001",
+  repair_type: "BUTTON", repair_count: "9", repair_quotient_pct: "0.49",
+  estimated_replacements_postponed: "9", product_footprint_kgco2e: "13.2",
+  estimated_avoided_product_kgco2e: "118.8", data_status: "SYNTHETIC_ESTIMATE",
+};
+
+describe("repairSchema", () => {
+  it("accepts a valid row and turns numbers into numbers", () => {
+    const r = repairSchema.parse(row);
+    expect(r.repair_count).toBe(9);
+    expect(r.product_footprint_kgco2e).toBe(13.2);
+  });
+  it("rejects a non-numeric repair_count with a reason", () => {
+    const r = repairSchema.safeParse({ ...row, repair_count: "abc" });
+    expect(r.success).toBe(false);
+    if (!r.success) expect(r.error.issues[0].path).toEqual(["repair_count"]);
+  });
+  it("rejects a blank number instead of reading it as 0", () => {
+    expect(repairSchema.safeParse({ ...row, repair_count: "" }).success).toBe(false);
+  });
+  it("rejects a malformed month and a fractional count", () => {
+    expect(repairSchema.safeParse({ ...row, month: "2025-13" }).success).toBe(false);
+    expect(repairSchema.safeParse({ ...row, repair_count: "1.5" }).success).toBe(false);
+  });
+});

@@ -23,7 +23,9 @@ data/raw/*.csv --data:build--> data/generated/{repairs,sites,customers,assumptio
         --> FactStatCard --> src/lib/format --> StatCard + ProvenanceChip + ShowMath
 ```
 
-- **Header check is by column list, in order, against `data_dictionary.csv`.** The dictionary is read at build time, so a re-exported pack is checked against its own definitions. Alternative: hard-coded column lists in Zod only. Rejected: drift between code and pack goes unnoticed. Zod still validates row values.
+- **Header check compares column sets against `data_dictionary.csv`.** A missing expected column or an unknown extra column fails the build; order is ignored. The dictionary is read at build time, so a re-exported pack is checked against its own definitions. Alternative: ordered list. Rejected: a harmless reorder should not block the build, while a renamed or extra column is a real signal. Alternative: hard-coded column lists in Zod only. Rejected: drift between code and pack goes unnoticed. Zod still validates row values.
+- **Generated data is built, not committed.** `prebuild` and `predev` run `data:build`; `data/generated/` is in `.gitignore`; `data/raw/` stays committed. A failing data build stops dev and build. Recorded as ADR 0013. It supersedes the "Base data: `data/generated/*.json`, committed" line in the product spec (the spec itself is not edited, per ADR 0007) and the runbook's "commit the generated JSON" step. ADR 0002 does not mention committing, so it stands.
+- **Tests do not depend on `data/generated/`.** The 15 233 acceptance test runs the pipeline functions in-process on `data/raw/`, so `npm test` works on a clean checkout without a prior build.
 - **Engine takes data as an argument.** No `fs`, no `server-only`, no formatting. Loading happens only in the dashboard server component. This keeps ADR 0005 and lets Slice 9 run the same code in the browser.
 - **Period is `{ from, to }` inclusive month strings** (`"2025-01"`). Months sort as strings, so no date maths.
 - **Computed from `repair_count`.** The pipeline cross-checks `estimated_replacements_postponed` row by row and reports disagreements. Checked on the current pack: 0 of 3 635 rows disagree.
@@ -35,7 +37,8 @@ data/raw/*.csv --data:build--> data/generated/{repairs,sites,customers,assumptio
 
 ## Risks / Trade-offs
 
-- [`data/generated/` not committed breaks `next build`] → generate it in the build script chain and decide tracking in the runbook; tasks verify a clean checkout builds.
-- [Header check too strict for harmless column reordering] → compare as ordered lists on purpose; relax only with a new ADR.
+- [Ignored `data/generated/` is missing on a clean checkout] → `prebuild` and `predev` generate it; tasks verify a clean checkout runs `npm run build`.
+- [Set comparison hides a reordered pack] → accepted: rows are read by column name, so order has no effect on values.
+- [Vercel build needs `data/raw/`] → it stays committed, so `prebuild` works there.
 - [A002 is Low-Medium confidence] → the card is ESTIMATED with the uncertain tint, and Show math names A002.
 - [Only one KPI proves the pipeline thinly] → the Fact shape and adapter are the reusable parts, and Slice 3 adds KPIs without changing them.

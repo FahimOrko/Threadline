@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
-    "data:build": "echo 'data:build is a stub until the data pipeline slice'",
+    "data:build": "tsx scripts/build-data.ts",
+    "predev": "npm run data:build",
+    "prebuild": "npm run data:build",
     "check:contrast": "tsx scripts/check-contrast.ts",
     "check:design-imports": "tsx scripts/check-design-imports.ts"
   },

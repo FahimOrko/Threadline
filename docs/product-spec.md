@@ -569,7 +569,7 @@ All data is 2025, monthly, 100% synthetic.
 
 > **In short:** Base data is static JSON shipped with the app. User changes are stored in the browser as a small overlay that sits on top of the base data. Reset means clearing the overlay.
 
-- **Base data**: `data/generated/*.json`, committed, read-only, deployed with the app
+- **Base data**: `data/generated/*.json`, built by `prebuild` and `predev` and never committed (ADR 0013), read-only, deployed with the app
 - **Overlay in the browser** (Zustand with persist, localStorage)
   - `edits`: value changes keyed by table, row key and field, each labelled MANUAL_EDIT
   - `scenarios`: injected dummy scenarios

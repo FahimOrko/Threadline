@@ -51,6 +51,7 @@ Update this list with every new reusable component.
 | Badge | `src/components/badge.tsx` | Small status label |
 | Tooltip | `src/components/tooltip.tsx` | Short hint on hover and focus |
 | StatCard | `src/components/stat-card.tsx` | Label, mono value, ProvenanceChip slot |
+| FactStatCard | `src/components/fact-stat-card.tsx` | Maps an engine Fact to StatCard, ProvenanceChip and ShowMath. Formats via `src/lib/format`; low/high read "not yet modelled" when the Fact has none |
 | StatCardSkeleton, EmptyState, ErrorState | `src/components/states.tsx` | Loading matches StatCard layout, empty says what to do, error is inline |
 
 ## Contrast

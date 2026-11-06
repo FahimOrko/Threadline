@@ -7,15 +7,23 @@ Turns the source CSVs into validated JSON and a data-quality report, and hands d
 ## ADDED Requirements
 
 ### Requirement: Header verification fails the build
-`npm run data:build` SHALL compare each source file's header row with its sheet definition in `data_dictionary.csv` and SHALL exit non-zero, naming the file and the differing columns, when they differ.
+`npm run data:build` SHALL compare each source file's header columns, as a set, with its sheet definition in `data_dictionary.csv` and SHALL exit non-zero, naming the file and the columns, when an expected column is missing or an unknown column is present. Column order SHALL NOT matter.
 
 #### Scenario: Header matches
 - **WHEN** every file the build reads has the columns its sheet defines
 - **THEN** the build continues and writes its output
 
-#### Scenario: Header mismatch
-- **WHEN** a file's header differs from its sheet, for example a misnamed or re-exported file
-- **THEN** the build exits non-zero, names the file and the missing or extra columns, and writes no JSON
+#### Scenario: Missing column
+- **WHEN** a file lacks a column its sheet defines
+- **THEN** the build exits non-zero, names the file and the missing column, and writes no JSON
+
+#### Scenario: Unknown extra column
+- **WHEN** a file has a column its sheet does not define
+- **THEN** the build exits non-zero and names the file and the extra column
+
+#### Scenario: Different column order
+- **WHEN** a file has exactly the columns its sheet defines, in another order
+- **THEN** the build continues
 
 ### Requirement: Scope of sheets
 The build SHALL read repairs, sites, customers and assumptions, and SHALL NOT schema-validate `readme.csv` or `data_dictionary.csv` as data sheets.
@@ -48,3 +56,14 @@ Data SHALL reach the engine through a `DataSource` interface that returns plain,
 #### Scenario: Engine input
 - **WHEN** a caller asks the adapter for data
 - **THEN** it receives plain objects and no engine code depends on how they were loaded
+
+### Requirement: Generated data is built, not committed
+`data/generated/` SHALL be git-ignored and SHALL be produced by `npm run data:build`, which `npm run dev` and `npm run build` SHALL run first; `data/raw/` SHALL stay committed.
+
+#### Scenario: Clean checkout
+- **WHEN** a developer clones the repo and runs `npm run dev` or `npm run build`
+- **THEN** the data build runs first and the app finds the generated JSON
+
+#### Scenario: Data build fails
+- **WHEN** the data build exits non-zero
+- **THEN** `npm run dev` and `npm run build` stop without starting

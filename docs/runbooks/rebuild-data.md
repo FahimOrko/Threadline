@@ -1,9 +1,15 @@
 # Rebuild data from CSVs
 
-Status: the build script is a stub until the data-pipeline slice.
+`npm run dev` and `npm run build` run `npm run data:build` first (`predev`, `prebuild`). `data/generated/` is git-ignored (ADR 0013).
 
-1. Put the source CSVs in `data/raw/`.
-2. Run `npm run data:build`.
-3. Check that JSON appears in `data/generated/`.
-4. Run `npm test` and `npm run build`.
-5. Commit the generated JSON if the project tracks it.
+## Re-export or replace the pack
+
+1. Put the 19 source CSVs in `data/raw/`, named after their sheets (`repairs.csv`, `sites.csv`, ...).
+2. Check every file holds its own sheet: run `npm run data:build`. It compares each file's columns, as a set, with its sheet in `data_dictionary.csv` and fails naming the file and the missing or unknown columns (ADR 0012). Order does not matter.
+3. If it fails, the export is wrong or the dictionary changed. Fix the export; do not rename files to fit. A faulty manual export once shipped every file under another sheet's name.
+
+## Rebuild
+
+1. Run `npm run data:build`.
+2. Read the one-line summary per file and `data/generated/data-quality.json`: rows read, valid, invalid with reasons, and the repairs cross-check.
+3. Run `npm test` and `npm run build`. Tests run the pipeline on `data/raw/` themselves and do not need `data/generated/`.
