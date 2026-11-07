@@ -12,9 +12,20 @@ const NA = "not applicable";
 
 // Mixed methods per column, so each numeric header carries its own compact chip and Show math.
 /** `openColumn` opens one header's Show math on first render; only the /design gallery uses it. */
-export function SiteTable({ table, openColumn }: { table: SiteRows; openColumn?: SiteColumnKey }) {
+export function SiteTable({
+  table,
+  openColumn,
+}: {
+  table: SiteRows;
+  openColumn?: SiteColumnKey;
+}) {
   if (table.rows.length === 0) {
-    return <EmptyState title="No sites" hint="This customer has no sites in the site master data." />;
+    return (
+      <EmptyState
+        title="No sites"
+        hint="This customer has no sites in the site master data."
+      />
+    );
   }
   return (
     <div className="overflow-x-auto rounded-lg border">
@@ -30,12 +41,23 @@ export function SiteTable({ table, openColumn }: { table: SiteRows; openColumn?:
             {COLUMNS.map((k) => {
               const c = table.columns[k];
               return (
-                <th key={k} scope="col" className="px-2 py-2 text-right text-xs font-medium">
+                <th
+                  key={k}
+                  scope="col"
+                  className="px-2 py-2 text-right text-xs font-medium"
+                >
                   <div className="flex flex-col items-end gap-1">
                     <span>
-                      {c.label} <span className="font-normal text-muted-foreground">({c.unit})</span>
+                      {c.label}{" "}
+                      <span className="font-normal text-muted-foreground">
+                        ({c.unit})
+                      </span>
                     </span>
-                    <ProvenanceChip compact methods={c.methods} source={c.source} />
+                    <ProvenanceChip
+                      compact
+                      methods={c.methods}
+                      source={c.source}
+                    />
                     <ShowMathPopover
                       align="end"
                       defaultOpen={openColumn === k}
@@ -43,11 +65,17 @@ export function SiteTable({ table, openColumn }: { table: SiteRows; openColumn?:
                       inputs={[
                         { label: "Customer", value: table.scope.customerName },
                         { label: "Period", value: formatPeriod(table.period) },
-                        { label: "Method", value: c.methods.map(label).join(", ") },
+                        {
+                          label: "Method",
+                          value: c.methods.map(label).join(", "),
+                        },
                         { label: "Source", value: label(c.source) },
                         ...c.inputs.map((i) => ({
                           label: i.label,
-                          value: typeof i.value === "number" ? formatQuantity(i.value, i.unit) : i.value,
+                          value:
+                            typeof i.value === "number"
+                              ? formatQuantity(i.value, i.unit)
+                              : i.value,
                         })),
                         { label: "Confidence", value: c.confidence },
                       ]}
@@ -91,7 +119,10 @@ export function SiteTableSkeleton() {
     <Panel role="status" aria-label="Loading" className="space-y-2">
       <div className="h-8 w-full rounded-md bg-muted motion-safe:animate-pulse" />
       {[0, 1, 2, 3].map((i) => (
-        <div key={i} className="h-5 w-full rounded-md bg-muted motion-safe:animate-pulse" />
+        <div
+          key={i}
+          className="h-5 w-full rounded-md bg-muted motion-safe:animate-pulse"
+        />
       ))}
     </Panel>
   );
