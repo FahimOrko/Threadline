@@ -11,8 +11,9 @@ export function formatPercent(n: number): string {
   return new Intl.NumberFormat("en-US", { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(n).replaceAll(",", " ");
 }
 
-/** A value for display; the unit "%" selects the percentage rule. */
-export const formatValue = (n: number, unit?: string) => (unit === "%" ? formatPercent(n) : formatNumber(n));
+/** A value for display; the unit "%" and "per 100 garments" select the one-decimal rule. */
+export const formatValue = (n: number, unit?: string) =>
+  unit === "%" || unit === "per 100 garments" ? formatPercent(n) : formatNumber(n);
 
 export const formatPeriod = (p: Period) => (p.from === p.to ? p.from : `${p.from} to ${p.to}`);
 

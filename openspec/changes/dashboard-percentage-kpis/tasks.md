@@ -11,7 +11,7 @@ Read first: `docs/conventions.md`, `docs/adr/README.md` (ADRs 0004, 0005, 0012, 
 
 ## 2. Engine
 
-- [x] 2.1 Add `onTimeCycleRate`, `repairRateByProduct` and `recyclingReuseShare` and a `percentageFacts(data, scope)` list, exported from `src/lib/engine/index.ts`. Verify: `tests/percentage-facts.test.ts` asserts, for NorthStar and a second customer, the values against an independent recomputation from the CSVs, methods, source, assumption IDs (A003, A004 on the waste share only), the "sampled cycles" and "(Dec)" labels, the zero-cycles and zero-allocation omissions, the missing laundry-month backstop error, and customer isolation. A disagreement with the recomputation is reported, never forced.
+- [x] 2.1 Add `onTimeCycleRate`, `repairRateByProduct` and `recyclingReuseShare` and a `percentageFacts(data, scope)` list, exported from `src/lib/engine/index.ts`. Verify: `tests/percentage-facts.test.ts` asserts, for NorthStar and a second customer, the values against an independent recomputation from the CSVs, methods, source, assumption IDs (A003, A004 on the waste share only), the "sampled cycles" and "Repairs per 100 garments (Dec)" labels, unit "per 100 garments" and the repair-events note,, the zero-cycles and zero-allocation omissions, the missing laundry-month backstop error, and customer isolation. A disagreement with the recomputation is reported, never forced.
 
 ## 3. Dashboard
 

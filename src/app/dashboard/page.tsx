@@ -71,7 +71,7 @@ async function DashboardContent({ searchParams }: { searchParams: PageProps<"/da
       <section className="space-y-4">
         <SectionHeader
           title="Percentages"
-          description="On-time rate is over sampled cycles; repair rates are full-year repairs over December pieces; waste share is allocated by washed-kg share."
+          description="On-time rate is over sampled cycles; repairs per 100 garments are full-year repair events over December pieces; waste share is allocated by washed-kg share."
         />
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {percentageFacts(data, scope).map((f) => (

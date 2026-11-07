@@ -1,11 +1,15 @@
 ## ADDED Requirements
 
 ### Requirement: Percentage cards
-The dashboard SHALL show, under a "Percentages" heading, the on-time cycle rate, one repair-rate card per product the customer has, and the recycling and reuse share of textile waste for the selected customer, each with value, provenance chip and Show math. Percentages SHALL print with one decimal. The cards SHALL be identical for the KAM and Customer roles and SHALL follow `?customer=`.
+The dashboard SHALL show, under a "Percentages" heading, the on-time cycle rate, one "Repairs per 100 garments (Dec)" card per product the customer has, and the recycling and reuse share of textile waste for the selected customer, each with value, provenance chip and Show math, identical for the KAM and Customer roles and following `?customer=`.
 
 #### Scenario: Cards for a customer
 - **WHEN** the user opens the dashboard for NorthStar Foods Group
-- **THEN** the section shows the on-time rate (labelled as sampled cycles), a repair-rate card per product labelled "(Dec)", and the recycling and reuse share, each in percent with one decimal
+- **THEN** the section shows the on-time rate (labelled as sampled cycles), a "Repairs per 100 garments (Dec)" card per product (for example 57.2 per 100 garments for Work Jacket Standard, no % sign), and the recycling and reuse share in percent; all with one decimal
+
+#### Scenario: Display rule
+- **WHEN** the cards are shown
+- **THEN** every value has one decimal, and repairs per 100 garments shows "per 100 garments" with no % sign
 
 #### Scenario: Waste share method
 - **WHEN** the user opens Show math on the recycling and reuse share

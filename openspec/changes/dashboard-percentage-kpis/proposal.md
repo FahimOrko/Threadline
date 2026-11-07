@@ -2,7 +2,7 @@
 
 ## Why
 
-The dashboard shows operational and money KPIs but no rates. Slice 3 change 2b adds three percentage KPIs (on-time cycles, repair rate by product, recycling and reuse share of waste). Each needs a sheet the pipeline does not load yet.
+The dashboard shows operational and money KPIs but no rates. Slice 3 change 2b adds three rate KPIs (on-time cycles, repairs per 100 garments by product, recycling and reuse share of waste). Each needs a sheet the pipeline does not load yet.
 
 ## What Changes
 
@@ -13,9 +13,9 @@ The dashboard shows operational and money KPIs but no rates. Slice 3 change 2b a
   - `customer_impacts` (1 248 rows) is pre-aggregated to allocated textile waste per customer, laundry and month, the only column the waste KPI needs. `waste_circularity` (48 rows) is small and ships as validated rows.
 - **Three KPIs**, per customer through `?customer=`, as Facts rendered with the existing `FactStatCard` in a new "Percentages" dashboard section:
   - **On-time cycle rate** = ON_TIME cycles / all cycles. MEASURED, SYNTHETIC. Labelled as a rate over sampled cycles.
-  - **Repair rate by product (Dec)**: one card per product the customer has = full-year repairs / December allocated pieces x 100. Same "(Dec)" labelling as per 100 wearers. CALCULATED, SYNTHETIC.
+  - **Repairs per 100 garments (Dec)**: one card per product the customer has = full-year repairs / December allocated pieces x 100, unit "per 100 garments", no % sign, one decimal. It counts repair events, so one garment can be repaired more than once and the value can exceed 100. Same "(Dec)" labelling and style as service requests per 100 wearers. CALCULATED, SYNTHETIC.
   - **Recycling and reuse share of textile waste** = (recycling + reuse) / total waste at each laundry-month, weighted by the customer's allocated waste kg. ALLOCATED + ESTIMATED, SYNTHETIC, assumptions A003 and A004. The method text says waste is allocated to the customer by washed-kg share.
-- Percentages use the existing one-decimal display rule (`unit: "%"`, `formatPercent`).
+- On-time rate and waste share are percentages (`unit: "%"`, existing one-decimal rule). Repairs per 100 garments uses the same one-decimal rule with its own unit.
 
 Out of scope: utilization (done), dormant tier share and garment signals (Slice 5), footprint and baseline percentages (change 3), `washing_pct`, mobile layout, any use of the other `customer_impacts` columns.
 

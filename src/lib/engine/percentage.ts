@@ -56,14 +56,14 @@ export function repairRateByProduct(data: PercentageData, scope: OperationalScop
     facts.push(
       build(data, scope, {
         id: `repair_rate_${p.product_id}`,
-        label: `Repair rate, ${p.product_name} (Dec)`,
+        label: `Repairs per 100 garments (Dec), ${p.product_name}`,
         value: (reps / allocated) * 100,
-        unit: "%",
+        unit: "per 100 garments",
         methods: ["CALCULATED"],
         source: "SYNTHETIC",
         assumptionIds: [],
         confidence: NO_RATING,
-        formula: "repair rate (Dec) = full-year repairs / December allocated pieces x 100, per product",
+        formula: "repairs per 100 garments (Dec) = full-year repairs / December allocated pieces x 100, per product",
         inputs: [
           { label: "Product", value: `${p.product_id} ${p.product_name}` },
           { label: "Repairs (full year)", value: reps, unit: "repairs" },
@@ -71,7 +71,7 @@ export function repairRateByProduct(data: PercentageData, scope: OperationalScop
           {
             label: "Note",
             note: true,
-            value: "Divides the full-year repair count by the December allocated pieces, so it is an approximation, not a rate for one period.",
+            value: "Counts repair events, so one garment can be repaired more than once and the value can exceed 100. Divides the full-year repair count by the December allocated pieces, so it is an approximation, not a rate for one period.",
           },
         ],
       }),

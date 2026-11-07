@@ -17,6 +17,7 @@ describe("format", () => {
     expect(formatPercent(1234.56)).toBe("1 234.6");
     expect(formatValue(83.5239, "%")).toBe("83.5");
     expect(formatValue(5.358, "per 100 wearers")).toBe("5.36");
+    expect(formatValue(57.171, "per 100 garments")).toBe("57.2");
     expect(formatQuantity(83.5239, "%")).toBe("83.5 %");
   });
   it("adds units and periods", () => {

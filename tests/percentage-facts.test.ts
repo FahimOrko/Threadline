@@ -32,8 +32,9 @@ describe("repairRateByProduct", () => {
       expect.closeTo(48.935, 3),
       expect.closeTo(38.596, 3),
     ]);
-    expect(fs[0]).toMatchObject({ unit: "%", methods: ["CALCULATED"], source: "SYNTHETIC" });
-    expect(fs[0].label).toContain("(Dec)");
+    expect(fs[0]).toMatchObject({ unit: "per 100 garments", methods: ["CALCULATED"], source: "SYNTHETIC" });
+    expect(fs[0].label).toBe("Repairs per 100 garments (Dec), Work Jacket Standard");
+    expect(fs[0].inputs.find((i) => i.note)!.value).toContain("repair events");
     expect(fs[0].inputs).toContainEqual({ label: "Repairs (full year)", value: 5816, unit: "repairs" });
     expect(fs[0].inputs).toContainEqual({ label: "Allocated pieces (Dec)", value: 10173, unit: "pieces" });
   });
@@ -68,7 +69,8 @@ describe("percentageFacts", () => {
   it("lists on-time, repair rates, then waste share, all with provenance", () => {
     const fs = percentageFacts(data, north);
     expect(fs.map((f) => f.id)).toEqual(["on_time_cycle_rate", "repair_rate_P1001", "repair_rate_P1002", "repair_rate_P1004", "recycling_reuse_share"]);
-    for (const f of fs) expect(f).toMatchObject({ unit: "%", scope: { customerId: "CUST001" } });
+    for (const f of fs) expect(f.scope.customerId).toBe("CUST001");
+    expect(fs.map((f) => f.unit)).toEqual(["%", "per 100 garments", "per 100 garments", "per 100 garments", "%"]);
     for (const f of fs) expect(f.methods.length && f.formula).toBeTruthy();
   });
 });
