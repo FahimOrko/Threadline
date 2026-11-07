@@ -55,3 +55,14 @@ describe("AppShell view links", () => {
     expect(screen.getByRole("link", { name: "Story" }).getAttribute("href")).toBe("/story");
   });
 });
+
+describe("AppShell sidebar on narrow screens", () => {
+  it("hides the sidebar, its separator and the toggle below md", () => {
+    const { container } = shell();
+    const aside = screen.getByLabelText("AI assistant", { selector: "aside" });
+    expect(aside.className).toMatch(/\bhidden\b.*\bmd:block\b/);
+    expect(aside.previousElementSibling?.className).toMatch(/\bhidden\b.*\bmd:block\b/);
+    const toggle = container.querySelector('button[aria-label$="AI sidebar"]');
+    expect(toggle?.className).toMatch(/\bhidden\b.*\bmd:inline-flex\b/);
+  });
+});

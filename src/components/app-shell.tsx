@@ -121,6 +121,7 @@ export function AppShell({ children, customers }: { children: React.ReactNode; c
           <Button
             variant="ghost"
             size="icon"
+            className="hidden md:inline-flex"
             aria-label={sidebarOpen ? "Collapse AI sidebar" : "Expand AI sidebar"}
             aria-expanded={sidebarOpen}
             onClick={() => setSidebarOpen((o) => !o)}
@@ -138,8 +139,8 @@ export function AppShell({ children, customers }: { children: React.ReactNode; c
         <main className="min-w-0 flex-1 p-6">{children}</main>
         {sidebarOpen && (
           <>
-            <Separator orientation="vertical" />
-            <aside aria-label="AI assistant" className="w-80 p-4">
+            <Separator orientation="vertical" className="hidden md:block" />
+            <aside aria-label="AI assistant" className="hidden w-80 p-4 md:block">
               <h2 className="font-medium">AI assistant</h2>
               <p className="text-sm text-muted-foreground">Coming soon.</p>
             </aside>
