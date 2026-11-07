@@ -58,7 +58,7 @@ A Show math control SHALL open a popover that lists the formula, inputs, assumpt
 - **THEN** it closes, so only one is open at a time
 
 ### Requirement: Fact stat card
-A FactStatCard SHALL render an engine Fact as a StatCard with its ProvenanceChip and ShowMath, formatting the value and unit for display and taking all provenance from the Fact.
+A FactStatCard SHALL render an engine Fact as a StatCard with its ProvenanceChip and ShowMath, formatting the value and unit for display and taking all provenance from the Fact. A Fact whose value is null SHALL render the StatCard "Needs input" state with the chip and Show math kept.
 
 #### Scenario: Fact rendered
 - **WHEN** a Fact is passed to FactStatCard
@@ -71,6 +71,10 @@ A FactStatCard SHALL render an engine Fact as a StatCard with its ProvenanceChip
 #### Scenario: In the gallery
 - **WHEN** the user opens `/design`
 - **THEN** FactStatCard appears with a fixture Fact labelled as sample data
+
+#### Scenario: Fact without a value
+- **WHEN** a Fact with a null value is passed to FactStatCard
+- **THEN** the card shows "Needs input" instead of a number, and the chip and Show math are still present
 
 ### Requirement: Compact provenance chip
 ProvenanceChip SHALL offer a compact variant that shows only the glyph of each method in the certainty tint, with the full method and source text available in a tooltip and an accessible label. The compact variant SHALL be reachable and operable by keyboard, SHALL show its tooltip on focus as well as on hover, and SHALL NOT rely on colour alone: the glyph and the accessible label carry the method.
