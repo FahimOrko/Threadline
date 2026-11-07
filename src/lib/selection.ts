@@ -21,3 +21,9 @@ export function resolveSensitivity(param: Param): { sensitivity: Sensitivity; re
   const match = SENSITIVITY_LEVELS.find((l) => l === value);
   return match ? { sensitivity: match, rejected: null } : { sensitivity: DEFAULT_SENSITIVITY, rejected: value };
 }
+
+/** Site page link that keeps the customer, baseline and sensitivity the dashboard is showing (ADR 0014, 0017). */
+export function siteHref(siteId: string, params: { customer: string; baseline: string; sensitivity: string }): string {
+  const q = new URLSearchParams(params);
+  return `/dashboard/sites/${encodeURIComponent(siteId)}?${q.toString()}`;
+}

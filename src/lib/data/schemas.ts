@@ -178,6 +178,8 @@ export type Laundry = z.infer<typeof laundrySchema>;
 export type Baseline = z.infer<typeof baselineSchema>;
 /** Build-time aggregate of service_cycles: raw cycles never reach the browser. */
 export type CycleCount = { customer_id: string; site_id: string; cycles: number; on_time: number };
+/** Build-time aggregate of service_cycles: per site, how many pickup gaps (whole days between an asset's consecutive pickups) had each length. Tiers are applied in the engine, never here. */
+export type PickupGaps = { customer_id: string; site_id: string; gaps: Record<string, number> };
 /** Build-time aggregate of customer_impacts: the customer's washed kg and allocated waste per laundry-month. */
 export type ImpactAllocation = { customer_id: string; laundry_id: string; month: string; customer_washed_kg: number; allocated_textile_waste_kg: number };
 export type Customer = z.infer<typeof customerSchema>;
@@ -191,6 +193,7 @@ export type AppData = {
   serviceActivity: ServiceActivity[];
   products: Product[];
   cycleCounts: CycleCount[];
+  pickupGaps: PickupGaps[];
   wasteCircularity: WasteCircularity[];
   impactAllocation: ImpactAllocation[];
   laundryResources: LaundryResource[];

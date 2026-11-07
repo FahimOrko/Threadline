@@ -1,14 +1,15 @@
 import { Suspense } from "react";
 import { FactStatCard } from "@/components/fact-stat-card";
+import { ObservationCard } from "@/components/observation-card";
 import { Panel } from "@/components/panel";
 import { SectionHeader } from "@/components/section-header";
-import { StatCardSkeleton } from "@/components/states";
+import { EmptyState, StatCardSkeleton } from "@/components/states";
 import { SiteTable, SiteTableSkeleton } from "@/components/site-table";
 import { resolveCustomer } from "@/lib/customer";
 import { generatedSource } from "@/lib/data/generated";
-import { baselineShortName, footprintFacts, footprintGroup, operationalFacts, operationalSiteRows, percentageFacts, valueFacts } from "@/lib/engine";
+import { baselineShortName, footprintFacts, footprintGroup, observations as observationsFor, operationalFacts, operationalSiteRows, percentageFacts, valueFacts } from "@/lib/engine";
 import { formatPeriod } from "@/lib/format";
-import { resolveBaseline, resolveSensitivity } from "@/lib/selection";
+import { resolveBaseline, resolveSensitivity, siteHref } from "@/lib/selection";
 
 // Full year 2025, fixed in this version. Every engine call takes it as an argument, so a period picker only changes this.
 const PERIOD = { from: "2025-01", to: "2025-12" };
@@ -44,6 +45,9 @@ async function DashboardContent({ searchParams }: { searchParams: PageProps<"/da
   const { baseline, rejected: badBaseline } = resolveBaseline(params.baseline, data.baselines);
   const { sensitivity, rejected: badSensitivity } = resolveSensitivity(params.sensitivity);
   const short = baselineShortName(baseline);
+  const { observations, facts: observationFacts } = observationsFor(data, scope);
+  const linkParams = { customer: customer.customer_id, baseline: baseline.baseline_id, sensitivity };
+  const siteName = (id: string) => data.sites.find((s) => s.site_id === id)?.site_name ?? id;
   const footprint = footprintFacts(data, scope, baseline, sensitivity);
   const footprintGroups = [
     { title: `Saved vs ${short}`, group: "saved" },
@@ -118,6 +122,26 @@ async function DashboardContent({ searchParams }: { searchParams: PageProps<"/da
             </div>
           </div>
         ))}
+      </section>
+      <section className="space-y-4">
+        <SectionHeader
+          title="Observations"
+          description="Rule-based readings of the data, full year 2025. Thresholds are team assumptions (T003 to T010); open Show math to see them."
+        />
+        {observations.length === 0 ? (
+          <EmptyState title="No observations" hint="No rule fired for this customer." />
+        ) : (
+          <div className="grid gap-3 lg:grid-cols-2">
+            {observations.map((o) => (
+              <ObservationCard
+                key={o.id}
+                observation={o}
+                facts={o.factIds.map((id) => observationFacts.find((f) => f.id === id)!)}
+                sites={o.scope.siteIds.map((id) => ({ siteId: id, siteName: siteName(id), href: siteHref(id, linkParams) }))}
+              />
+            ))}
+          </div>
+        )}
       </section>
       <section className="space-y-4">
         <SectionHeader title="Sites" description="Wearers and garments are December 2025; repairs and requests are the full year." />

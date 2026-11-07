@@ -215,6 +215,22 @@ describe("service_cycles sheet", () => {
     expect(c.info).toBe(true);
     expect(data.cycleCounts[0].cycles).toBe(3);
   });
+  it("builds the pickup-gap histogram from timestamp order, one gap per consecutive pair", () => {
+    const { data } = buildData(
+      withCycles(
+        cycles(
+          cycle("A1", 3, "2025-01-11T00:00:00"), // out of order by cycle number: gaps follow timestamps (10 days, 40 days)
+          cycle("A1", 2, "2025-02-20T00:00:00"),
+          cycle("A1", 1, "2025-01-01T00:00:00"),
+          cycle("A2", 1, "2025-01-05T00:00:00", "ON_TIME", "S002"), // a single pickup adds no gap
+          cycle("A3", 1, "2025-01-01T00:00:00"),
+          cycle("A3", 2, "2025-01-11T12:00:00"), // whole days: 10.5 days counts as 10
+        ),
+      ),
+    );
+    expect(data.pickupGaps).toEqual([{ customer_id: "CUST001", site_id: "S001", gaps: { "10": 2, "40": 1 } }]);
+    expect("serviceCycles" in data).toBe(false);
+  });
   it("rejects an unknown performance flag as an invalid row", () => {
     const { report } = buildData(withCycles(cycles(cycle("A1", 1, "2025-01-01T00:00:00"), cycle("A1", 2, "2025-02-01T00:00:00", "MAYBE"))));
     expect(report.files.serviceCycles).toMatchObject({ read: 2, valid: 1 });
@@ -255,6 +271,10 @@ describe("waste reference", () => {
     const csvKg = readFileSync("data/raw/customer_impacts.csv", "utf8").split("\n").slice(1).filter(Boolean).map((l) => l.split(",")).filter((c) => c[1] === "CUST001").reduce((s, c) => s + Number(c[5]), 0);
     expect(data.impactAllocation.filter((a) => a.customer_id === "CUST001").reduce((s, a) => s + a.customer_washed_kg, 0)).toBeCloseTo(csvKg, 3);
     expect(data.cycleCounts.reduce((s, c) => s + c.cycles, 0)).toBe(16415);
+    const gaps = data.pickupGaps.filter((g) => g.customer_id === "CUST001").flatMap((g) => Object.entries(g.gaps).flatMap(([d, n]) => Array<number>(n).fill(Number(d)))).sort((x, y) => x - y);
+    expect(gaps).toHaveLength(9244);
+    expect(gaps[Math.floor((gaps.length - 1) / 2)]).toBe(49);
+    expect(gaps[gaps.length - 1]).toBe(170);
     expect(report.files.serviceCycles.crossChecks[0].disagreements).toHaveLength(1107);
   });
 });

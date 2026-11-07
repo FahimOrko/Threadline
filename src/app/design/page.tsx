@@ -4,6 +4,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Badge } from "@/components/badge";
 import { FactStatCard } from "@/components/fact-stat-card";
+import { ObservationCard } from "@/components/observation-card";
 import { Panel } from "@/components/panel";
 import { ProvenanceChip } from "@/components/provenance-chip";
 import { SiteTable, SiteTableSkeleton } from "@/components/site-table";
@@ -14,7 +15,7 @@ import { EmptyState, ErrorState, StatCardSkeleton } from "@/components/states";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Tooltip } from "@/components/tooltip";
 import { METHODS, SOURCES } from "@/lib/provenance";
-import { SAMPLE_LABEL, sampleFact, sampleNeedsInputFact, sampleMathWorstCase, sampleStats, sampleSiteTable, stressChip } from "./_sample/data";
+import { SAMPLE_LABEL, sampleFact, sampleNeedsInputFact, sampleMathWorstCase, sampleObservations, sampleSiteLinks, sampleStats, sampleSiteTable, stressChip } from "./_sample/data";
 
 const sections = ["Tokens", "Provenance", "Data display", "Controls", "States", "Effects"];
 const tokenNames = [
@@ -147,6 +148,17 @@ export default function DesignPage() {
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <FactStatCard fact={sampleFact} />
             <FactStatCard fact={sampleNeedsInputFact} />
+          </div>
+        </div>
+        <div className="space-y-2">
+          <h3 className="text-sm font-medium">ObservationCard</h3>
+          <p className="max-w-[65ch] text-sm text-muted-foreground">
+            An engine observation: type and severity as words, text, suggested action, links to flagged sites, and each Fact it rests on with its chip and Show math. Shown: a risk with two site links, a value highlight and a data gap whose Fact needs input.
+          </p>
+          <div className="grid gap-3 lg:grid-cols-3">
+            {sampleObservations.map((s) => (
+              <ObservationCard key={s.observation.id} observation={s.observation} facts={[...s.facts]} sites={s.observation.scope.siteIds.length > 0 ? sampleSiteLinks : []} />
+            ))}
           </div>
         </div>
         <div className="space-y-2">

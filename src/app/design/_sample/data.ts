@@ -1,7 +1,7 @@
 // Sample data for the /design gallery only. Not engine output, never computed.
 // Nothing outside src/app/design/ may import this folder (npm run check:design-imports).
 import type { ShowMathProps } from "@/components/show-math";
-import type { Fact, SiteRows } from "@/lib/engine";
+import type { Fact, Observation, SiteRows } from "@/lib/engine";
 
 export const SAMPLE_LABEL = "sample data, not engine output";
 
@@ -99,3 +99,41 @@ export const sampleSiteTable: SiteRows = {
     requests: sampleColumn("Service requests", "requests", ["MEASURED"], "sample: sum of service requests"),
   },
 };
+
+// Fixtures for ObservationCard. Not engine output.
+const sampleCount = (id: string, label: string, value: number | null, source: Fact["source"] = "ASSUMPTION"): Fact => ({
+  ...sampleFact,
+  id,
+  label,
+  value,
+  unit: "sites",
+  methods: ["CALCULATED"],
+  source,
+  assumptionIds: ["T000"],
+  formula: "sample = count of sites over a sample threshold",
+  inputs: [{ label: "Sample site A", value: "2 Critical, 5 Risk or worse, of 385 gaps" }],
+  range: { low: null, base: value, high: null },
+});
+const sampleObservation = (o: Pick<Observation, "id" | "type" | "severity" | "title" | "text" | "suggestedAction" | "factIds"> & { siteIds: string[] }): Observation => ({
+  audience: "both",
+  scope: { customerId: "SAMPLE", siteIds: o.siteIds },
+  ...o,
+});
+export const sampleObservations = [
+  {
+    observation: sampleObservation({ id: "s_risk", type: "risk", severity: "high", title: "Sample risk: garments left unused", text: "Sample text naming Sample site A and Sample site B. Not engine output.", suggestedAction: "Sample action: raise it with the site manager.", factIds: ["s_f1"], siteIds: ["X1", "X2"] }),
+    facts: [sampleCount("s_f1", "Sites with a sample signal", 2)],
+  },
+  {
+    observation: sampleObservation({ id: "s_value", type: "value", severity: "low", title: "Sample value highlight", text: "Sample text without any flagged site.", suggestedAction: "Sample action: use it as a value point.", factIds: ["s_f2"], siteIds: [] }),
+    facts: [{ ...sampleFact, id: "s_f2" }],
+  },
+  {
+    observation: sampleObservation({ id: "s_gap", type: "gap", severity: "medium", title: "Sample data gap", text: "Sample text: a team assumption is not set.", suggestedAction: "Sample action: ask for the value.", factIds: ["s_f3"], siteIds: [] }),
+    facts: [sampleCount("s_f3", "Sample cost", null)],
+  },
+] as const;
+export const sampleSiteLinks = [
+  { siteId: "X1", siteName: "Sample site A", href: "#" },
+  { siteId: "X2", siteName: "Sample site B", href: "#" },
+];

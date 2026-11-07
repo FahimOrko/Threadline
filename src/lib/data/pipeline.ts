@@ -1,6 +1,6 @@
 // CSV text in, validated data and a data-quality report out. No file access here (the script does IO).
 import Papa from "papaparse";
-import { DEFAULT_BASELINE_ID, SHEETS, type AppData, type CustomerImpact, type CycleCount, type ImpactAllocation, type ServiceCycle } from "./schemas";
+import { DEFAULT_BASELINE_ID, SHEETS, type AppData, type CustomerImpact, type CycleCount, type ImpactAllocation, type PickupGaps, type ServiceCycle } from "./schemas";
 
 export type InvalidRow = { row: number; reason: string };
 export type CrossCheck = {
@@ -120,6 +120,25 @@ function countCycles(cycles: ServiceCycle[]): CycleCount[] {
   return [...by.values()].sort((a, b) => a.customer_id.localeCompare(b.customer_id) || a.site_id.localeCompare(b.site_id));
 }
 
+/** Gaps in whole days between each asset's consecutive pickups, sorted by pickup timestamp (not cycle number); an asset keeps one site in the pack, so a gap belongs to the later pickup's site. */
+function pickupGaps(cycles: ServiceCycle[]): PickupGaps[] {
+  const byAsset = new Map<string, ServiceCycle[]>();
+  for (const c of cycles) byAsset.set(c.asset_id, [...(byAsset.get(c.asset_id) ?? []), c]);
+  const by = new Map<string, PickupGaps>();
+  for (const list of byAsset.values()) {
+    list.sort((a, b) => Date.parse(a.pickup_timestamp) - Date.parse(b.pickup_timestamp));
+    for (let i = 1; i < list.length; i++) {
+      const c = list[i];
+      const days = String(Math.floor((Date.parse(c.pickup_timestamp) - Date.parse(list[i - 1].pickup_timestamp)) / 86_400_000));
+      const k = `${c.customer_id}|${c.site_id}`;
+      const n = by.get(k) ?? { customer_id: c.customer_id, site_id: c.site_id, gaps: {} };
+      n.gaps[days] = (n.gaps[days] ?? 0) + 1;
+      by.set(k, n);
+    }
+  }
+  return [...by.values()].sort((a, b) => a.customer_id.localeCompare(b.customer_id) || a.site_id.localeCompare(b.site_id));
+}
+
 function allocateImpacts(impacts: CustomerImpact[]): ImpactAllocation[] {
   const by = new Map<string, ImpactAllocation>();
   for (const r of impacts) {
@@ -177,6 +196,7 @@ export function buildData(files: Record<string, string>): { data: AppData; repor
   const data = {
     ...rows,
     cycleCounts: countCycles(cycles),
+    pickupGaps: pickupGaps(cycles),
     impactAllocation: allocateImpacts(rows.customerImpacts as CustomerImpact[]),
   } as unknown as AppData & { serviceCycles?: never; customerImpacts?: never };
   delete data.serviceCycles; // raw cycles and impacts are validated and reported, never shipped
