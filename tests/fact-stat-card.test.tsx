@@ -84,3 +84,22 @@ describe("FactStatCard without a value", () => {
     expect(t).toContain("not available");
   });
 });
+
+describe("FactStatCard percentages", () => {
+  const pct: Fact = {
+    ...fact, label: "Garment utilization (Dec)", value: 83.5239, unit: "%", methods: ["CALCULATED"], assumptionIds: [],
+    inputs: [{ label: "Active assets scanned (Dec)", value: 26513, unit: "pieces" }, { label: "Allocated pieces (Dec)", value: 31743, unit: "pieces" }],
+    range: { low: null, base: 83.5239, high: null },
+  };
+  it("shows one decimal on the card and in the range, and exact inputs in Show math", async () => {
+    const { container } = render(<FactStatCard fact={pct} />);
+    expect(container.textContent).toContain("83.5");
+    expect(container.textContent).not.toContain("83.52");
+    await userEvent.click(screen.getByRole("button", { name: /show math/i }));
+    await screen.findByText("Active assets scanned (Dec)");
+    const t = document.body.textContent ?? "";
+    expect(t).toContain("26 513 pieces");
+    expect(t).toContain("31 743 pieces");
+    expect(t).not.toContain("83.52");
+  });
+});

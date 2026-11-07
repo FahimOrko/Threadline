@@ -29,10 +29,10 @@ Read first: `docs/conventions.md`, `docs/adr/README.md` (ADRs 0004, 0005, 0010, 
 
 ## 5. Dashboard
 
-- [ ] 5.1 In `src/app/dashboard/page.tsx` add a "Money and utilization" section under the operational cards, rendering `valueFacts` with `FactStatCard` for the resolved customer. Verify: `npm run build` compiles; with `npm run dev` the section follows `?customer=` and shows 660 082 EUR, 1 335 527 EUR, "Needs input" and 83.5 % for NorthStar.
-- [ ] 5.2 Add the runbook line for the `products` sheet (6 rows, `valid 6, invalid 0`) to `docs/runbooks/rebuild-data.md`. Verify: line present and matches the `data:build` output.
+- [x] 5.1 In `src/app/dashboard/page.tsx` add a "Money and utilization" section under the operational cards, rendering `valueFacts` with `FactStatCard` for the resolved customer. Verify: `npm run build` compiles; with `npm run dev` the section follows `?customer=` and shows 660 082 EUR, 1 335 527 EUR, "Needs input" and 83.5 % for NorthStar.
+- [x] 5.2 Add the runbook line for the `products` sheet (6 rows, `valid 6, invalid 0`) to `docs/runbooks/rebuild-data.md`. Verify: line present and matches the `data:build` output.
 
 ## 6. Real-browser verification and gates
 
-- [ ] 6.1 With Playwright and Chrome check, in dark and light themes: the four cards and values for NorthStar and for a second customer via the picker, the needs-input card (hint names T001, amber chip, no 0 or NaN), Show math popovers on the four cards (open, Esc, outside click; T001 row visible), identical content in KAM and Customer roles, no client fetch of generated JSON and no console errors. Verify: a pass or fail line per check in the final report.
-- [ ] 6.2 Run `npm run data:build`, `npm test`, `npm run lint`, `npm run build`, `npm run check:design-imports`, `npm run check:contrast` and `openspec validate dashboard-money-kpis --strict`. Verify: all pass; anything not verifiable is listed.
+- [x] 6.1 With Playwright and Chrome check, in dark and light themes: the four cards and values for NorthStar and for a second customer via the picker, the needs-input card (hint names T001, amber chip, no 0 or NaN), Show math popovers on the four cards (open, Esc, outside click; T001 row visible), identical content in KAM and Customer roles, no client fetch of generated JSON and no console errors. Verify: a pass or fail line per check in the final report.
+- [x] 6.2 Run `npm run data:build`, `npm test`, `npm run lint`, `npm run build`, `npm run check:design-imports`, `npm run check:contrast` and `openspec validate dashboard-money-kpis --strict`. Verify: all pass; anything not verifiable is listed.

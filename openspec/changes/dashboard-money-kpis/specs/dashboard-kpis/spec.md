@@ -12,11 +12,15 @@ The operational cards, the money and utilization cards and the site table SHALL 
 ## ADDED Requirements
 
 ### Requirement: Money and utilization cards
-The dashboard SHALL show, below the operational cards, one card each for Avoided purchase cost, Garment value kept in use (Dec), Cost of unused allocation (Dec, per week) and Garment utilization (Dec) for the selected customer, each with value, unit, provenance chip and Show math.
+The dashboard SHALL show, below the operational cards, one card each for Avoided purchase cost, Garment value kept in use (Dec), Cost of unused allocation (Dec, per week) and Garment utilization (Dec) for the selected customer, each with value, unit, provenance chip and Show math. Percentage values SHALL show one decimal, rounded only for display; Show math SHALL keep the exact inputs.
 
 #### Scenario: NorthStar cards
 - **WHEN** the user opens the dashboard for NorthStar Foods Group with T001 unset
 - **THEN** the cards show 660 082 EUR, 1 335 527 EUR, "Needs input" and 83.5 %
+
+#### Scenario: Percentage precision
+- **WHEN** the Garment utilization card is shown for NorthStar Foods Group
+- **THEN** it reads 83.5 %, and Show math lists the unrounded inputs 26 513 and 31 743 pieces
 
 #### Scenario: Show math lists the team assumption
 - **WHEN** the user opens Show math on Cost of unused allocation
