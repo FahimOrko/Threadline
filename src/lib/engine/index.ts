@@ -30,5 +30,6 @@ export type { TeamAssumption, TeamAssumptions } from "./assumptions-config";
 export type { OperationalScope, SiteColumn, SiteColumnKey, SiteRow, SiteRows } from "./operational";
 export { classifyGaps, dormantSignal, overAllocationSignal, repairSpikeSignal } from "./signals";
 export type { DormantSite, OverAllocatedSite, RepairSpikeSite, SignalResult, SpikeMonth } from "./signals";
+export { dataReadinessFacts } from "./readiness";
 export { observations } from "./observations";
 export type { Observation, ObservationSet, ObservationType } from "./observations";

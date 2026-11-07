@@ -32,6 +32,7 @@ Read before coding, together with `docs/adr/README.md`. Add a new convention her
 - A site page narrows the same Facts with `siteId` in the scope (`inScope`, `factScope` in `src/lib/engine/fact.ts`). A Fact the data cannot split by site is left out and the page says so; a customer-level number never stands in for it.
 - Garment-signal thresholds (T003 to T010) are set team modelling choices, not unknowns (ADR 0018). The pipeline ships a threshold-free aggregate (pickup-gap histogram) and the engine applies the tiers; observations carry no digits in their text, the numbers live in the Facts they list.
 - A baseline is always a parameter of an engine function, never read inside it. The dashboard passes the row chosen by `?baseline=` and the level from `?sensitivity=`, both resolved in `src/lib/selection.ts` (ADR 0017); unknown values fall back to `DEFAULT_BASELINE_ID` and base with a notice.
+- Story priorities are `?priorities=a,b` (ADR 0019), resolved by `resolvePriorities` in `src/lib/selection.ts`; unknown picks are dropped with a screen-only notice. Story text is a template over `{{fact:id}}` tokens in `src/lib/story`; a null Fact reads "Needs input".
 - A reference a computation depends on (e.g. `product_id` for money KPIs) fails the build, naming the ids and the sheet. A row that is merely unmapped is counted in the data-quality report and excluded.
 
 ## Testing

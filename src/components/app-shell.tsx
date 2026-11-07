@@ -101,14 +101,17 @@ function ViewLinkList({ query, pathname }: { query: string; pathname?: string })
   });
 }
 
-// Keeps the chosen customer, baseline and sensitivity across views; without a param the links stay clean.
+// Keeps the chosen customer, baseline, sensitivity and story priorities across views; without a param the links stay clean.
 function ViewLinks({ customers, baselines }: { customers: ShellCustomer[]; baselines: ShellBaseline[] }) {
-  const { customer, baseline, sensitivity, raw } = useSelection(customers, baselines);
+  const { customer, baseline, sensitivity, raw, params } = useSelection(customers, baselines);
   const pathname = usePathname();
   const q = new URLSearchParams();
   if (raw.customer !== null) q.set("customer", customer.customer_id);
   if (raw.baseline !== null) q.set("baseline", baseline.baseline_id);
   if (raw.sensitivity !== null) q.set("sensitivity", sensitivity);
+  // Story picks (ADR 0019) travel unvalidated; the Story page validates them.
+  const priorities = params.get("priorities");
+  if (priorities) q.set("priorities", priorities);
   return <ViewLinkList pathname={pathname} query={q.size ? `?${q.toString()}` : ""} />;
 }
 

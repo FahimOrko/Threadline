@@ -27,3 +27,34 @@ export function siteHref(siteId: string, params: { customer: string; baseline: s
   const q = new URLSearchParams(params);
   return `/dashboard/sites/${encodeURIComponent(siteId)}?${q.toString()}`;
 }
+
+export const PRIORITIES = ["water", "cost", "emissions", "circularity", "service", "hygiene"] as const;
+export type Priority = (typeof PRIORITIES)[number];
+export const MAX_PRIORITIES = 2;
+
+/** Resolves `?priorities=a,b` (ADR 0019). Keeps the first valid distinct picks up to two, in order; every other value is dropped and named in `rejected`. No value means no picks. */
+export function resolvePriorities(param: Param): { priorities: Priority[]; rejected: string[] } {
+  const values = (Array.isArray(param) ? param : [param]).flatMap((p) => (p ?? "").split(",")).filter((v) => v !== "");
+  const priorities: Priority[] = [];
+  const rejected: string[] = [];
+  for (const v of values) {
+    const match = PRIORITIES.find((p) => p === v);
+    if (match && !priorities.includes(match) && priorities.length < MAX_PRIORITIES) priorities.push(match);
+    else rejected.push(v);
+  }
+  return { priorities, rejected };
+}
+
+/** Story link that keeps customer, baseline, sensitivity and the priority picks (ADR 0014, 0017, 0019). */
+export function storyHref(params: { customer: string; baseline: string; sensitivity: string; priorities: readonly Priority[] }): string {
+  const q = new URLSearchParams({ customer: params.customer, baseline: params.baseline, sensitivity: params.sensitivity });
+  // The comma stays literal so the address reads ?priorities=water,cost.
+  const picks = params.priorities.length > 0 ? `&priorities=${params.priorities.join(",")}` : "";
+  return `/story?${q.toString()}${picks}`;
+}
+
+/** The picks after clicking `p`: a picked chip is removed, a new one is added and a third replaces the oldest (ADR 0019). */
+export function togglePriority(picks: readonly Priority[], p: Priority): Priority[] {
+  if (picks.includes(p)) return picks.filter((x) => x !== p);
+  return [...picks, p].slice(-MAX_PRIORITIES);
+}

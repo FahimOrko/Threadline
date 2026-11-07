@@ -12,7 +12,12 @@ import repairs from "../../../data/generated/repairs.json";
 import serviceActivity from "../../../data/generated/serviceActivity.json";
 import sites from "../../../data/generated/sites.json";
 import wasteCircularity from "../../../data/generated/wasteCircularity.json";
+import qualityJson from "../../../data/generated/data-quality.json";
+import { parseQualityReport } from "./quality";
 import type { PickupGaps } from "./schemas";
 import { jsonDataSource } from "./source";
 
 export const generatedSource = jsonDataSource({ repairs, sites, customers, assumptions, serviceActivity, products, cycleCounts, pickupGaps: pickupGaps as unknown as PickupGaps[], wasteCircularity, impactAllocation, laundryResources, laundries, baselines });
+
+/** The build's data-quality report. A missing or malformed file fails the import, never an empty chapter. */
+export const generatedQuality = parseQualityReport(qualityJson);

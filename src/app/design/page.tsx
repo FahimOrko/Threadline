@@ -4,13 +4,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Badge } from "@/components/badge";
 import { FactStatCard } from "@/components/fact-stat-card";
+import { Notice } from "@/components/notice";
 import { ObservationCard } from "@/components/observation-card";
 import { Panel } from "@/components/panel";
+import { PriorityPicker } from "@/components/priority-picker";
 import { ProvenanceChip } from "@/components/provenance-chip";
 import { SiteTable, SiteTableSkeleton } from "@/components/site-table";
 import { SectionHeader } from "@/components/section-header";
 import { ShowMathPopover } from "@/components/show-math";
 import { StatCard } from "@/components/stat-card";
+import { StoryChapter } from "@/components/story-chapter";
 import { EmptyState, ErrorState, StatCardSkeleton } from "@/components/states";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Tooltip } from "@/components/tooltip";
@@ -160,6 +163,35 @@ export default function DesignPage() {
               <ObservationCard key={s.observation.id} observation={s.observation} facts={[...s.facts]} sites={s.observation.scope.siteIds.length > 0 ? sampleSiteLinks : []} />
             ))}
           </div>
+        </div>
+        <div className="space-y-2">
+          <h3 className="text-sm font-medium">Notice</h3>
+          <p className="max-w-[65ch] text-sm text-muted-foreground">
+            An inline status line, such as a fallback notice. The screen-only variant is marked so a print route can hide it.
+          </p>
+          <div className="grid gap-3 lg:grid-cols-2">
+            <Notice>Sample notice: an unknown value was replaced by the default.</Notice>
+            <Notice screenOnly>Sample screen-only notice: hidden when printed.</Notice>
+          </div>
+        </div>
+        <div className="space-y-2">
+          <h3 className="text-sm font-medium">StoryChapter</h3>
+          <p className="max-w-[65ch] text-sm text-muted-foreground">
+            One chapter of the Story: title, a &quot;Your priority&quot; badge per pick (in words, so a chapter serving two picks shows two), template lines and the cards below. Always fully expanded and kept whole on a printed page. The text here is sample text, not engine output.
+          </p>
+          <div className="grid gap-6 lg:grid-cols-2">
+            <StoryChapter id="design-sample" title="Sample chapter" lines={["A sample line with no figures. Real lines resolve fact tokens from the engine."]}>
+              <FactStatCard fact={sampleFact} />
+            </StoryChapter>
+            <StoryChapter id="design-sample-two" title="Sample chapter serving two picks" picked={["water", "emissions"]} lines={["Both badges show when one chapter serves both picks."]} />
+          </div>
+        </div>
+        <div className="space-y-2">
+          <h3 className="text-sm font-medium">PriorityPicker</h3>
+          <p className="max-w-[65ch] text-sm text-muted-foreground">
+            Six priority chips as plain links. The picked chips are filled and announced as selected; a third pick replaces the oldest. Each link keeps the customer, baseline and sensitivity in the address. Shown with two picks.
+          </p>
+          <PriorityPicker picks={["cost", "hygiene"]} params={{ customer: "CUST001", baseline: "B_LOCAL", sensitivity: "base" }} />
         </div>
         <div className="space-y-2">
           <h3 className="text-sm font-medium">Stress test</h3>

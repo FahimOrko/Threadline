@@ -104,3 +104,30 @@ describe("AppShell baseline and sensitivity selectors", () => {
     expect(screen.getByRole("link", { name: "Story" }).getAttribute("href")).toBe("/story?customer=CUST002&baseline=B_HOME&sensitivity=low");
   });
 });
+
+describe("AppShell story priorities (ADR 0019)", () => {
+  it("view links keep ?priorities= together with the other params", () => {
+    search = "customer=CUST002&priorities=cost,hygiene";
+    shell();
+    expect(screen.getByRole("link", { name: "Story" }).getAttribute("href")).toBe("/story?customer=CUST002&priorities=cost%2Chygiene");
+    expect(screen.getByRole("link", { name: "Dashboard" }).getAttribute("href")).toContain("priorities=cost%2Chygiene");
+  });
+  it("view links stay clean without picks", () => {
+    search = "customer=CUST002";
+    shell();
+    expect(screen.getByRole("link", { name: "Story" }).getAttribute("href")).not.toContain("priorities");
+  });
+  it.each([
+    ["Customer", "Other Co"],
+    ["Baseline", "home washing"],
+    ["Sensitivity", "high"],
+  ])("changing %s keeps priorities and an unrelated param", async (name, option) => {
+    search = "priorities=water,cost&foo=bar";
+    shell();
+    await userEvent.click(screen.getByRole("combobox", { name }));
+    await userEvent.click(await screen.findByRole("option", { name: option }));
+    const url = new URL(push.mock.calls[0][0], "http://x");
+    expect(url.searchParams.get("priorities")).toBe("water,cost");
+    expect(url.searchParams.get("foo")).toBe("bar");
+  });
+});
