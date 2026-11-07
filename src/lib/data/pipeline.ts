@@ -71,6 +71,27 @@ function crossCheckRepairs(rows: AppData["repairs"]): CrossCheck {
   };
 }
 
+export type ReferenceProblem = { sheet: string; ids: string[] };
+
+/** A computation depends on these references, so a miss fails the build (unlike an unmapped row, which is only reported). */
+export class UnknownReferenceError extends Error {
+  constructor(public problems: ReferenceProblem[]) {
+    super(problems.map((p) => `${p.sheet}: unknown product_id [${p.ids.join(", ")}]`).join("\n"));
+    this.name = "UnknownReferenceError";
+  }
+}
+
+/** Every product_id in `rows` must exist in products. */
+function crossCheckProducts(sheet: string, rows: { product_id: string }[], known: Set<string>): CrossCheck {
+  const missing = [...new Set(rows.map((r) => r.product_id).filter((id) => !known.has(id)))].sort();
+  return {
+    id: `${sheet}.product_id in products`,
+    checked: rows.length,
+    passed: missing.length === 0,
+    disagreements: missing.map((product_id) => ({ product_id })),
+  };
+}
+
 /** `files` maps a file stem (`repairs`, `data_dictionary`, ...) to its CSV text. */
 export function buildData(files: Record<string, string>): { data: AppData; report: QualityReport } {
   const dict = dictionaryColumns(files.data_dictionary ?? "");
@@ -94,7 +115,7 @@ export function buildData(files: Record<string, string>): { data: AppData; repor
   });
   if (problems.length) throw new HeaderMismatchError(problems);
 
-  const data = { repairs: [], sites: [], customers: [], assumptions: [], serviceActivity: [] } as AppData;
+  const data = { repairs: [], sites: [], customers: [], assumptions: [], serviceActivity: [], products: [] } as AppData;
   const report: QualityReport = { files: {} };
   for (const p of parsed) {
     const { def, res } = p!;
@@ -113,5 +134,13 @@ export function buildData(files: Record<string, string>): { data: AppData; repor
     report.files[def.key] = { read: res.data.length, valid: valid.length, invalid, crossChecks: [] };
   }
   report.files.repairs.crossChecks.push(crossCheckRepairs(data.repairs));
+  const known = new Set(data.products.map((p) => p.product_id));
+  const refs = [
+    { sheet: "repairs", key: "repairs", rows: data.repairs },
+    { sheet: "service_activity", key: "serviceActivity", rows: data.serviceActivity },
+  ].map((s) => ({ ...s, check: crossCheckProducts(s.sheet, s.rows, known) }));
+  for (const s of refs) report.files[s.key].crossChecks.push(s.check);
+  const bad = refs.filter((s) => !s.check.passed);
+  if (bad.length) throw new UnknownReferenceError(bad.map((s) => ({ sheet: s.sheet, ids: s.check.disagreements.map((d) => String(d.product_id)) })));
   return { data, report };
 }

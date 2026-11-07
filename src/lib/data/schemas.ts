@@ -71,9 +71,20 @@ export const serviceActivitySchema = z.strictObject({
   data_status: text,
 });
 
+export const productSchema = z.strictObject({
+  product_id: text,
+  product_name: text,
+  product_group: text,
+  avg_weight_kg: num,
+  synthetic_product_footprint_kgco2e: num,
+  synthetic_purchase_cost_eur: num,
+  material_note: text,
+});
+
 export type Repair = z.infer<typeof repairSchema>;
 export type Site = z.infer<typeof siteSchema>;
 export type ServiceActivity = z.infer<typeof serviceActivitySchema>;
+export type Product = z.infer<typeof productSchema>;
 export type Customer = z.infer<typeof customerSchema>;
 export type Assumption = z.infer<typeof assumptionSchema>;
 
@@ -83,6 +94,7 @@ export type AppData = {
   customers: Customer[];
   assumptions: Assumption[];
   serviceActivity: ServiceActivity[];
+  products: Product[];
 };
 
 /** Sheet name (as in data_dictionary.csv) to schema; the file is `<sheet lower-case>.csv`. */
@@ -92,4 +104,5 @@ export const SHEETS = {
   Customers: { key: "customers", schema: customerSchema },
   Assumptions: { key: "assumptions", schema: assumptionSchema },
   Service_Activity: { key: "serviceActivity", schema: serviceActivitySchema },
+  Products: { key: "products", schema: productSchema },
 } as const;
