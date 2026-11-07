@@ -1,9 +1,14 @@
 // Footprint KPIs (Slice 3, change 3a): savings vs a baseline, service footprint, delivery footprint.
-// Pure: data in, Facts out. The baseline is an argument so Slice 4 only wires the selector.
+// Pure: data in, Facts out. The baseline and the sensitivity level are arguments (ADR 0017).
 import { DEFAULT_BASELINE_ID, type AppData, type Baseline } from "@/lib/data/schemas";
+import { TEAM_ASSUMPTIONS } from "./assumptions-config";
 import type { Fact } from "./fact";
 import { activeWearers, type OperationalScope } from "./operational";
-import { build } from "./value";
+import { build, teamAssumptionInputs } from "./value";
+
+export const SENSITIVITY_LEVELS = ["low", "base", "high"] as const;
+export type Sensitivity = (typeof SENSITIVITY_LEVELS)[number];
+export const DEFAULT_SENSITIVITY: Sensitivity = "base";
 
 export { DEFAULT_BASELINE_ID };
 export type { Baseline };
@@ -20,7 +25,7 @@ const SHORT_NAMES: Record<string, string> = { B_LOCAL: "local laundry", B_HOME: 
 export const baselineShortName = (b: Baseline) => SHORT_NAMES[b.baseline_id] ?? b.baseline_name;
 
 const ILLUSTRATIVE_NOTE =
-  "The local laundry baseline process factor is marked illustrative in the data pack and sits far above the laundries' own process factors, which drives the high percentage. Read the CO2e saving as an indication until Lindström confirms the factor.";
+  "The baseline factors are marked illustrative in the data pack and can sit far above the laundries' own factors, which drives the high percentage. Read the CO2e saving as an indication until Lindström confirms the factors.";
 const DELIVERY_NOTE =
   "A baseline with zero delivery (home washing) makes delivery alone look worse than the baseline. Read delivery together with the net CO2e saved, which covers process and delivery.";
 const ROUTE_KM_NOTE = "Route kilometres are not in the data pack, so delivery is not estimated from distance. This is a listed data gap.";
@@ -67,7 +72,7 @@ function totalsFor(data: FootprintData, scope: OperationalScope, b: Baseline): T
   return t;
 }
 
-export function footprintFacts(data: FootprintData, scope: OperationalScope, baseline: Baseline): Fact[] {
+export function footprintFacts(data: FootprintData, scope: OperationalScope, baseline: Baseline, sensitivity: Sensitivity = DEFAULT_SENSITIVITY): Fact[] {
   const t = totalsFor(data, scope, baseline);
   if (t.kg === 0) return [];
   const short = baselineShortName(baseline);
@@ -80,47 +85,69 @@ export function footprintFacts(data: FootprintData, scope: OperationalScope, bas
     { label: "Customer washed kg", value: t.kg, unit: "kg" },
   ];
 
+  // Low and high scale the baseline factors only (T002); laundry factors are pack data. Null spread: no low or high.
+  const t002 = TEAM_ASSUMPTIONS.sensitivitySpread;
+  const scale = { low: t002.value === null ? null : 1 - t002.value, base: 1, high: t002.value === null ? null : 1 + t002.value };
+  const levels = (f: (k: number) => number): Fact["range"] => ({
+    low: scale.low === null ? null : f(scale.low),
+    base: f(1),
+    high: scale.high === null ? null : f(scale.high),
+  });
+  const offBase = sensitivity !== "base";
+
   const saved = (id: string, name: string, unit: string, base: number, own: number, baselineFactor: number, note?: string): Fact[] => {
-    const saving = base - own;
+    const k = scale[sensitivity];
+    const shown = k ?? 1; // inputs show the factors the selected level actually used
     const inputs: Inputs = [
       ...kgInputs,
-      { label: `Baseline ${name.toLowerCase()} (${baseline.baseline_id})`, value: base, unit },
+      { label: `Baseline ${name.toLowerCase()} (${baseline.baseline_id}, ${sensitivity})`, value: base * shown, unit },
       { label: `Laundry ${name.toLowerCase()} (kg-weighted)`, value: own, unit },
-      { label: "Baseline factor", value: baselineFactor, unit: `${unit}/kg` },
+      { label: `Baseline factor (${sensitivity})`, value: baselineFactor * shown, unit: `${unit}/kg` },
       { label: "Laundry factor (kg-weighted)", value: own / t.kg, unit: `${unit}/kg` },
       { label: "Baseline", value: baseline.baseline_name },
+      { label: "Sensitivity", value: sensitivity },
+      ...teamAssumptionInputs("sensitivity spread", t002),
       ...(note ? [{ label: "Baseline note", note: true as const, value: note }] : []),
     ];
     const common = {
-      source: "SYNTHETIC" as const,
+      // Off base the value depends on T002, so it is assumed (ADR 0016); at base the pack data alone decides it.
+      source: offBase ? ("ASSUMPTION" as const) : ("SYNTHETIC" as const),
       methods: ["ALLOCATED", "ESTIMATED"] as Fact["methods"],
-      assumptionIds: ["A001"],
+      assumptionIds: offBase ? ["A001", t002.id] : ["A001"],
       confidence: `${a001.confidence} (A001)`,
       inputs,
     };
+    const withRange = (f: Fact, range: Fact["range"]): Fact => ({ ...f, range, value: k === null ? null : range[sensitivity] });
+    const saving = (m: number) => base * m - own;
     const facts = [
-      withBaseline(
-        build(data, scope, {
-          ...common,
-          id,
-          label: `${name} saved vs ${short}`,
-          value: saving,
-          unit,
-          formula: `${name.toLowerCase()} saved = sum of washed kg x (baseline factor - laundry factor)${id === "co2e_saved" ? ", factor = process + delivery" : ""}, baseline: ${baseline.baseline_name}`,
-        }),
+      withRange(
+        withBaseline(
+          build(data, scope, {
+            ...common,
+            id,
+            label: `${name} saved vs ${short}`,
+            value: 0,
+            unit,
+            formula: `${name.toLowerCase()} saved = sum of washed kg x (baseline factor x sensitivity - laundry factor)${id === "co2e_saved" ? ", factor = process + delivery" : ""}, baseline: ${baseline.baseline_name}, sensitivity: ${sensitivity} (low 1 - T002, base 1, high 1 + T002)`,
+          }),
+        ),
+        levels(saving),
       ),
     ];
     if (base !== 0)
       facts.push(
-        withBaseline(
-          build(data, scope, {
-            ...common,
-            id: `${id}_pct`,
-            label: `${name} saved vs ${short}, share`,
-            value: (saving / base) * 100,
-            unit: "%",
-            formula: `share = ${name.toLowerCase()} saved / sum of washed kg x baseline factor x 100, baseline: ${baseline.baseline_name}`,
-          }),
+        withRange(
+          withBaseline(
+            build(data, scope, {
+              ...common,
+              id: `${id}_pct`,
+              label: `${name} saved vs ${short}, share`,
+              value: 0,
+              unit: "%",
+              formula: `share = ${name.toLowerCase()} saved / sum of washed kg x baseline factor x sensitivity x 100, baseline: ${baseline.baseline_name}, sensitivity: ${sensitivity}`,
+            }),
+          ),
+          levels((m) => (saving(m) / (base * m)) * 100),
         ),
       );
     return facts;

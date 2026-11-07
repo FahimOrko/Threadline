@@ -6,8 +6,9 @@ import { StatCardSkeleton } from "@/components/states";
 import { SiteTable, SiteTableSkeleton } from "@/components/site-table";
 import { resolveCustomer } from "@/lib/customer";
 import { generatedSource } from "@/lib/data/generated";
-import { DEFAULT_BASELINE_ID, footprintFacts, footprintGroup, operationalFacts, operationalSiteRows, percentageFacts, valueFacts } from "@/lib/engine";
+import { baselineShortName, footprintFacts, footprintGroup, operationalFacts, operationalSiteRows, percentageFacts, valueFacts } from "@/lib/engine";
 import { formatPeriod } from "@/lib/format";
+import { resolveBaseline, resolveSensitivity } from "@/lib/selection";
 
 // Full year 2025, fixed in this version. Every engine call takes it as an argument, so a period picker only changes this.
 const PERIOD = { from: "2025-01", to: "2025-12" };
@@ -40,12 +41,12 @@ async function DashboardContent({ searchParams }: { searchParams: PageProps<"/da
   const { customer, rejected } = resolveCustomer(params.customer, data.customers);
   const scope = { customerId: customer.customer_id, period: PERIOD };
   const facts = operationalFacts(data, scope);
-  // Slice 4 replaces this lookup with the selected baseline id.
-  const baseline = data.baselines.find((b) => b.baseline_id === DEFAULT_BASELINE_ID);
-  if (!baseline) throw new Error(`Baseline ${DEFAULT_BASELINE_ID} is missing from the baselines data`);
-  const footprint = footprintFacts(data, scope, baseline);
+  const { baseline, rejected: badBaseline } = resolveBaseline(params.baseline, data.baselines);
+  const { sensitivity, rejected: badSensitivity } = resolveSensitivity(params.sensitivity);
+  const short = baselineShortName(baseline);
+  const footprint = footprintFacts(data, scope, baseline, sensitivity);
   const footprintGroups = [
-    { title: "Saved vs local laundry", group: "saved" },
+    { title: `Saved vs ${short}`, group: "saved" },
     { title: "Service footprint", group: "service" },
     { title: "Delivery footprint", group: "delivery" },
   ] as const;
@@ -55,6 +56,20 @@ async function DashboardContent({ searchParams }: { searchParams: PageProps<"/da
         <Panel role="status">
           <p className="text-sm">
             &quot;{rejected}&quot; is not a known customer, so {customer.customer_name} is shown instead.
+          </p>
+        </Panel>
+      )}
+      {badBaseline !== null && (
+        <Panel role="status">
+          <p className="text-sm">
+            &quot;{badBaseline}&quot; is not a known baseline, so {short} is shown instead.
+          </p>
+        </Panel>
+      )}
+      {badSensitivity !== null && (
+        <Panel role="status">
+          <p className="text-sm">
+            &quot;{badSensitivity}&quot; is not a known sensitivity level, so base is shown instead.
           </p>
         </Panel>
       )}
@@ -91,7 +106,7 @@ async function DashboardContent({ searchParams }: { searchParams: PageProps<"/da
       <section className="space-y-4">
         <SectionHeader
           title="Footprint"
-          description="Full year 2025 against the local laundry baseline (A001). Baseline values are illustrative. Route kilometres are not in the data pack, so delivery is not estimated from distance."
+          description={`Full year 2025 against the ${short} baseline at ${sensitivity} sensitivity (A001, T002). Baseline values are illustrative; only the saved cards move with sensitivity. Route kilometres are not in the data pack, so delivery is not estimated from distance.`}
         />
         {footprintGroups.map(({ title, group }) => (
           <div key={group} className="space-y-2">

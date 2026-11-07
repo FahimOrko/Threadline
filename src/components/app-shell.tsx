@@ -10,6 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { resolveCustomer } from "@/lib/customer";
+import { SENSITIVITY_LEVELS } from "@/lib/engine";
+import { resolveBaseline, resolveSensitivity } from "@/lib/selection";
 import { useRoleStore, type Role } from "@/store/role-store";
 
 const views = [
@@ -19,42 +21,66 @@ const views = [
 ];
 
 type ShellCustomer = { customer_id: string; name: string };
+type ShellBaseline = { baseline_id: string; name: string };
 
-// The layout cannot read searchParams, so the header reads the URL here. It uses the same resolveCustomer as the page.
-function useSelectedCustomer(customers: ShellCustomer[]) {
+const SENSITIVITY_ITEMS = SENSITIVITY_LEVELS.map((l) => ({ value: l, label: l }));
+
+// The layout cannot read searchParams, so the header reads the URL here. It uses the same resolvers as the page.
+function useSelection(customers: ShellCustomer[], baselines: ShellBaseline[]) {
   const params = useSearchParams();
-  const raw = params.get("customer");
-  const { customer } = resolveCustomer(raw ?? undefined, customers);
-  return { customer, hasParam: raw !== null };
+  const raw = { customer: params.get("customer"), baseline: params.get("baseline"), sensitivity: params.get("sensitivity") };
+  return {
+    params,
+    customer: resolveCustomer(raw.customer ?? undefined, customers).customer,
+    baseline: resolveBaseline(raw.baseline ?? undefined, baselines).baseline,
+    sensitivity: resolveSensitivity(raw.sensitivity ?? undefined).sensitivity,
+    raw,
+  };
 }
 
-function CustomerPicker({ customers }: { customers: ShellCustomer[] }) {
+// A selector only changes its own param; the others stay in the address (ADR 0017).
+function ParamSelect({ label, name, value, items }: { label: string; name: string; value: string; items: { value: string; label: string }[] }) {
   const router = useRouter();
   const pathname = usePathname();
+  const params = useSearchParams();
   const labelId = useId();
-  const { customer } = useSelectedCustomer(customers);
   return (
     <div className="flex items-center gap-2">
       <span id={labelId} className="text-sm text-muted-foreground">
-        Customer
+        {label}
       </span>
       <Select
-        value={customer.customer_id}
-        items={customers.map((c) => ({ value: c.customer_id, label: c.name }))}
-        onValueChange={(id) => router.push(`${pathname}?customer=${encodeURIComponent(String(id))}`)}
+        value={value}
+        items={items}
+        onValueChange={(v) => {
+          const next = new URLSearchParams(params.toString());
+          next.set(name, String(v));
+          router.push(`${pathname}?${next.toString()}`);
+        }}
       >
         <SelectTrigger size="sm" aria-labelledby={labelId}>
           <SelectValue />
         </SelectTrigger>
         <SelectContent alignItemWithTrigger={false}>
-          {customers.map((c) => (
-            <SelectItem key={c.customer_id} value={c.customer_id}>
-              {c.name}
+          {items.map((i) => (
+            <SelectItem key={i.value} value={i.value}>
+              {i.label}
             </SelectItem>
           ))}
         </SelectContent>
       </Select>
     </div>
+  );
+}
+
+function Selectors({ customers, baselines }: { customers: ShellCustomer[]; baselines: ShellBaseline[] }) {
+  const { customer, baseline, sensitivity } = useSelection(customers, baselines);
+  return (
+    <>
+      <ParamSelect label="Customer" name="customer" value={customer.customer_id} items={customers.map((c) => ({ value: c.customer_id, label: c.name }))} />
+      <ParamSelect label="Baseline" name="baseline" value={baseline.baseline_id} items={baselines.map((b) => ({ value: b.baseline_id, label: b.name }))} />
+      <ParamSelect label="Sensitivity" name="sensitivity" value={sensitivity} items={SENSITIVITY_ITEMS} />
+    </>
   );
 }
 
@@ -75,14 +101,18 @@ function ViewLinkList({ query, pathname }: { query: string; pathname?: string })
   });
 }
 
-// Keeps the chosen customer across views; without the param the links stay clean.
-function ViewLinks({ customers }: { customers: ShellCustomer[] }) {
-  const { customer, hasParam } = useSelectedCustomer(customers);
+// Keeps the chosen customer, baseline and sensitivity across views; without a param the links stay clean.
+function ViewLinks({ customers, baselines }: { customers: ShellCustomer[]; baselines: ShellBaseline[] }) {
+  const { customer, baseline, sensitivity, raw } = useSelection(customers, baselines);
   const pathname = usePathname();
-  return <ViewLinkList pathname={pathname} query={hasParam ? `?customer=${encodeURIComponent(customer.customer_id)}` : ""} />;
+  const q = new URLSearchParams();
+  if (raw.customer !== null) q.set("customer", customer.customer_id);
+  if (raw.baseline !== null) q.set("baseline", baseline.baseline_id);
+  if (raw.sensitivity !== null) q.set("sensitivity", sensitivity);
+  return <ViewLinkList pathname={pathname} query={q.size ? `?${q.toString()}` : ""} />;
 }
 
-export function AppShell({ children, customers }: { children: React.ReactNode; customers: ShellCustomer[] }) {
+export function AppShell({ children, customers, baselines }: { children: React.ReactNode; customers: ShellCustomer[]; baselines: ShellBaseline[] }) {
   const role = useRoleStore((s) => s.role);
   const setRole = useRoleStore((s) => s.setRole);
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -102,11 +132,8 @@ export function AppShell({ children, customers }: { children: React.ReactNode; c
             </Button>
           }
         >
-          <CustomerPicker customers={customers} />
+          <Selectors customers={customers} baselines={baselines} />
         </Suspense>
-        <Button variant="outline" size="sm" disabled>
-          Baseline: not selected
-        </Button>
         <div className="ml-auto flex items-center gap-2">
           <ToggleGroup
             aria-label="Role"
@@ -133,7 +160,7 @@ export function AppShell({ children, customers }: { children: React.ReactNode; c
       </header>
       <nav aria-label="Views" className="flex gap-1 border-b px-4 py-2">
         <Suspense fallback={<ViewLinkList query="" />}>
-          <ViewLinks customers={customers} />
+          <ViewLinks customers={customers} baselines={baselines} />
         </Suspense>
       </nav>
       <div className="flex flex-1">

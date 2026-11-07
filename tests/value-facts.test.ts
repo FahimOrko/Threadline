@@ -19,7 +19,7 @@ const { data } = buildData(Object.fromEntries(stems.map((s) => [s, readFileSync(
 const period = { from: "2025-01", to: "2025-12" };
 const north = { customerId: "CUST001", period };
 const fee = TEAM_ASSUMPTIONS.rentalFeePerPieceWeek;
-const withFee = (value: number | null): TeamAssumptions => ({ rentalFeePerPieceWeek: { ...fee, value } });
+const withFee = (value: number | null): TeamAssumptions => ({ ...TEAM_ASSUMPTIONS, rentalFeePerPieceWeek: { ...fee, value } });
 const cost = (id: string) => data.products.find((p) => p.product_id === id)!.synthetic_purchase_cost_eur;
 
 describe("productCost", () => {

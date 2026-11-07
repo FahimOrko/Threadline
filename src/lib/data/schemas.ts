@@ -163,7 +163,7 @@ export const baselineSchema = z.strictObject({
   assumption_note: text,
 });
 
-/** The baseline the dashboard compares against (assumption A001); Slice 4 replaces the lookup with the selected id. */
+/** The baseline the dashboard compares against (assumption A001) when `?baseline=` is absent or unknown. */
 export const DEFAULT_BASELINE_ID = "B_LOCAL";
 
 export type Repair = z.infer<typeof repairSchema>;

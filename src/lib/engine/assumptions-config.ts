@@ -17,6 +17,14 @@ export const TEAM_ASSUMPTIONS = {
     note: "Typical weekly rental fee per garment piece. Asked of Lindström; not supplied yet.",
     certainty: "assumed",
   },
+  // A declared modelling choice, not an unknown: it is set (ADR 0017). Unknowns stay null (ADR 0016).
+  sensitivitySpread: {
+    id: "T002",
+    value: 0.2,
+    unit: "share of each baseline factor",
+    note: "Team modelling choice: low and high scale every baseline factor by 1 - 0.2 and 1 + 0.2. The data pack has no low or high factors. Laundry factors are not scaled.",
+    certainty: "assumed",
+  },
 } as const satisfies Record<string, TeamAssumption>;
 
 export type TeamAssumptions = Record<keyof typeof TEAM_ASSUMPTIONS, TeamAssumption>;

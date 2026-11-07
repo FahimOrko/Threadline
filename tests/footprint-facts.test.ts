@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { buildData } from "@/lib/data/pipeline";
-import { DEFAULT_BASELINE_ID, footprintFacts, footprintGroup, requireValue, type Baseline } from "@/lib/engine";
+import { DEFAULT_BASELINE_ID, footprintFacts, footprintGroup, requireValue, type Baseline, type Sensitivity } from "@/lib/engine";
 
 const stems = ["data_dictionary", "repairs", "sites", "customers", "assumptions", "service_activity", "products", "service_cycles", "waste_circularity", "customer_impacts", "laundry_resources", "baselines", "laundries"];
 const { data } = buildData(Object.fromEntries(stems.map((s) => [s, readFileSync(`data/raw/${s}.csv`, "utf8")])));
@@ -37,7 +37,11 @@ function expected(customer: string, b: Baseline) {
   co2e = process + delivery;
   return { kg, waterSaved: baseWater - water, energySaved: baseEnergy - energy, co2eSaved: baseCo2e - co2e, waterPct: ((baseWater - water) / baseWater) * 100, energyPct: ((baseEnergy - energy) / baseEnergy) * 100, co2ePct: ((baseCo2e - co2e) / baseCo2e) * 100, service: co2e, delivery };
 }
-const byId = (customer: string, b: Baseline = local) => Object.fromEntries(footprintFacts(data, scope(customer), b).map((f) => [f.id, f]));
+const byId = (customer: string, b: Baseline = local, level: Sensitivity = "base") => Object.fromEntries(footprintFacts(data, scope(customer), b, level).map((f) => [f.id, f]));
+const SAVED = ["water_saved", "water_saved_pct", "energy_saved", "energy_saved_pct", "co2e_saved", "co2e_saved_pct"];
+const NOT_SAVED = ["service_footprint", "service_footprint_per_tonne", "service_footprint_per_wearer", "delivery_footprint", "delivery_share"];
+const baselines = data.baselines;
+const levels = ["low", "base", "high"] as const;
 
 describe("footprintFacts", () => {
   for (const customer of ["CUST001", "CUST002"]) {
@@ -72,11 +76,17 @@ describe("footprintFacts", () => {
     expect(requireValue(f.delivery_share)).toBeCloseTo(32.2, 1);
   });
 
-  it("every Fact has range base = value, empty low and high, and a value", () => {
-    for (const f of footprintFacts(data, scope("CUST001"), local)) {
-      expect(f.value).not.toBeNull();
-      expect(f.range).toEqual({ low: null, base: f.value, high: null });
+  it("service and delivery Facts have range base = value, empty low and high, and a value", () => {
+    const f = byId("CUST001");
+    for (const id of NOT_SAVED) {
+      expect(f[id].value).not.toBeNull();
+      expect(f[id].range).toEqual({ low: null, base: f[id].value, high: null });
     }
+  });
+
+  it("savings Facts carry low < base < high", () => {
+    const f = byId("CUST001");
+    for (const id of SAVED) expect(f[id].range.low! < f[id].range.base! && f[id].range.base! < f[id].range.high!).toBe(true);
   });
 
   it("savings: ALLOCATED + ESTIMATED, SYNTHETIC, A001, baseline in the label; footprints: no assumption", () => {
@@ -95,8 +105,8 @@ describe("footprintFacts", () => {
 
   it("CO2e saved carries the illustrative-baseline note, water and energy do not", () => {
     const f = byId("CUST001");
-    for (const id of ["co2e_saved", "co2e_saved_pct"]) expect(f[id].inputs.find((i) => i.note)!.value).toMatch(/illustrative.*far above the laundries/);
-    expect(f.water_saved.inputs.some((i) => i.note)).toBe(false);
+    for (const id of ["co2e_saved", "co2e_saved_pct"]) expect(f[id].inputs.find((i) => i.label === "Baseline note")!.value).toMatch(/illustrative.*far above the laundries/);
+    expect(f.water_saved.inputs.some((i) => i.label === "Baseline note")).toBe(false);
   });
 
   it("delivery Facts list both delivery factors, the net-comparison note and the route-km data gap", () => {
@@ -118,6 +128,55 @@ describe("footprintFacts", () => {
     expect(f.co2e_saved.label).toContain("vs home washing");
     expect(f.co2e_saved.baseline).toBe(home.baseline_name);
     expect(requireValue(f.co2e_saved)).not.toBeCloseTo(requireValue(byId("CUST001").co2e_saved), 0);
+  });
+
+  for (const b of baselines) {
+    const short = { B_LOCAL: "local laundry", B_HOME: "home washing", B_INHOUSE: "in-house laundry" }[b.baseline_id]!;
+    for (const level of levels) {
+      it(`${b.baseline_id} at ${level}: values equal the saving with baseline factors scaled, labels name the baseline`, () => {
+        const k = { low: 0.8, base: 1, high: 1.2 }[level];
+        const scaled = { ...b, water_l_per_kg: b.water_l_per_kg * k, energy_kwh_per_kg: b.energy_kwh_per_kg * k, process_kgco2e_per_kg: b.process_kgco2e_per_kg * k, delivery_kgco2e_per_kg: b.delivery_kgco2e_per_kg * k };
+        const e = expected("CUST001", scaled);
+        const f = byId("CUST001", b, level);
+        expect(requireValue(f.water_saved)).toBeCloseTo(e.waterSaved, 3);
+        expect(requireValue(f.energy_saved)).toBeCloseTo(e.energySaved, 3);
+        expect(requireValue(f.co2e_saved)).toBeCloseTo(e.co2eSaved, 3);
+        expect(requireValue(f.co2e_saved_pct)).toBeCloseTo(e.co2ePct, 6);
+        for (const id of SAVED) {
+          expect(f[id].label).toContain(`vs ${short}`);
+          expect(f[id].value).toBe(f[id].range[level]);
+          expect(f[id].range).toEqual(byId("CUST001", b, "base")[id].range);
+        }
+        expect(f.co2e_saved.source).toBe(level === "base" ? "SYNTHETIC" : "ASSUMPTION");
+        expect(f.co2e_saved.assumptionIds).toEqual(level === "base" ? ["A001"] : ["A001", "T002"]);
+        expect(f.co2e_saved.inputs.some((i) => i.label.startsWith("T002"))).toBe(true);
+      });
+    }
+
+    it(`${b.baseline_id}: service and delivery Facts do not change with sensitivity`, () => {
+      const base = byId("CUST001", b, "base");
+      for (const level of ["low", "high"] as const) {
+        const f = byId("CUST001", b, level);
+        for (const id of NOT_SAVED) expect(f[id]).toEqual(base[id]);
+      }
+    });
+
+    it(`${b.baseline_id}: net CO2e saved stays in the delivery group with the net-comparison note`, () => {
+      for (const level of levels) {
+        const facts = footprintFacts(data, scope("CUST001"), b, level);
+        const group = footprintGroup(facts, "delivery");
+        expect(group.map((x) => x.id)).toEqual(["delivery_footprint", "delivery_share", "co2e_saved"]);
+        const note = group[0].inputs.filter((i) => i.note).map((i) => String(i.value));
+        expect(note.some((n) => n.includes("zero delivery") && n.includes("net CO2e saved"))).toBe(true);
+      }
+    });
+  }
+
+  it("home washing has a zero delivery baseline factor at every level", () => {
+    for (const level of levels) {
+      const f = byId("CUST001", home, level);
+      expect(f.delivery_footprint.inputs.find((i) => i.label.startsWith("Baseline delivery factor"))!.value).toBe(0);
+    }
   });
 
   it("falls back to the sheet name for an unmapped baseline id", () => {
