@@ -1,3 +1,4 @@
+export { requireValue } from "./fact";
 export type { Fact, Period } from "./fact";
 export { replacementsPostponed } from "./replacements-postponed";
 export {

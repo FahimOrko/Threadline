@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { buildData } from "@/lib/data/pipeline";
-import { replacementsPostponed } from "@/lib/engine";
+import { replacementsPostponed, requireValue } from "@/lib/engine";
 
 // Runs the pipeline in-process on data/raw, so no prior `npm run data:build` is needed.
 const stems = ["data_dictionary", "repairs", "sites", "customers", "assumptions", "service_activity", "products"];
@@ -24,10 +24,10 @@ describe("replacementsPostponed", () => {
     const jan = replacementsPostponed(data, { customerId: "CUST001", period: { from: "2025-01", to: "2025-01" } });
     const rest = replacementsPostponed(data, { customerId: "CUST001", period: { from: "2025-02", to: "2025-12" } });
     expect(jan.value).toBeGreaterThan(0);
-    expect(jan.value + rest.value).toBe(15233);
+    expect(requireValue(jan) + requireValue(rest)).toBe(15233);
   });
   it("sums only the requested customer", () => {
-    const all = data.customers.map((c) => replacementsPostponed(data, { customerId: c.customer_id, period: year }).value);
+    const all = data.customers.map((c) => requireValue(replacementsPostponed(data, { customerId: c.customer_id, period: year })));
     expect(all.reduce((a, b) => a + b, 0)).toBe(data.repairs.reduce((s, r) => s + r.repair_count, 0));
   });
   it("is 0 with zero rows for an unknown customer", () => {
@@ -46,5 +46,13 @@ describe("engine purity", () => {
       const src = readFileSync(`src/lib/engine/${f}`, "utf8");
       expect(src, f).not.toMatch(/from\s+["'](node:|fs|path|server-only|next\/)/);
     }
+  });
+});
+
+describe("requireValue", () => {
+  const f = replacementsPostponed(data, { customerId: "CUST001", period: year });
+  it("returns the value when set", () => expect(requireValue(f)).toBe(15233));
+  it("throws naming the fact id when null", () => {
+    expect(() => requireValue({ ...f, value: null })).toThrow("Fact replacements_postponed has no value");
   });
 });

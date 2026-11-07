@@ -9,6 +9,7 @@ import {
   operationalSiteRows,
   repairs,
   serviceRequests,
+  requireValue,
   serviceRequestsPer100Wearers,
 } from "@/lib/engine";
 
@@ -65,7 +66,7 @@ describe("NorthStar acceptance values (sample_output.csv)", () => {
 describe("other customers and empty cases", () => {
   it("only sums the requested customer", () => {
     const ids = data.customers.map((c) => c.customer_id);
-    const total = ids.reduce((s, id) => s + serviceRequests(data, { customerId: id, period }).value, 0);
+    const total = ids.reduce((s, id) => s + requireValue(serviceRequests(data, { customerId: id, period })), 0);
     expect(total).toBe(data.serviceActivity.reduce((s, r) => s + r.service_requests, 0));
   });
   it("unknown customer gives zeros, a zero-wearer rate of 0 and an explanatory input", () => {

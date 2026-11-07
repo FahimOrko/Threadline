@@ -1,7 +1,7 @@
 // Operational KPIs (Slice 3, change 1). Pure: data in, Facts out; display strings come from src/lib/format.
 import type { AppData } from "@/lib/data/schemas";
 import type { Method } from "@/lib/provenance";
-import type { Fact, Period } from "./fact";
+import { requireValue, type Fact, type Period } from "./fact";
 import { replacementsPostponed } from "./replacements-postponed";
 
 type OperationalData = Pick<AppData, "sites" | "customers" | "assumptions" | "repairs" | "serviceActivity">;
@@ -128,8 +128,8 @@ export function serviceRequests(data: OperationalData, scope: OperationalScope):
 }
 
 export function serviceRequestsPer100Wearers(data: OperationalData, scope: OperationalScope): Fact {
-  const requests = serviceRequests(data, scope).value;
-  const wearers = activeWearers(data, scope).value;
+  const requests = requireValue(serviceRequests(data, scope));
+  const wearers = requireValue(activeWearers(data, scope));
   const value = wearers === 0 ? 0 : (requests / wearers) * 100;
   return fact(data, scope, {
     id: "service_requests_per_100_wearers",

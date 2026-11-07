@@ -1,7 +1,7 @@
 import { ProvenanceChip } from "@/components/provenance-chip";
 import { ShowMathPopover } from "@/components/show-math";
 import { StatCard } from "@/components/stat-card";
-import type { Fact } from "@/lib/engine";
+import { requireValue, type Fact } from "@/lib/engine";
 import { formatNumber, formatPeriod, formatQuantity } from "@/lib/format";
 
 const NOT_MODELLED = "not yet modelled";
@@ -9,10 +9,13 @@ const NOT_MODELLED = "not yet modelled";
 // The only place a Fact becomes StatCard, ProvenanceChip and ShowMathPopover props.
 export function FactStatCard({ fact }: { fact: Fact }) {
   const { range } = fact;
+  // shortcut: a Fact without a value cannot render yet; the "Needs input" state arrives in task 4.1 of dashboard-money-kpis.
+  const value = requireValue(fact);
+  if (range.base === null) throw new Error(`Fact ${fact.id} has no value`);
   return (
     <StatCard
       label={fact.label}
-      value={formatNumber(fact.value)}
+      value={formatNumber(value)}
       unit={fact.unit}
       provenance={<ProvenanceChip methods={fact.methods} source={fact.source} />}
     >

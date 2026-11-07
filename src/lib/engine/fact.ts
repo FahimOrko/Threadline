@@ -3,10 +3,17 @@ import type { Method, Source } from "@/lib/provenance";
 
 export type Period = { from: string; to: string }; // inclusive "YYYY-MM"
 
+/** The value of a Fact that must have one; throws instead of turning null into a number. */
+export function requireValue(fact: Pick<Fact, "id" | "value">): number {
+  if (fact.value === null) throw new Error(`Fact ${fact.id} has no value`);
+  return fact.value;
+}
+
 export type Fact = {
   id: string;
   label: string;
-  value: number;
+  /** null = a required team assumption is unset ("needs input", ADR 0016). Never 0 or NaN. */
+  value: number | null;
   unit: string;
   methods: Method[];
   source: Source;
@@ -19,5 +26,5 @@ export type Fact = {
   period: Period;
   baseline: string | null;
   /** null = not modelled yet (sensitivity arrives in Slice 4). */
-  range: { low: number | null; base: number; high: number | null };
+  range: { low: number | null; base: number | null; high: number | null };
 };
