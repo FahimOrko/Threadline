@@ -69,11 +69,11 @@ The dashboard SHALL show a table of the selected customer's sites with active we
 - **THEN** the site page opens with the same `?customer=`
 
 ### Requirement: Same content for both roles
-The operational cards, the money and utilization cards and the site table SHALL be identical in the KAM and Customer roles.
+The dashboard SHALL be for the KAM only. The same cards and tables SHALL show whichever customer is selected, and the customer view SHALL NOT reach them (see dashboard-navigation).
 
 #### Scenario: Role switch
 - **WHEN** the user switches from KAM to Customer
-- **THEN** the cards and the table do not change
+- **THEN** the dashboard is no longer reachable and Story opens instead
 
 ### Requirement: Money and utilization cards
 The dashboard SHALL show, below the operational cards, one card each for Avoided purchase cost, Garment value kept in use (Dec), Cost of unused allocation (Dec, per week) and Garment utilization (Dec) for the selected customer, each with value, unit, provenance chip and Show math. Percentage values SHALL show one decimal, rounded only for display; Show math SHALL keep the exact inputs.
@@ -160,7 +160,7 @@ The dashboard SHALL show, under a "Footprint" heading, savings vs the selected b
 - **THEN** the cards wrap in the same grid as the other sections without clipping
 
 ### Requirement: Site page
-The route `/dashboard/sites/[siteId]` SHALL show the site name, site type, laundry name and a back link to `/dashboard?customer=<customerId>`, then the operational, money and utilization and percentage `FactStatCard`s with site scope, each naming the site in Show math. Content SHALL be identical for the KAM and Customer roles.
+The route `/dashboard/sites/[siteId]` SHALL show inside the dashboard sidebar the site name, site type, laundry name and a back link to `/dashboard/sites?customer=<customerId>`, then the operational, money and utilization and percentage `FactStatCard`s with site scope, each naming the site in Show math. Content SHALL be the same for any customer-scoped KAM visit.
 
 #### Scenario: Site values match the table
 - **WHEN** the user opens a NorthStar site from the table
@@ -193,10 +193,10 @@ The site page SHALL render the not-found page when the `siteId` is unknown or th
 - **THEN** the not-found page is rendered
 
 ### Requirement: Observations section
-The dashboard SHALL show an Observations section with one ObservationCard per observation of the selected customer, placed after the cards and before the Sites table, with an empty state when there are none. A flagged site SHALL link to its site page keeping the `customer`, `baseline` and `sensitivity` params. The site page SHALL NOT gain an observations block.
+The Signals section SHALL show one ObservationCard per observation of the selected customer, after its charts, with an empty state when there are none. A flagged site SHALL link to its site page keeping the `customer`, `baseline`, `sensitivity` and `view` params. The site page SHALL NOT gain an observations block.
 
 #### Scenario: NorthStar
-- **WHEN** the dashboard is opened for CUST001
+- **WHEN** the Signals section is opened for CUST001
 - **THEN** five observations show: one value, three risks and one gap
 
 #### Scenario: Link keeps params
@@ -204,5 +204,5 @@ The dashboard SHALL show an Observations section with one ObservationCard per ob
 - **THEN** the site page opens with the same three params
 
 #### Scenario: Other customer
-- **WHEN** the customer is changed in the header
+- **WHEN** the customer is changed in the sidebar
 - **THEN** the section shows that customer's observations

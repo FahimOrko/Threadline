@@ -6,22 +6,22 @@ Lets the same app serve the Key Account Manager preparing the review and the cus
 ## Requirements
 
 ### Requirement: Role toggle
-The app SHALL provide a header toggle between the KAM and Customer roles, defaulting to KAM on first visit.
+The app SHALL provide a header toggle between the KAM and Customer views, defaulting to KAM. The toggle SHALL set `?view=` on the current address; no store is read.
 
 #### Scenario: Default role
-- **WHEN** a user opens the app for the first time
-- **THEN** the role is KAM
+- **WHEN** a user opens the app with no `view`
+- **THEN** the view is KAM
 
 #### Scenario: Switch role
 - **WHEN** the user selects Customer in the toggle
-- **THEN** the toggle shows Customer as active
+- **THEN** the address gains `view=customer` and the toggle shows Customer as active
 
 ### Requirement: Role persists
-The app SHALL remember the chosen role in the browser and restore it after a reload.
+The app SHALL keep the chosen view in the address. A reload keeps it, and navigation between Impact World and Story carries it.
 
 #### Scenario: Reload keeps role
 - **WHEN** the user selects Customer and reloads the page
-- **THEN** the role is still Customer
+- **THEN** the view is still Customer
 
 #### Scenario: No logins
 - **WHEN** the user switches role

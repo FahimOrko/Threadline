@@ -6,11 +6,15 @@ Gives users one frame around every view: a header, a way to switch between the t
 ## Requirements
 
 ### Requirement: Header placeholders
-The app SHALL show a header on every view with a customer picker, a baseline selector, a sensitivity selector, the role toggle, and a theme toggle that switches between dark and light.
+The app SHALL show a header on every view with a theme toggle that switches between dark and light and the KAM/Customer view toggle, and, outside the dashboard and the game, a customer picker, a baseline selector and a sensitivity selector. On `/dashboard` routes the three pickers live in the dashboard sidebar.
 
 #### Scenario: Header visible on all views
-- **WHEN** the user opens any of the three views
-- **THEN** the header with customer picker, baseline selector, sensitivity selector, role toggle and theme toggle is shown
+- **WHEN** the user opens Impact World
+- **THEN** the header shows the customer picker, baseline selector, sensitivity selector, view toggle and theme toggle
+
+#### Scenario: Header on the dashboard
+- **WHEN** the user opens a dashboard route
+- **THEN** the header shows no picker and the sidebar does
 
 #### Scenario: Switch theme from header
 - **WHEN** the user activates the theme toggle
@@ -21,19 +25,23 @@ The app SHALL show a header on every view with a customer picker, a baseline sel
 - **THEN** the selection changes as described in the customer-selection capability
 
 ### Requirement: View switching
-The app SHALL offer a view switcher for Dashboard, Impact World and Story, and SHALL show the page of the chosen view with the active view highlighted.
+The app SHALL offer a view switcher for Dashboard, Impact World and Story, and SHALL show the page of the chosen view with the active view highlighted. In the customer view the switcher SHALL omit Dashboard. Links to Story and Impact World SHALL carry only `view`.
 
 #### Scenario: Switch view
 - **WHEN** the user selects "Story" in the view switcher
 - **THEN** the Story page is shown and "Story" is marked active
 
 #### Scenario: Root opens the Dashboard
-- **WHEN** the user opens the app root
+- **WHEN** the user opens the app root in the KAM view
 - **THEN** the Dashboard view is shown
 
 #### Scenario: Direct link
 - **WHEN** the user opens the Impact World address directly
 - **THEN** the Impact World page is shown with "Impact World" active
+
+#### Scenario: Customer view
+- **WHEN** `?view=customer`
+- **THEN** the switcher shows Impact World and Story only
 
 ### Requirement: Empty view pages
 Each view SHALL render an empty page that shows its own name and no data.
