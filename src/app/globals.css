@@ -18,6 +18,15 @@
   --color-sidebar-primary: var(--sidebar-primary);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar: var(--sidebar);
+  --color-chart-subject: var(--chart-subject);
+  --color-chart-comparison: var(--chart-comparison);
+  --color-chart-uncertain: var(--chart-uncertain);
+  --color-chart-grid: var(--chart-grid);
+  --color-heat-0: var(--heat-0);
+  --color-heat-1: var(--heat-1);
+  --color-heat-2: var(--heat-2);
+  --color-heat-3: var(--heat-3);
+  --color-heat-4: var(--heat-4);
   --color-chart-5: var(--chart-5);
   --color-chart-4: var(--chart-4);
   --color-chart-3: var(--chart-3);
@@ -81,6 +90,15 @@
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
   --radius: 0.5rem;
+  --chart-subject: oklch(0.48 0.095 195);
+  --chart-comparison: oklch(0.5 0.01 250);
+  --chart-uncertain: oklch(0.5 0.12 65);
+  --chart-grid: oklch(0.88 0.008 250);
+  --heat-0: oklch(0.96 0.008 195);
+  --heat-1: oklch(0.9 0.035 195);
+  --heat-2: oklch(0.8 0.065 195);
+  --heat-3: oklch(0.64 0.09 195);
+  --heat-4: oklch(0.48 0.095 195);
   --sidebar: oklch(0.97 0.005 250);
   --sidebar-foreground: oklch(0.2 0.015 250);
   --sidebar-primary: oklch(0.48 0.095 195);
@@ -141,6 +159,15 @@
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
+  --chart-subject: oklch(0.78 0.12 195);
+  --chart-comparison: oklch(0.7 0.01 250);
+  --chart-uncertain: oklch(0.8 0.12 85);
+  --chart-grid: oklch(1 0 0 / 14%);
+  --heat-0: oklch(0.24 0.012 250);
+  --heat-1: oklch(0.34 0.04 195);
+  --heat-2: oklch(0.48 0.07 195);
+  --heat-3: oklch(0.64 0.1 195);
+  --heat-4: oklch(0.78 0.12 195);
   --sidebar: oklch(0.2 0.012 250);
   --sidebar-foreground: oklch(0.96 0.005 250);
   --sidebar-primary: oklch(0.78 0.12 195);
@@ -160,6 +187,16 @@
   }
   html {
     @apply font-sans;
+  }
+}
+
+/* The one-off ring on a card whose figure changed after a scenario switch (ADR 0025); used only under motion-safe. */
+@keyframes changed {
+  from {
+    box-shadow: 0 0 0 2px var(--primary);
+  }
+  to {
+    box-shadow: 0 0 0 2px transparent;
   }
 }
 

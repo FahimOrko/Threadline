@@ -80,8 +80,8 @@ export function repairRateByProduct(data: PercentageData, scope: OperationalScop
   return facts;
 }
 
-/** Share of the customer's allocated textile waste that is recycled or reused, weighted by allocated kg. */
-export function recyclingReuseShare(data: PercentageData, scope: OperationalScope): Fact | null {
+/** The customer's allocated textile waste in kg and the part of it recycled or reused (A003: allocated by washed-kg share). Null without waste. */
+export function wasteSplit(data: Pick<AppData, "wasteCircularity" | "impactAllocation">, scope: OperationalScope): { total: number; recovered: number; rows: number } | null {
   const rows = data.impactAllocation.filter(
     (a) => a.customer_id === scope.customerId && a.month >= scope.period.from && a.month <= scope.period.to,
   );
@@ -95,7 +95,14 @@ export function recyclingReuseShare(data: PercentageData, scope: OperationalScop
     total += a.allocated_textile_waste_kg;
     recovered += (a.allocated_textile_waste_kg * (w.recycling_kg + w.reuse_kg)) / w.textile_waste_total_kg;
   }
-  if (total === 0) return null;
+  return total === 0 ? null : { total, recovered, rows: rows.length };
+}
+
+/** Share of the customer's allocated textile waste that is recycled or reused, weighted by allocated kg. */
+export function recyclingReuseShare(data: PercentageData, scope: OperationalScope): Fact | null {
+  const split = wasteSplit(data, scope);
+  if (split === null) return null;
+  const { total, recovered, rows } = split;
   const find = (id: string) => {
     const a = data.assumptions.find((x) => x.assumption_id === id);
     if (!a) throw new Error(`Assumption ${id} is missing from the assumptions data`);
@@ -114,7 +121,7 @@ export function recyclingReuseShare(data: PercentageData, scope: OperationalScop
     formula:
       "share = sum of allocated waste kg x (recycling_kg + reuse_kg) / textile_waste_total_kg of its laundry-month, divided by total allocated waste kg x 100. Laundry waste is allocated to the customer by washed-kg share (A003).",
     inputs: [
-      { label: "Laundry-months used", value: rows.length },
+      { label: "Laundry-months used", value: rows },
       { label: "Allocated textile waste", value: total, unit: "kg" },
       { label: "Recycled or reused (allocated)", value: recovered, unit: "kg" },
       {

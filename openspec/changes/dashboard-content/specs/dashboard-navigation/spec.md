@@ -13,21 +13,6 @@ The app sidebar SHALL show one link per dashboard section, each a subroute under
 - **WHEN** the KAM opens `/dashboard/sites/<siteId>`
 - **THEN** the sidebar shows "Sites" active and the breadcrumb links back to `/dashboard/sites`
 
-### Requirement: Pickers in the sidebar
-The customer picker SHALL be the sidebar's switcher, labelled, on every route where pickers apply, and SHALL show the customer's initials when the sidebar is collapsed. The baseline and sensitivity pickers SHALL be shown, labelled, in the header on every dashboard route. The sensitivity picker SHALL use the plain labels Cautious, Standard and Generous estimate. Each picker SHALL change only its own URL param.
-
-#### Scenario: Change customer
-- **WHEN** the KAM chooses another customer in the switcher
-- **THEN** the current section reloads for that customer and the other params stay
-
-#### Scenario: Change estimate
-- **WHEN** the KAM chooses "Generous estimate" in the header
-- **THEN** the page reloads with `sensitivity=high` and the other params stay
-
-#### Scenario: Collapsed sidebar
-- **WHEN** the sidebar is collapsed
-- **THEN** the customer switcher shows initials with an accessible name giving the customer, and the baseline and sensitivity selectors remain in the header
-
 ### Requirement: Customer view has no dashboard
 When `?view=customer`, the navigation SHALL NOT offer the dashboard, and a request to `/dashboard` or any route below it SHALL be redirected to `/story/game` before the page renders, keeping `view` and `customer` and dropping other dashboard params. Without `view` or with an unknown value the view SHALL be KAM.
 
@@ -42,3 +27,58 @@ When `?view=customer`, the navigation SHALL NOT offer the dashboard, and a reque
 #### Scenario: Default is KAM
 - **WHEN** `/dashboard` is opened with no `view`
 - **THEN** the dashboard is shown
+
+## ADDED Requirements
+
+### Requirement: Breadcrumb links
+Every breadcrumb segment except the current page SHALL be a link that keeps `customer`, `baseline`, `sensitivity` and `view`: "Dashboard" to `/dashboard` and "Sites" to `/dashboard/sites`.
+
+#### Scenario: Link from a site page
+- **WHEN** the KAM is on a site page with `?customer=CUST002` and activates "Dashboard"
+- **THEN** `/dashboard?customer=CUST002` opens
+
+#### Scenario: Current page
+- **WHEN** the breadcrumb is shown
+- **THEN** its last segment is plain text marked `aria-current="page"`
+
+### Requirement: Customer switcher
+The sidebar's top slot SHALL hold, below the Threadline wordmark row, a switcher row with an avatar showing the customer's initials, the customer's name, a subtitle with its industry and its site count (from the customer data and the delivery-sites Fact, never typed in) and a chevron. Activating it SHALL open a menu listing every customer, the current one checked; choosing one SHALL change only the `customer` param. When the sidebar is collapsed the row SHALL show the avatar alone with the customer's name as its tooltip and accessible name. In the customer view the row SHALL show the locked customer with no menu.
+
+#### Scenario: Change customer
+- **WHEN** the KAM opens the switcher and chooses another customer
+- **THEN** the current section reloads for that customer and the other params stay
+
+#### Scenario: Collapsed sidebar
+- **WHEN** the sidebar is collapsed
+- **THEN** only the avatar is shown, its accessible name and tooltip give the customer's name, and it still opens the menu
+
+#### Scenario: Customer view
+- **WHEN** the view is customer
+- **THEN** the switcher row shows the customer without a menu or chevron
+
+### Requirement: Scenario strip
+The Overview and Environmental footprint pages (the only pages whose figures depend on the baseline or estimate) SHALL show, above their title, a scenario strip. No other dashboard page, including site pages, SHALL show it with two labelled groups of segmented buttons with every option visible: "Comparing against" (the baseline display names: local laundry, home washing, in-house laundry) and "Estimate" (Cautious estimate, Standard estimate, Generous estimate). The strip SHALL be visually distinct from cards (tinted surface and accent border) and read as a control. Each option SHALL have a short plain-language tooltip; the estimate tooltips SHALL say the range is declared by the team (T002), not measured (ADR 0017). The strip SHALL carry one line: "These choices change the savings figures on this page." A choice SHALL change only its own URL param, and an unknown value SHALL show the default as checked. After a choice, every card or panel figure whose Fact value changed SHALL show a brief highlight, decided by comparing the Fact's value before and after; the highlight SHALL NOT appear with `prefers-reduced-motion: reduce` or on first load.
+
+#### Scenario: Only where it matters
+- **WHEN** the KAM opens Garments and utilization, Costs, Signals, Sites or a site page
+- **THEN** no scenario strip is shown and no text says the choices do not apply
+
+#### Scenario: All options visible
+- **WHEN** a dashboard page opens
+- **THEN** all three baselines and all three estimates are shown as buttons, with the URL's choice checked, and no dropdown
+
+#### Scenario: Change estimate
+- **WHEN** the KAM chooses "Generous estimate"
+- **THEN** the page reloads with `sensitivity=high` and the other params stay
+
+#### Scenario: Tooltip
+- **WHEN** the KAM focuses or hovers "Cautious estimate"
+- **THEN** a tooltip says in plain words what it means and that the range is declared by the team
+
+#### Scenario: Changed cards highlight
+- **WHEN** a choice changes a card's Fact value
+- **THEN** that card is highlighted briefly and cards whose value did not change are not
+
+#### Scenario: Narrow main area
+- **WHEN** both sidebars are open at 1230px
+- **THEN** the two groups sit on their own lines and no button wraps its text

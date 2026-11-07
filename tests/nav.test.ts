@@ -55,16 +55,23 @@ describe("links", () => {
 
 describe("breadcrumb", () => {
   it("names the section on the dashboard", () => {
-    expect(breadcrumbFor("/dashboard")).toEqual([{ label: "Dashboard" }, { label: "Overview" }]);
-    expect(breadcrumbFor("/dashboard/costs")).toEqual([{ label: "Dashboard" }, { label: "Costs" }]);
+    expect(breadcrumbFor("/dashboard")).toEqual([{ label: "Dashboard", href: "/dashboard" }, { label: "Overview" }]);
+    expect(breadcrumbFor("/dashboard/costs")).toEqual([{ label: "Dashboard", href: "/dashboard" }, { label: "Costs" }]);
   });
   it("a site page links back to Sites and names the site", () => {
-    expect(breadcrumbFor("/dashboard/sites/S1", "Plant A")).toEqual([{ label: "Dashboard" }, { label: "Sites", href: "/dashboard/sites" }, { label: "Plant A" }]);
+    expect(breadcrumbFor("/dashboard/sites/S1", "Plant A")).toEqual([{ label: "Dashboard", href: "/dashboard" }, { label: "Sites", href: "/dashboard/sites" }, { label: "Plant A" }]);
     expect(breadcrumbFor("/dashboard/sites/S1").at(-1)).toEqual({ label: "Site" });
   });
   it("other views show their own name", () => {
     expect(breadcrumbFor("/story/game")).toEqual([{ label: "Story" }]);
     expect(breadcrumbFor("/impact")).toEqual([{ label: "Impact World" }]);
+  });
+  it("links every crumb except the current page", () => {
+    for (const p of ["/dashboard", "/dashboard/costs", "/dashboard/sites", "/dashboard/sites/S1"]) {
+      const crumbs = breadcrumbFor(p, "Plant A");
+      expect(crumbs.slice(0, -1).every((c) => c.href !== undefined)).toBe(true);
+      expect(crumbs.at(-1)!.href).toBeUndefined();
+    }
   });
   it("is empty before the pathname is known", () => {
     expect(breadcrumbFor(undefined)).toEqual([]);

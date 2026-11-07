@@ -25,3 +25,12 @@ export const formatValue = (n: number, unit?: string) =>
 export const formatPeriod = (p: Period) => (p.from === p.to ? p.from : `${p.from} to ${p.to}`);
 
 export const formatQuantity = (n: number, unit?: string) => (unit ? `${formatValue(n, unit)} ${unit}` : formatNumber(n));
+
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+/** "2025-10" -> "Oct", or "Oct 2025" with `year`. */
+export const formatMonth = (m: string, year = false) => `${MONTHS[Number(m.slice(5, 7)) - 1]}${year ? ` ${m.slice(0, 4)}` : ""}`;
+/** "Oct to Dec 2025", "Dec 2025" for one month, both years when they differ. */
+export function formatMonthRange(p: Period): string {
+  if (p.from === p.to) return formatMonth(p.from, true);
+  return p.from.slice(0, 4) === p.to.slice(0, 4) ? `${formatMonth(p.from)} to ${formatMonth(p.to, true)}` : `${formatMonth(p.from, true)} to ${formatMonth(p.to, true)}`;
+}

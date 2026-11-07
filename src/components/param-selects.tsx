@@ -1,19 +1,19 @@
 "use client";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useId } from "react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { CaretUpDown } from "@phosphor-icons/react";
+import { Tooltip } from "@/components/tooltip";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { resolveCustomer } from "@/lib/customer";
-import { SENSITIVITY_LEVELS } from "@/lib/engine";
-import { SENSITIVITY_LABEL, resolveBaseline, resolveSensitivity } from "@/lib/selection";
+import { formatNumber } from "@/lib/format";
+import { resolveBaseline, resolveSensitivity } from "@/lib/selection";
 
-export type ShellCustomer = { customer_id: string; name: string };
+/** `industry` and `sites` come from the customer data and the delivery-sites Fact; they only fill the switcher's subtitle. */
+export type ShellCustomer = { customer_id: string; name: string; industry?: string; sites?: number };
 export type ShellBaseline = { baseline_id: string; name: string };
 
-const SENSITIVITY_ITEMS = SENSITIVITY_LEVELS.map((l) => ({ value: l, label: SENSITIVITY_LABEL[l] }));
-
-// The layout cannot read searchParams, so the header reads the URL here. It uses the same resolvers as the page.
+// The layout cannot read searchParams, so client components read the URL here. It uses the same resolvers as the page.
 export function useSelection(customers: ShellCustomer[], baselines: ShellBaseline[]) {
   const params = useSearchParams();
   const raw = { customer: params.get("customer"), baseline: params.get("baseline"), sensitivity: params.get("sensitivity") };
@@ -26,57 +26,80 @@ export function useSelection(customers: ShellCustomer[], baselines: ShellBaselin
   };
 }
 
-// Two letters for the collapsed customer switcher.
+// Two letters for the customer avatar.
 export const initials = (name: string) => name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0].toUpperCase()).join("");
 
-// A selector only changes its own param; the others stay in the address (ADR 0017).
-// `compact` is the collapsed sidebar form: the label stays for assistive tech and the trigger shows initials.
-export function ParamSelect({ label, name, value, items, stacked, compact }: { label: string; name: string; value: string; items: { value: string; label: string }[]; stacked?: boolean; compact?: boolean }) {
+/** A param change keeps every other param in the address (ADR 0017). */
+export function useSetParam() {
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
-  const labelId = useId();
+  return (name: string, value: string) => {
+    const next = new URLSearchParams(params.toString());
+    next.set(name, value);
+    router.push(`${pathname}?${next.toString()}`);
+  };
+}
+
+const subtitle = (c: ShellCustomer) => [c.industry, c.sites === undefined ? undefined : `${formatNumber(c.sites)} ${c.sites === 1 ? "site" : "sites"}`].filter(Boolean).join(" · ");
+
+function Avatar({ name }: { name: string }) {
   return (
-    <div className={cn("flex gap-2", stacked ? "flex-col" : "items-center")}>
-      <span id={labelId} className={cn("text-sm text-muted-foreground", compact && "sr-only")}>
-        {label}
-      </span>
-      <Select
-        value={value}
-        items={items}
-        onValueChange={(v) => {
-          const next = new URLSearchParams(params.toString());
-          next.set(name, String(v));
-          router.push(`${pathname}?${next.toString()}`);
-        }}
-      >
-        <SelectTrigger size="sm" aria-labelledby={labelId} className={cn(stacked && "w-full", compact && "size-8 justify-center px-0 [&>svg]:hidden")}>
-          {compact ? <span aria-hidden className="text-xs font-medium">{initials(items.find((i) => i.value === value)?.label ?? "")}</span> : <SelectValue />}
-        </SelectTrigger>
-        <SelectContent alignItemWithTrigger={false}>
-          {items.map((i) => (
-            <SelectItem key={i.value} value={i.value}>
-              {i.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </div>
+    <span aria-hidden className="flex size-8 shrink-0 items-center justify-center rounded-md bg-sidebar-primary text-xs font-medium text-sidebar-primary-foreground">
+      {initials(name)}
+    </span>
   );
 }
 
-export function CustomerSelect({ customers, baselines, compact }: { customers: ShellCustomer[]; baselines: ShellBaseline[]; compact?: boolean }) {
+/**
+ * The customer switcher row at the top of the sidebar (sidebar-07 style): avatar, name, industry and site count, chevron, and a menu of customers.
+ * Collapsed it is the avatar alone with the name as a tooltip. `locked` (customer view) shows the customer with no menu.
+ */
+export function CustomerSwitcher({ customers, baselines, collapsed, locked }: { customers: ShellCustomer[]; baselines: ShellBaseline[]; collapsed?: boolean; locked?: boolean }) {
   const { customer } = useSelection(customers, baselines);
-  return <ParamSelect stacked compact={compact} label="Customer" name="customer" value={customer.customer_id} items={customers.map((c) => ({ value: c.customer_id, label: c.name }))} />;
-}
-
-/** The two pickers that change the numbers on a dashboard page (ADR 0017); they live in the header. */
-export function EstimateSelects({ customers, baselines }: { customers: ShellCustomer[]; baselines: ShellBaseline[] }) {
-  const { baseline, sensitivity } = useSelection(customers, baselines);
-  return (
+  const setParam = useSetParam();
+  const current = customers.find((c) => c.customer_id === customer.customer_id) ?? customers[0];
+  const body = (
     <>
-      <ParamSelect label="Baseline" name="baseline" value={baseline.baseline_id} items={baselines.map((b) => ({ value: b.baseline_id, label: b.name }))} />
-      <ParamSelect label="Estimate" name="sensitivity" value={sensitivity} items={SENSITIVITY_ITEMS} />
+      <Avatar name={current.name} />
+      {!collapsed && (
+        <span className="grid min-w-0 flex-1 text-left leading-tight">
+          <span className="truncate text-sm font-medium">{current.name}</span>
+          <span className="truncate text-xs text-muted-foreground">{subtitle(current)}</span>
+        </span>
+      )}
     </>
+  );
+  const row = "flex w-full items-center gap-2 rounded-md p-1 text-sidebar-foreground";
+  if (locked) {
+    return (
+      <div className={cn(row, collapsed && "justify-center")} aria-label={`Customer: ${current.name}`} role="group">
+        {body}
+      </div>
+    );
+  }
+  const trigger = (
+    <DropdownMenuTrigger aria-label={`Customer: ${current.name}. Switch customer`} className={cn(row, "outline-none hover:bg-sidebar-accent focus-visible:ring-2 focus-visible:ring-sidebar-ring data-popup-open:bg-sidebar-accent", collapsed && "justify-center")}>
+      {body}
+      {!collapsed && <CaretUpDown aria-hidden className="ml-auto size-4 shrink-0 text-muted-foreground" />}
+    </DropdownMenuTrigger>
+  );
+  return (
+    <DropdownMenu>
+      {collapsed ? <Tooltip label={current.name}>{trigger}</Tooltip> : trigger}
+      <DropdownMenuContent align="start" className="w-(--anchor-width) min-w-56">
+        <DropdownMenuRadioGroup value={current.customer_id} onValueChange={(v) => setParam("customer", String(v))}>
+          {customers.map((c) => (
+            <DropdownMenuRadioItem key={c.customer_id} value={c.customer_id}>
+              <Avatar name={c.name} />
+              <span className="grid min-w-0 leading-tight">
+                <span className="truncate">{c.name}</span>
+                <span className="truncate text-xs text-muted-foreground">{subtitle(c)}</span>
+              </span>
+            </DropdownMenuRadioItem>
+          ))}
+        </DropdownMenuRadioGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

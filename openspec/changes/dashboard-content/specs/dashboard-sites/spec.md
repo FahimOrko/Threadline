@@ -30,3 +30,18 @@ The Sites section SHALL show the sites by month heatmap (see dashboard-charts) a
 #### Scenario: Toggle
 - **WHEN** the KAM selects "Repairs"
 - **THEN** the heatmap shows repairs and the table is unchanged
+
+### Requirement: Back to sites
+A site page SHALL start with a "Back to sites" button, above the site name, linking to `/dashboard/sites` with the current customer, baseline and sensitivity.
+
+#### Scenario: Back link
+- **WHEN** the KAM opens a site page with `?customer=CUST001&baseline=B_HOME&sensitivity=high`
+- **THEN** the button links to `/dashboard/sites?customer=CUST001&baseline=B_HOME&sensitivity=high`
+
+### Requirement: Site page groups
+The site page SHALL show a summary panel (name, type, laundry and four figures: active wearers, garments in circulation, utilization, on-time rate), then groups by meaning: Garments and use (the site against the customer chart), Costs and service, and Repairs (a panel, one horizontal bar chart of repair rate by product with product names on its rows, and the monthly repair line). It SHALL NOT repeat a figure the comparison chart shows as a card. The note on figures not shown for a single site SHALL stay as a muted footnote.
+
+#### Scenario: One chart for products
+- **WHEN** a site has three products
+- **THEN** one bar chart shows three rows and no card per product exists
+

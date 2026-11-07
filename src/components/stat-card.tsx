@@ -10,22 +10,31 @@ export function StatCard({
   needsInput,
   provenance,
   note,
+  trend,
+  extra,
   className,
   children,
 }: {
   label: string;
-  value?: string;
+  value?: React.ReactNode;
   unit?: string;
   needsInput?: string;
   provenance?: React.ReactNode;
   /** One plain line under the value saying what it means. */
   note?: string;
+  /** Top-right of the card: a trend badge. */
+  trend?: React.ReactNode;
+  /** Between the line and the chip: a sparkline or a comparison. */
+  extra?: React.ReactNode;
   className?: string;
   children?: React.ReactNode;
 }) {
   return (
     <Panel className={cn("space-y-2", className)}>
-      <p className="text-sm text-muted-foreground">{label}</p>
+      <div className="flex items-start justify-between gap-2">
+        <p className="text-sm text-muted-foreground">{label}</p>
+        {trend}
+      </div>
       {needsInput === undefined ? (
         <p className="flex items-baseline gap-1">
           <span className="num text-2xl font-medium">{value}</span>
@@ -38,6 +47,7 @@ export function StatCard({
         </div>
       )}
       {note && <p className="text-xs text-muted-foreground">{note}</p>}
+      {extra}
       {provenance}
       {children}
     </Panel>

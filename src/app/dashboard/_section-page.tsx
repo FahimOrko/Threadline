@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { Panel } from "@/components/panel";
+import { ScenarioStrip } from "@/components/scenario-strip";
 import { StatCardSkeleton } from "@/components/states";
 import { resolveCustomer } from "@/lib/customer";
 import { generatedSource } from "@/lib/data/generated";
@@ -25,10 +26,11 @@ export type SectionContext = {
  * One section page: heading and skeleton prerender, the rest waits for searchParams (runtime data).
  * Notices for an unknown customer, baseline or sensitivity come first, as on the old page.
  */
-export function SectionPage({ slug, searchParams, children }: { slug: SectionSlug; searchParams: Search; children: (ctx: SectionContext) => React.ReactNode | Promise<React.ReactNode> }) {
+export function SectionPage({ slug, scenario, searchParams, children }: { slug: SectionSlug; /** Show the scenario strip: only on pages where the baseline or estimate change a figure (ADR 0027). */ scenario?: boolean; searchParams: Search; children: (ctx: SectionContext) => React.ReactNode | Promise<React.ReactNode> }) {
   const { label } = section(slug);
   return (
     <div className="space-y-6">
+      {scenario && <Scenario />}
       <h1 className="text-2xl font-semibold">{label}</h1>
       <Suspense
         fallback={
@@ -45,6 +47,11 @@ export function SectionPage({ slug, searchParams, children }: { slug: SectionSlu
       </Suspense>
     </div>
   );
+}
+
+async function Scenario() {
+  const { baselines } = await generatedSource.load();
+  return <ScenarioStrip baselines={baselines.map((b) => ({ baseline_id: b.baseline_id, name: baselineShortName(b) }))} />;
 }
 
 async function Content({ slug, searchParams, children }: { slug: SectionSlug; searchParams: Search; children: (ctx: SectionContext) => React.ReactNode | Promise<React.ReactNode> }) {

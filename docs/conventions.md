@@ -49,3 +49,12 @@ Read before coding, together with `docs/adr/README.md`. Add a new convention her
 
 ## Docs
 - ADRs are append-only. `docs/product-spec.md` is only edited on request.
+
+## Dashboard charts and scenario (ADR 0024, 0026)
+
+- Chart values come from the engine only: `monthlySeries` (with `windows` and `trend`), `monthlySeriesBySite`, `repairBand`, `dormantStacks`, `footprintComparison`, `overAllocationCutoffPercent`, or the Facts. Components map a value to a width or a height and never derive a figure; slicing a series to its last 3, 6 or 12 points, sorting and filtering are selection. Pages assemble chart data in `src/lib/dashboard-data.ts`.
+- Every chart sits in `ChartFrame` (question title, caption, summary, hidden table equal to the values, Show math). A client chart never receives a function prop from a server page: pass data and let the client build links.
+- Dashed = estimated or illustrative (the chip's uncertain tone decides); hatched = needs input, never zero; amber only for uncertainty; no legends, direct labels.
+- The baseline and estimate are the scenario strip above the title of Overview and Environmental footprint (the pages whose figures depend on them), never the header. Trend badges state direction only; the tooltip names the periods (flows: last three months against the three before; utilization: December against September).
+- Provenance chips on cards are the one-line `label` variant, with one `ChipLegend` per page.
+- Dashboard motion is the five effects of `docs/design.md`; each is off under `prefers-reduced-motion` and none touches a number except the count-up, which lands on `formatCardValue`'s string.

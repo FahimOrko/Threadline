@@ -1,3 +1,4 @@
+import { ChangeHighlight } from "@/components/change-highlight";
 import { ProvenanceChip } from "@/components/provenance-chip";
 import { ShowMathPopover, type ShowMathProps } from "@/components/show-math";
 import { StatCard } from "@/components/stat-card";
@@ -36,20 +37,24 @@ export function factShowMath(fact: Fact): ShowMathProps {
 }
 
 // The only place a Fact becomes StatCard, ProvenanceChip and ShowMathPopover props.
-export function FactStatCard({ fact, note, className }: { fact: Fact; note?: string; className?: string }) {
+export function FactStatCard({ fact, note, className, value, trend, extra }: { fact: Fact; note?: string; className?: string; /** Replaces the printed value, for the count-up; it must read as the same string. */ value?: React.ReactNode; trend?: React.ReactNode; extra?: React.ReactNode }) {
   // A null value means a team assumption is unset (ADR 0016): show "Needs input", never 0 or an empty value.
   const missing = fact.assumptionIds.filter((id) => id.startsWith("T")).join(", ");
   return (
+    <ChangeHighlight value={fact.value} className={className}>
     <StatCard
       label={fact.label}
       note={note}
-      className={className}
-      value={fact.value === null ? undefined : formatCardValue(fact.value, fact.unit)}
+      className="h-full"
+      trend={trend}
+      extra={extra}
+      value={fact.value === null ? undefined : (value ?? formatCardValue(fact.value, fact.unit))}
       unit={fact.unit}
       needsInput={fact.value === null ? `Set ${missing || "the missing assumption"} in the assumptions config. See Show math.` : undefined}
-      provenance={<ProvenanceChip methods={fact.methods} source={fact.source} />}
+      provenance={<ProvenanceChip variant="label" methods={fact.methods} source={fact.source} />}
     >
       <ShowMathPopover {...factShowMath(fact)} />
     </StatCard>
+    </ChangeHighlight>
   );
 }

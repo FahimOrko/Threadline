@@ -4,13 +4,12 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { createContext, Suspense, useContext, useEffect, useState } from "react";
 import { CaretDoubleLeft, CaretDoubleRight, CaretRight } from "@phosphor-icons/react";
-import { EstimateSelects, type ShellBaseline, type ShellCustomer } from "@/components/param-selects";
+import type { ShellBaseline, ShellCustomer } from "@/components/param-selects";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { breadcrumbFor } from "@/lib/nav";
 import { carryParams } from "@/lib/selection";
-import { GAME_PATH } from "@/lib/story/game";
 
 // A site page names its own last crumb; the header cannot read the page's data (ADR 0025).
 const SiteName = createContext<{ name?: string; setName: (n?: string) => void }>({ setName: () => {} });
@@ -27,8 +26,6 @@ export function SiteCrumb({ name }: { name: string }) {
   }, [name, setName]);
   return null;
 }
-
-const onDashboard = (p?: string) => p !== undefined && (p === "/dashboard" || p.startsWith("/dashboard/"));
 
 function Crumbs({ pathname }: { pathname?: string }) {
   const { name } = useContext(SiteName);
@@ -59,10 +56,10 @@ function Crumbs({ pathname }: { pathname?: string }) {
   );
 }
 
-type Props = { customers: ShellCustomer[]; baselines: ShellBaseline[]; pathname?: string; aiOpen: boolean; onToggleAi: () => void };
+type Props = { customers?: ShellCustomer[]; baselines?: ShellBaseline[]; pathname?: string; aiOpen: boolean; onToggleAi: () => void };
 
-/** One thin row (ADR 0025): sidebar trigger, breadcrumb, then the baseline and estimate pickers on dashboard routes and the AI sidebar toggle. */
-export function AppHeader({ customers, baselines, pathname, aiOpen, onToggleAi }: Props) {
+/** One thin row (ADR 0025): sidebar trigger, breadcrumb, then the and the AI sidebar toggle (the baseline and estimate choices live in the scenario strip on dashboard pages). */
+export function AppHeader({ pathname, aiOpen, onToggleAi }: Props) {
   return (
     <header className="flex h-10 shrink-0 items-center gap-2 border-b px-3">
       <SidebarTrigger />
@@ -71,11 +68,6 @@ export function AppHeader({ customers, baselines, pathname, aiOpen, onToggleAi }
         <Crumbs pathname={pathname} />
       </Suspense>
       <div className="ml-auto flex items-center gap-3">
-        {onDashboard(pathname) && pathname !== GAME_PATH && (
-          <Suspense fallback={null}>
-            <EstimateSelects customers={customers} baselines={baselines} />
-          </Suspense>
-        )}
         <Button
           variant="ghost"
           size="icon"

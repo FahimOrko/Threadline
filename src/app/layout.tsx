@@ -4,7 +4,8 @@ import "./globals.css";
 import { AppShell } from "@/components/app-shell";
 import { ThemeProvider } from "@/components/theme-provider";
 import { generatedSource } from "@/lib/data/generated";
-import { baselineShortName } from "@/lib/engine";
+import { PERIOD } from "@/lib/dashboard";
+import { baselineShortName, deliverySites, requireValue } from "@/lib/engine";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -22,7 +23,8 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
-  const { customers, baselines } = await generatedSource.load();
+  const data = await generatedSource.load();
+  const { customers, baselines } = data;
   return (
     <html
       lang="en"
@@ -30,7 +32,12 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body suppressHydrationWarning className="min-h-full flex flex-col"><ThemeProvider>
-          <AppShell customers={customers.map((c) => ({ customer_id: c.customer_id, name: c.customer_name }))}
+          <AppShell customers={customers.map((c) => ({
+              customer_id: c.customer_id,
+              name: c.customer_name,
+              industry: c.industry,
+              sites: requireValue(deliverySites(data, { customerId: c.customer_id, period: PERIOD })),
+            }))}
             baselines={baselines.map((b) => ({ baseline_id: b.baseline_id, name: baselineShortName(b) }))}
           >
             {children}

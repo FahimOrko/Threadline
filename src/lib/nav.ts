@@ -34,12 +34,12 @@ export const navHref = (item: NavItem, pathname: string, params: URLSearchParams
 
 export type Crumb = { label: string; href?: string };
 
-/** The header breadcrumb for a route. `siteName` names the last crumb on a site page. Only the Sites crumb links, back to the table. */
+/** The header breadcrumb for a route. `siteName` names the last crumb on a site page. Every crumb except the current page links. */
 export function breadcrumbFor(pathname: string | undefined, siteName?: string): Crumb[] {
   if (pathname === undefined) return [];
   if (pathname === "/dashboard" || pathname.startsWith("/dashboard/")) {
     const section = SECTIONS.find((s) => s.href !== "/dashboard" && (pathname === s.href || pathname.startsWith(`${s.href}/`))) ?? SECTIONS[0];
-    const crumbs: Crumb[] = [{ label: "Dashboard" }];
+    const crumbs: Crumb[] = [{ label: "Dashboard", href: "/dashboard" }];
     if (pathname.startsWith("/dashboard/sites/")) return [...crumbs, { label: section.label, href: section.href }, { label: siteName ?? "Site" }];
     return [...crumbs, { label: section.label }];
   }

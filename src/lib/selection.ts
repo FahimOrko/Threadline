@@ -22,6 +22,19 @@ export const SENSITIVITY_DESCRIPTION: Record<Sensitivity, string> = {
   base: "Factors as given in the data pack.",
   high: "The old laundry is assumed less efficient than the data pack says, so savings come out larger.",
 };
+/** The scenario strip's tooltips (ADR 0017): what each estimate means, and that the range is declared by the team, not measured. */
+export const SENSITIVITY_TOOLTIP: Record<Sensitivity, string> = {
+  low: `${SENSITIVITY_DESCRIPTION.low} The size of the range is declared by the team (T002), not measured.`,
+  base: `${SENSITIVITY_DESCRIPTION.base} The range around it is declared by the team (T002), not measured.`,
+  high: `${SENSITIVITY_DESCRIPTION.high} The size of the range is declared by the team (T002), not measured.`,
+};
+/** What each comparison means in one plain sentence, for the scenario strip's tooltips. Unknown ids fall back to a generic line. */
+export const BASELINE_TOOLTIP: Record<string, string> = {
+  B_LOCAL: "Savings are measured against garments washed by an outsourced local laundry. This is the default comparison.",
+  B_HOME: "Savings are measured against garments washed at home by the wearer. Home washing has no delivery, so delivery alone looks worse than it.",
+  B_INHOUSE: "Savings are measured against garments washed in the customer's own laundry.",
+};
+export const baselineTooltip = (id: string) => BASELINE_TOOLTIP[id] ?? "Savings are measured against this way of washing garments.";
 
 /** Resolves `?sensitivity=`. Unknown values fall back to base; `rejected` names the bad value. */
 export function resolveSensitivity(param: Param): { sensitivity: Sensitivity; rejected: string | null } {
@@ -37,6 +50,11 @@ export function siteHref(siteId: string, params: { customer: string; baseline: s
   const q = new URLSearchParams(rest);
   if (view === "customer") q.set("view", view);
   return `/dashboard/sites/${encodeURIComponent(siteId)}?${q.toString()}`;
+}
+
+/** A dashboard page link (optionally to an anchor) that keeps the customer, baseline and sensitivity the page is showing. */
+export function sectionHref(path: string, params: { customer: string; baseline: string; sensitivity: string }, hash?: string): string {
+  return `${path}?${new URLSearchParams(params).toString()}${hash ? `#${hash}` : ""}`;
 }
 
 export const PRIORITIES = ["water", "cost", "emissions", "circularity", "service", "hygiene"] as const;

@@ -26,8 +26,11 @@ describe("FactStatCard", () => {
     expect(container.textContent).toContain("Replacements postponed");
     expect(container.textContent).toContain("15 233");
     expect(container.textContent).toContain("replacements");
-    expect(container.textContent).toContain("Estimated");
-    expect(container.textContent).toContain("Synthetic");
+    // The label chip is one line: the word and a source mark on screen, the full text as its name.
+    const chip = screen.getByRole("button", { name: "Estimated, Synthetic" });
+    expect(chip.getAttribute("data-variant")).toBe("label");
+    expect(chip.className).toContain("whitespace-nowrap");
+    expect(chip.textContent).toBe("Estimated");
   });
   it("opens Show math with formula, inputs, assumption and a missing range", async () => {
     render(<FactStatCard fact={fact} />);
@@ -69,7 +72,7 @@ describe("FactStatCard without a value", () => {
   it("keeps the amber assumed chip and a Show math control", () => {
     const { container } = render(<FactStatCard fact={unset} />);
     expect(container.textContent).toContain("Estimated");
-    expect(container.textContent).toContain("Assumption");
+    expect(screen.getByRole("button", { name: "Estimated, Assumption" }).getAttribute("data-tone")).toBe("uncertain");
     expect(screen.getByRole("button", { name: /show math/i })).toBeTruthy();
   });
   it("lists T001 as not set next to the 5 230 unused pieces in Show math", async () => {

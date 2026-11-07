@@ -149,7 +149,7 @@ export const SidebarMenuItem = ({ className, ...props }: React.ComponentProps<"l
 );
 
 const menuButton =
-  "flex h-8 w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm text-sidebar-foreground outline-hidden ring-sidebar-ring transition-[width,padding] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 data-active:bg-sidebar-accent data-active:font-medium data-active:text-sidebar-accent-foreground group-data-[collapsible=icon]/sidebar:size-8 group-data-[collapsible=icon]/sidebar:p-2 [&_svg]:size-4 [&_svg]:shrink-0 [&>span:last-child]:truncate";
+  "relative z-10 flex h-8 w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm text-sidebar-foreground outline-hidden ring-sidebar-ring transition-[width,padding] hover:text-sidebar-accent-foreground focus-visible:ring-2 data-active:font-medium data-active:text-sidebar-accent-foreground group-data-[collapsible=icon]/sidebar:size-8 group-data-[collapsible=icon]/sidebar:p-2 [&_svg]:size-4 [&_svg]:shrink-0 [&>span:last-child]:truncate";
 
 /** Renders a button, or the element given in `render` (a Link). `isActive` sets `data-active`; pass `aria-current` yourself on links. */
 export function SidebarMenuButton({ render, isActive = false, className, ...props }: useRender.ComponentProps<"button"> & { isActive?: boolean }) {

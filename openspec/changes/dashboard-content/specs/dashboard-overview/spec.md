@@ -5,16 +5,27 @@ Gives the Overview six section cards in the manner of a product dashboard (value
 
 ## ADDED Requirements
 
-### Requirement: Six section cards
-After its intro and legend, the Overview SHALL show six section cards in this order: water saved, CO₂e saved, avoided purchase cost, garment utilization, on-time cycle rate, critical dormant sites. Each card SHALL show a plain-language label, the value and unit, one line saying what it means, one compact provenance chip and Show math. All six SHALL have the same height and layout, and the grid SHALL reflow by the width of the main area (three columns at 640px and above, two below).
+### Requirement: Grouped panels
+After its intro, the Overview SHALL show grouped panels instead of one card per figure: Environment (water saved as hero, with net CO2e saved and energy saved), Money (avoided purchase cost as hero, with garment value in use), Garments and service (utilization as hero, with on-time rate and repairs) and Needs attention (the signal counts), then the interactive chart, then a Coverage panel (active wearers, garments in circulation, delivery sites). Each panel SHALL have one hero figure, one small visual where one fits, and related figures as inline stats; every figure SHALL keep a compact provenance chip and Show math, with a short on-screen label. Panels SHALL fill the grid evenly (two columns at 640px of main area and above, one below; no orphan panel).
 
-#### Scenario: Cards
+#### Scenario: Panels
 - **WHEN** the Overview opens for CUST001
-- **THEN** six cards show the same values, units and provenance as the matching Facts
+- **THEN** every figure shows the same value, unit and provenance as its Fact, and no figure repeats a value shown in the chart
 
 #### Scenario: Narrow main area
 - **WHEN** the AI sidebar and app sidebar are both open at 1230px
-- **THEN** the cards stay readable with no sideways scroll and equal heights
+- **THEN** the panels stay readable with no sideways scroll and no chip wraps
+
+### Requirement: Sites named under counts
+A figure that counts sites SHALL name them as links to their site pages, keeping the customer, baseline and sensitivity. The Overview SHALL show up to three names under the figure and "+N more" linking to the Signals page at that signal; the Signals page SHALL list all. The names SHALL come from the engine's observations for the same signal as the count.
+
+#### Scenario: Names match the count
+- **WHEN** the Overview shows "2 sites" with Critical dormant garments for CUST001
+- **THEN** two site names are shown, each linking to `/dashboard/sites/{id}` with the current params
+
+#### Scenario: More than three
+- **WHEN** a signal flags five sites
+- **THEN** three names and "+2 more" are shown, the last linking to the Signals page at that signal
 
 ### Requirement: Trend indicator
 A card with an engine monthly series SHALL show a trend badge from the series' `trend`: a word (Up, Down or Flat), a Phosphor glyph and the signed percent. It SHALL NOT use colour alone and SHALL NOT say whether the change is good or bad. Its tooltip, and Show math, SHALL state the exact comparison period, for example "Oct to Dec 2025 against Jul to Sep 2025" or "Dec 2025 against Sep 2025". A card without a monthly series (on-time cycle rate, critical dormant sites) SHALL show no trend badge and no invented trend.

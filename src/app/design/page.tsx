@@ -14,9 +14,9 @@ import { Panel } from "@/components/panel";
 import { PriorityPicker } from "@/components/priority-picker";
 import { ProvenanceChip } from "@/components/provenance-chip";
 import { SidebarView } from "@/components/app-sidebar";
-import { SectionCard } from "@/components/section-card";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { Suspense } from "react";
+import { ChartGallery } from "./_charts";
 import { SiteTable, SiteTableSkeleton } from "@/components/site-table";
 import { SectionHeader } from "@/components/section-header";
 import { PrintButton } from "@/components/print-button";
@@ -170,16 +170,6 @@ export default function DesignPage() {
           </div>
         </div>
         <div className="space-y-2">
-          <h3 className="text-sm font-medium">SectionCard</h3>
-          <p className="max-w-[65ch] text-sm text-muted-foreground">
-            An Overview headline: a FactStatCard plus one plain line saying what the number means. Equal height in its grid; the grid follows the width of the main area. Phase 2 adds trend, sparkline and comparison.
-          </p>
-          <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
-            <SectionCard fact={sampleFact} meaning="Sample line saying what the number means." />
-            <SectionCard fact={sampleNeedsInputFact} meaning="Sample line saying what the number means." />
-          </div>
-        </div>
-        <div className="space-y-2">
           <h3 className="text-sm font-medium">Needs input</h3>
           <p className="max-w-[65ch] text-sm text-muted-foreground">
             A Fact with a null value, because a team assumption is unset (ADR 0016), shows &quot;Needs input&quot; and a hint instead of a number. The amber assumed chip and Show math stay; Show math lists the assumption as &quot;not set&quot;. Same box as a card with a value.
@@ -282,6 +272,7 @@ export default function DesignPage() {
             <SiteTableSkeleton />
           </div>
         </div>
+        <ChartGallery />
         <div className="space-y-2">
           <h3 className="text-sm font-medium">AppSidebar</h3>
           <p className="max-w-[65ch] text-sm text-muted-foreground">
@@ -291,7 +282,7 @@ export default function DesignPage() {
             {[true, false].map((open) => (
               <SidebarProvider key={String(open)} defaultOpen={open} className="h-[32rem] min-h-0 w-auto overflow-hidden rounded-lg border">
                 <Suspense fallback={null}>
-                  <SidebarView className="h-full" customers={[{ customer_id: "CUST001", name: "Sample customer" }]} baselines={[]} />
+                  <SidebarView className="h-full" customers={[{ customer_id: "CUST001", name: "Sample customer", industry: "Sample industry", sites: 12 }]} baselines={[]} />
                 </Suspense>
               </SidebarProvider>
             ))}

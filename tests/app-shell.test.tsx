@@ -13,10 +13,11 @@ vi.mock("next/navigation", () => ({
 }));
 
 import { AppShell } from "@/components/app-shell";
+import { ScenarioStrip } from "@/components/scenario-strip";
 
 const customers = [
-  { customer_id: "CUST001", name: "NorthStar Foods Group" },
-  { customer_id: "CUST002", name: "Other Co" },
+  { customer_id: "CUST001", name: "NorthStar Foods Group", industry: "Food production", sites: 12 },
+  { customer_id: "CUST002", name: "Other Co", industry: "Retail", sites: 1 },
 ];
 const baselines = [
   { baseline_id: "B_LOCAL", name: "local laundry" },
@@ -38,47 +39,61 @@ beforeEach(() => {
 afterEach(cleanup);
 
 describe("customer switcher", () => {
-  it("shows NorthStar by default and for an unknown value", () => {
+  const trigger = () => screen.getByRole("button", { name: /^Customer: .*Switch customer$/ });
+  it("is a switcher row: avatar initials, name, industry and site count, then a menu of customers", async () => {
     shell();
-    expect(screen.getByRole("combobox", { name: "Customer" }).textContent).toContain("NorthStar Foods Group");
-    cleanup();
+    const t = trigger();
+    expect(t.textContent).toContain("NorthStar Foods Group");
+    expect(t.textContent).toContain("NF");
+    expect(t.textContent).toContain("Food production · 12 sites");
+    await userEvent.click(t);
+    const items = await screen.findAllByRole("menuitemradio");
+    expect(items.map((i) => i.textContent)).toEqual(["NFNorthStar Foods GroupFood production · 12 sites", "OCOther CoRetail · 1 site"]);
+    expect(items[0].getAttribute("aria-checked")).toBe("true");
+  });
+  it("shows the first customer for an unknown value", () => {
     search = "customer=NOPE";
     shell();
-    expect(screen.getByRole("combobox", { name: "Customer" }).textContent).toContain("NorthStar Foods Group");
+    expect(trigger().textContent).toContain("NorthStar Foods Group");
   });
-  it("lists every customer and navigates with the chosen id, keeping other params", async () => {
-    search = "baseline=B_HOME&sensitivity=low";
+  it("navigates with the chosen id and keeps other params", async () => {
+    search = "baseline=B_HOME&sensitivity=low&priorities=water,cost&foo=bar";
     shell();
-    await userEvent.click(screen.getByRole("combobox", { name: "Customer" }));
-    expect(screen.getAllByRole("option").map((o) => o.textContent)).toEqual(["NorthStar Foods Group", "Other Co"]);
-    await userEvent.click(screen.getByRole("option", { name: "Other Co" }));
-    expect(push).toHaveBeenCalledWith("/impact?baseline=B_HOME&sensitivity=low&customer=CUST002");
-  });
-  it("keeps priorities and an unrelated param", async () => {
-    search = "priorities=water,cost&foo=bar";
-    shell();
-    await userEvent.click(screen.getByRole("combobox", { name: "Customer" }));
-    await userEvent.click(await screen.findByRole("option", { name: "Other Co" }));
+    await userEvent.click(trigger());
+    await userEvent.click(await screen.findByRole("menuitemradio", { name: /Other Co/ }));
     const url = new URL(push.mock.calls[0][0], "http://x");
-    expect(url.searchParams.get("priorities")).toBe("water,cost");
-    expect(url.searchParams.get("foo")).toBe("bar");
+    expect(url.pathname).toBe("/impact");
+    expect(Object.fromEntries(url.searchParams)).toEqual({ baseline: "B_HOME", sensitivity: "low", priorities: "water,cost", foo: "bar", customer: "CUST002" });
   });
   it("is hidden on the game and shown elsewhere", () => {
     path = "/story/game";
     const { unmount } = shell();
-    expect(screen.queryByRole("combobox", { name: "Customer" })).toBeNull();
+    expect(screen.queryByRole("button", { name: /Switch customer/ })).toBeNull();
     unmount();
     path = "/story";
     shell();
-    expect(screen.getByRole("combobox", { name: "Customer" })).toBeTruthy();
+    expect(trigger()).toBeTruthy();
   });
-  it("collapsed, it shows initials and keeps its accessible name", () => {
+  it("collapsed, it is the avatar alone and keeps its accessible name", () => {
     path = "/dashboard";
     shell();
     expect(sidebar().getAttribute("data-state")).toBe("collapsed");
-    const box = screen.getByRole("combobox", { name: "Customer" });
-    expect(box.textContent).toContain("NF");
-    expect(box.textContent).not.toContain("NorthStar");
+    const t = trigger();
+    expect(t.textContent).toBe("NF");
+    expect(t.getAttribute("aria-label")).toContain("NorthStar Foods Group");
+  });
+  it("in customer view shows the locked customer with no menu", () => {
+    search = "view=customer&customer=CUST002";
+    shell();
+    expect(screen.queryByRole("button", { name: /Switch customer/ })).toBeNull();
+    const row = screen.getByRole("group", { name: "Customer: Other Co" });
+    expect(row.textContent).toContain("Retail · 1 site");
+  });
+  it("keeps the wordmark in its own row above the switcher", () => {
+    shell();
+    const header = sidebar().querySelector('[data-slot="sidebar-header"]')!;
+    expect(header.firstElementChild?.textContent).toBe("Threadline");
+    expect(header.lastElementChild?.contains(trigger())).toBe(true);
   });
 });
 
@@ -167,58 +182,110 @@ describe("view and theme toggles in the sidebar footer", () => {
   });
 });
 
-describe("header", () => {
-  it("shows the baseline and estimate pickers on dashboard routes only", () => {
-    path = "/dashboard";
-    const { unmount } = shell();
-    expect(screen.getByRole("combobox", { name: "Baseline" }).textContent).toContain("local laundry");
-    expect(screen.getByRole("combobox", { name: "Estimate" }).textContent).toContain("Standard estimate");
-    unmount();
-    path = "/impact";
-    shell();
-    for (const name of ["Baseline", "Estimate"]) expect(screen.queryByRole("combobox", { name })).toBeNull();
+const strip = () => within(screen.getByRole("region", { name: "Scenario" }));
+const radio = (group: string, name: string | RegExp) => within(screen.getByRole("radiogroup", { name: group })).getByRole("radio", { name });
+
+describe("scenario strip", () => {
+  const dash = (p = "/dashboard") => {
+    path = p;
+    return render(
+      <AppShell customers={customers} baselines={baselines}>
+        <ScenarioStrip baselines={baselines} />
+      </AppShell>,
+    );
+  };
+  it("shows every option as a button, with the defaults checked", () => {
+    dash();
+    expect(within(screen.getByRole("radiogroup", { name: "Comparing against" })).getAllByRole("radio").map((r) => r.textContent)).toEqual(["local laundry", "home washing", "in-house laundry"]);
+    expect(within(screen.getByRole("radiogroup", { name: "Estimate" })).getAllByRole("radio").map((r) => r.textContent)).toEqual(["Cautious estimate", "Standard estimate", "Generous estimate"]);
+    expect(radio("Comparing against", "local laundry").getAttribute("aria-checked")).toBe("true");
+    expect(radio("Estimate", "Standard estimate").getAttribute("aria-checked")).toBe("true");
+    expect(screen.queryByRole("combobox")).toBeNull();
   });
   it("falls back for unknown values, like the page", () => {
-    path = "/dashboard";
     search = "baseline=NOPE&sensitivity=extreme";
-    shell();
-    expect(screen.getByRole("combobox", { name: "Baseline" }).textContent).toContain("local laundry");
-    expect(screen.getByRole("combobox", { name: "Estimate" }).textContent).toContain("Standard estimate");
+    dash();
+    expect(radio("Comparing against", "local laundry").getAttribute("aria-checked")).toBe("true");
+    expect(radio("Estimate", "Standard estimate").getAttribute("aria-checked")).toBe("true");
   });
-  it("lists the plain estimate labels and changing one keeps the other params", async () => {
+  it("reads the choice from the URL", () => {
+    search = "baseline=B_HOME&sensitivity=high";
+    dash();
+    expect(radio("Comparing against", "home washing").getAttribute("aria-checked")).toBe("true");
+    expect(radio("Estimate", "Generous estimate").getAttribute("aria-checked")).toBe("true");
+  });
+  it("changing one keeps every other param", async () => {
     path = "/dashboard/costs";
     search = "customer=CUST002&baseline=B_HOME&priorities=water";
-    shell();
-    await userEvent.click(screen.getByRole("combobox", { name: "Estimate" }));
-    expect((await screen.findAllByRole("option")).map((o) => o.textContent)).toEqual(["Cautious estimate", "Standard estimate", "Generous estimate"]);
-    await userEvent.click(screen.getByRole("option", { name: "Generous estimate" }));
+    dash("/dashboard/costs");
+    await userEvent.click(radio("Estimate", "Generous estimate"));
     expect(push).toHaveBeenCalledWith("/dashboard/costs?customer=CUST002&baseline=B_HOME&priorities=water&sensitivity=high");
+    push.mockClear();
+    await userEvent.click(radio("Comparing against", "in-house laundry"));
+    expect(push).toHaveBeenCalledWith("/dashboard/costs?customer=CUST002&baseline=B_INHOUSE&priorities=water");
   });
-  it("changing the baseline keeps customer and sensitivity", async () => {
-    path = "/dashboard";
-    search = "customer=CUST002&sensitivity=high";
-    shell();
-    await userEvent.click(screen.getByRole("combobox", { name: "Baseline" }));
-    await userEvent.click(await screen.findByRole("option", { name: "home washing" }));
-    expect(push).toHaveBeenCalledWith("/dashboard?customer=CUST002&sensitivity=high&baseline=B_HOME");
+  it("does not navigate when the checked option is clicked again", async () => {
+    dash();
+    await userEvent.click(radio("Estimate", "Standard estimate"));
+    expect(push).not.toHaveBeenCalled();
+  });
+  it("gives each option a plain tooltip; estimates keep the team-declared-range framing", async () => {
+    dash();
+    await userEvent.hover(radio("Comparing against", "home washing"));
+    expect((await screen.findByText(/washed at home/)).textContent).toMatch(/no delivery/);
+    await userEvent.hover(radio("Estimate", "Cautious estimate"));
+    expect((await screen.findByText(/declared by the team \(T002\), not measured/)).textContent).toMatch(/smaller/);
+  });
+  it("says the choices change the savings figures on this page, nothing more", () => {
+    dash("/dashboard");
+    expect(strip().getByText("These choices change the savings figures on this page.")).toBeTruthy();
+    expect(screen.queryByText(/nothing on this page depends on them/)).toBeNull();
+  });
+  it("is a tinted, bordered control surface, not a card", () => {
+    dash();
+    expect(screen.getByRole("region", { name: "Scenario" }).className).toMatch(/border-primary.*bg-primary/);
+  });
+});
+
+describe("header", () => {
+  it("carries no baseline or estimate picker on any route", () => {
+    for (const p of ["/dashboard", "/impact"]) {
+      path = p;
+      const { unmount } = shell();
+      for (const name of ["Baseline", "Estimate"]) expect(screen.queryByRole("combobox", { name })).toBeNull();
+      expect(screen.queryByRole("radiogroup")).toBeNull();
+      unmount();
+    }
   });
   it("the game shows no picker at all", () => {
     path = "/story/game";
     shell();
     for (const name of ["Customer", "Baseline", "Estimate"]) expect(screen.queryByRole("combobox", { name })).toBeNull();
   });
-  it("breadcrumb names the section; a site page links back to Sites", () => {
+  it("breadcrumb names the section and links every crumb but the current page, keeping the params", () => {
     path = "/dashboard/costs";
+    search = "customer=CUST002&baseline=B_HOME&sensitivity=low";
     const { unmount } = shell();
     const crumbs = within(screen.getByRole("navigation", { name: "Breadcrumb" }));
     expect(crumbs.getByText("Costs").getAttribute("aria-current")).toBe("page");
+    expect(crumbs.queryByRole("link", { name: "Costs" })).toBeNull();
+    expect(crumbs.getByRole("link", { name: "Dashboard" }).getAttribute("href")).toBe("/dashboard?customer=CUST002&baseline=B_HOME&sensitivity=low");
     unmount();
     path = "/dashboard/sites/S1";
-    search = "customer=CUST002";
+    search = "customer=CUST002&sensitivity=high";
     shell();
     const site = within(screen.getByRole("navigation", { name: "Breadcrumb" }));
-    expect(site.getByRole("link", { name: "Sites" }).getAttribute("href")).toBe("/dashboard/sites?customer=CUST002");
+    expect(site.getByRole("link", { name: "Dashboard" }).getAttribute("href")).toBe("/dashboard?customer=CUST002&sensitivity=high");
+    expect(site.getByRole("link", { name: "Sites" }).getAttribute("href")).toBe("/dashboard/sites?customer=CUST002&sensitivity=high");
     expect(site.getByText("Site").getAttribute("aria-current")).toBe("page");
+    expect(site.queryByRole("link", { name: "Site" })).toBeNull();
+  });
+  it("on Overview the Dashboard crumb is a link and Overview is the current page", () => {
+    path = "/dashboard";
+    shell();
+    const crumbs = within(screen.getByRole("navigation", { name: "Breadcrumb" }));
+    expect(crumbs.getByRole("link", { name: "Dashboard" }).getAttribute("href")).toBe("/dashboard");
+    expect(crumbs.getByText("Overview").getAttribute("aria-current")).toBe("page");
   });
 });
 

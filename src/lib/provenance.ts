@@ -18,7 +18,7 @@ export type Method = (typeof METHODS)[number];
 export type Source = (typeof SOURCES)[number];
 export type Tone = "certain" | "uncertain";
 
-const UNCERTAIN_METHODS: ReadonlySet<Method> = new Set([
+export const UNCERTAIN_METHODS: ReadonlySet<Method> = new Set([
   "ESTIMATED",
   "ILLUSTRATIVE",
   "MANUAL_EDIT",

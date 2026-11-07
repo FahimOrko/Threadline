@@ -99,3 +99,25 @@ A chart section MAY fade in once on first load. It SHALL NOT replay on toggles o
 #### Scenario: Reduced motion
 - **WHEN** the user prefers reduced motion
 - **THEN** the panels show at once
+
+### Requirement: Figures in panels
+A Fact that a chart on the same page already shows SHALL NOT also be a card; it stays reachable through the chart's Show math and text alternative. A ring or part-of-whole bar inside a panel SHALL carry its own text alternative with the label and values, and SHALL map engine values to angle or width only.
+
+#### Scenario: Ring
+- **WHEN** a panel shows a share as a ring
+- **THEN** the ring has an accessible name with the label and the percent
+
+### Requirement: Changed-value highlight
+After a scenario change, a Fact card whose Fact value changed SHALL show a brief ring, decided by comparing the Fact values before and after with no new arithmetic. It SHALL play once per change, SHALL NOT play on first load, and SHALL NOT play with `prefers-reduced-motion: reduce`.
+
+#### Scenario: Value changed
+- **WHEN** the estimate changes and a card's Fact value differs
+- **THEN** the card shows the ring once
+
+#### Scenario: Value unchanged
+- **WHEN** the choice does not change a card's Fact value
+- **THEN** the card shows no ring
+
+#### Scenario: Reduced motion
+- **WHEN** the user prefers reduced motion
+- **THEN** no ring is shown

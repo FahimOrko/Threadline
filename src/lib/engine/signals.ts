@@ -97,7 +97,7 @@ export function overAllocationSignal(data: SignalData, scope: Scope, team: TeamA
 export type SpikeMonth = { month: string; repairs: number; mean: number };
 export type RepairSpikeSite = { siteId: string; siteName: string; spikes: SpikeMonth[] };
 
-function monthsOf(from: string, to: string): string[] {
+export function monthsOf(from: string, to: string): string[] {
   const out: string[] = [];
   let [y, m] = from.split("-").map(Number);
   while (`${y}-${String(m).padStart(2, "0")}` <= to) {
@@ -111,21 +111,38 @@ function monthsOf(from: string, to: string): string[] {
   return out;
 }
 
+export type BandMonth = { month: string; repairs: number; /** Mean of the trailing window; null until the window has enough history. */ mean: number | null; /** Repairs at which the month counts as a spike; null with the mean. */ threshold: number | null; spike: boolean };
+export type RepairBandSite = { siteId: string; siteName: string; months: BandMonth[] };
+
+/** Monthly repairs per site with the spike rule's mean, threshold and flag. The one place the rule is applied: `repairSpikeSignal` filters this. */
+export function repairBand(data: SignalData, scope: Scope, team: TeamAssumptions = TEAM_ASSUMPTIONS): RepairBandSite[] {
+  const { repairSpikeRatio: ratio, repairSpikeWindow: window, repairSpikeMinIncrease: floor } = team;
+  const months = monthsOf(scope.period.from, scope.period.to);
+  return customerSites(data, scope).map((s) => {
+    const byMonth = new Map<string, number>();
+    for (const r of data.repairs) if (r.customer_id === scope.customerId && r.site_id === s.site_id) byMonth.set(r.month, (byMonth.get(r.month) ?? 0) + r.repair_count);
+    return {
+      siteId: s.site_id,
+      siteName: s.site_name,
+      months: months.map((month, i): BandMonth => {
+        const repairs = byMonth.get(month) ?? 0;
+        if (i < window.value!) return { month, repairs, mean: null, threshold: null, spike: false };
+        const mean = months.slice(i - window.value!, i).reduce((t, m) => t + (byMonth.get(m) ?? 0), 0) / window.value!;
+        // A spike needs both T008 x mean and T010 above the mean, so the line is the higher of the two.
+        const threshold = Math.max(ratio.value! * mean, mean + floor.value!);
+        return { month, repairs, mean, threshold, spike: repairs >= ratio.value! * mean && repairs - mean >= floor.value! };
+      }),
+    };
+  });
+}
+
 /** Sites with a month whose repairs (all products) are at least T008 times the mean of the T009 months before it and at least T010 above that mean. Months without T009 months of history in the period are not tested. */
 export function repairSpikeSignal(data: SignalData, scope: Scope, team: TeamAssumptions = TEAM_ASSUMPTIONS): SignalResult<RepairSpikeSite> {
   const { repairSpikeRatio: ratio, repairSpikeWindow: window, repairSpikeMinIncrease: floor } = team;
-  const months = monthsOf(scope.period.from, scope.period.to);
   const sites: RepairSpikeSite[] = [];
-  for (const s of customerSites(data, scope)) {
-    const byMonth = new Map<string, number>();
-    for (const r of data.repairs) if (r.customer_id === scope.customerId && r.site_id === s.site_id) byMonth.set(r.month, (byMonth.get(r.month) ?? 0) + r.repair_count);
-    const spikes: SpikeMonth[] = [];
-    for (let i = window.value!; i < months.length; i++) {
-      const mean = months.slice(i - window.value!, i).reduce((t, m) => t + (byMonth.get(m) ?? 0), 0) / window.value!;
-      const repairs = byMonth.get(months[i]) ?? 0;
-      if (repairs >= ratio.value! * mean && repairs - mean >= floor.value!) spikes.push({ month: months[i], repairs, mean });
-    }
-    if (spikes.length > 0) sites.push({ siteId: s.site_id, siteName: s.site_name, spikes });
+  for (const b of repairBand(data, scope, team)) {
+    const spikes: SpikeMonth[] = b.months.filter((m) => m.spike).map((m) => ({ month: m.month, repairs: m.repairs, mean: m.mean! }));
+    if (spikes.length > 0) sites.push({ siteId: b.siteId, siteName: b.siteName, spikes });
   }
   const fact = build(data, scope, {
     id: "repair_spike_sites",
@@ -146,3 +163,9 @@ export function repairSpikeSignal(data: SignalData, scope: Scope, team: TeamAssu
   });
   return { fact, sites };
 }
+
+export type DormantStack = { siteId: string; siteName: string; /** Gaps in the Watch tier only. */ watch: number; /** Gaps in the Risk tier only. */ risk: number; critical: number };
+
+/** The tiers as stacked, non-overlapping counts (`classifyGaps` counts every gap above a boundary, so each tier includes the ones above it). */
+export const dormantStacks = (all: DormantSite[]): DormantStack[] =>
+  all.map((s) => ({ siteId: s.siteId, siteName: s.siteName, watch: s.watch - s.risk, risk: s.risk - s.critical, critical: s.critical }));

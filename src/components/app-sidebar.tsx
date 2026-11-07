@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { Suspense } from "react";
+import { motion, useReducedMotion } from "motion/react";
+import { Suspense, useState } from "react";
 import { BookOpen, Buildings, Bell, Coins, Eye, Globe, Leaf, SquaresFour, TShirt, UserCircle } from "@phosphor-icons/react";
-import { CustomerSelect, type ShellBaseline, type ShellCustomer } from "@/components/param-selects";
+import { CustomerSwitcher, type ShellBaseline, type ShellCustomer } from "@/components/param-selects";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Tooltip } from "@/components/tooltip";
 import { buttonVariants } from "@/components/ui/button";
@@ -37,8 +38,11 @@ const ICONS: Record<NavIcon, React.ElementType> = {
   impact: Globe,
 };
 
+// The hover and active indicators glide between items (ADR 0025's motion list). Under reduced motion they are plain static fills: no layout animation.
 function Items({ groups, pathname, href }: { groups: NavGroup[]; pathname?: string; href: (item: NavGroup["items"][number]) => string }) {
   const { state } = useSidebar();
+  const reduced = useReducedMotion();
+  const [hover, setHover] = useState<string | null>(null);
   return groups.map((g, i) => (
     <div key={g.label}>
       {i > 0 && <SidebarSeparator />}
@@ -54,7 +58,15 @@ function Items({ groups, pathname, href }: { groups: NavGroup[]; pathname?: stri
                 <span>{item.label}</span>
               </SidebarMenuButton>
             );
-            return <SidebarMenuItem key={item.key}>{state === "collapsed" ? <Tooltip label={item.label}>{link}</Tooltip> : link}</SidebarMenuItem>;
+            return (
+              <SidebarMenuItem key={item.key} onPointerEnter={() => setHover(item.key)} onPointerLeave={() => setHover(null)} onFocus={() => setHover(item.key)} onBlur={() => setHover(null)}>
+                {hover === item.key && !active && (
+                  <motion.span aria-hidden data-indicator="hover" layoutId={reduced ? undefined : "nav-hover"} transition={{ duration: 0.18, ease: "easeOut" }} className="absolute inset-0 rounded-md bg-sidebar-accent/70" />
+                )}
+                {active && <motion.span aria-hidden data-indicator="active" layoutId={reduced ? undefined : "nav-active"} transition={{ duration: 0.22, ease: "easeOut" }} className="absolute inset-0 rounded-md bg-sidebar-accent" />}
+                {state === "collapsed" ? <Tooltip label={item.label}>{link}</Tooltip> : link}
+              </SidebarMenuItem>
+            );
           })}
         </SidebarMenu>
       </SidebarGroup>
@@ -109,7 +121,7 @@ export function SidebarView({ customers, baselines, pathname, params = new URLSe
     <Sidebar aria-label="Main" className={className}>
       <SidebarHeader>
         <Wordmark />
-        {showCustomer && <CustomerSelect customers={customers} baselines={baselines} compact={state === "collapsed"} />}
+        {showCustomer && <CustomerSwitcher customers={customers} baselines={baselines} collapsed={state === "collapsed"} locked={view === "customer"} />}
       </SidebarHeader>
       <SidebarContent>
         <nav aria-label="Sections">

@@ -2,8 +2,9 @@
 // Pure: data in, Facts out. The baseline and the sensitivity level are arguments (ADR 0017).
 import { DEFAULT_BASELINE_ID, type AppData, type Baseline } from "@/lib/data/schemas";
 import { TEAM_ASSUMPTIONS } from "./assumptions-config";
-import type { Fact } from "./fact";
+import { factScope, type Fact } from "./fact";
 import { activeWearers, type OperationalScope } from "./operational";
+import { wasteSplit } from "./percentage";
 import { build, teamAssumptionInputs } from "./value";
 
 export const SENSITIVITY_LEVELS = ["low", "base", "high"] as const;
@@ -259,4 +260,64 @@ export function footprintFacts(data: FootprintData, scope: OperationalScope, bas
 /** The Facts of one dashboard group, in group order. */
 export function footprintGroup(facts: Fact[], group: keyof typeof FOOTPRINT_GROUPS): Fact[] {
   return FOOTPRINT_GROUPS[group].flatMap((id) => facts.filter((f) => f.id === id));
+}
+
+export type WaterfallStep = { label: string; start: number; end: number; /** end minus start, signed; the figure a step is labelled with. */ delta: number; kind: "total" | "decrease" | "increase" };
+type Part = { label: string; value: number; unit: string };
+export type FootprintComparison = {
+  scope: Fact["scope"];
+  period: OperationalScope["period"];
+  baseline: string;
+  sensitivity: Sensitivity;
+  /** Per metric: what the comparison would have used, what the service used, and the unit. `comparison - service` is the saved Fact's value. */
+  metrics: Record<"water" | "energy" | "co2e", { label: string; comparison: number; service: number; unit: string }>;
+  /** Net CO2e from the comparison down to the service total; the last step is the service total. */
+  waterfall: WaterfallStep[];
+  /** Net CO2e saving: the comparison total minus the service total. */
+  netSaving: number;
+  composition: { emissions: Part[]; waste: Part[] | null };
+};
+
+/** The totals the footprint Facts use, laid out for charts: comparison against service per metric, the CO2e waterfall and the two compositions. Null without washed kg or when the sensitivity level has no spread (T002 unset). */
+export function footprintComparison(data: FootprintData & Pick<AppData, "wasteCircularity">, scope: OperationalScope, baseline: Baseline, sensitivity: Sensitivity = DEFAULT_SENSITIVITY): FootprintComparison | null {
+  const t = totalsFor(data, scope, baseline);
+  const t002 = TEAM_ASSUMPTIONS.sensitivitySpread.value;
+  const k = sensitivity === "base" ? 1 : t002 === null ? null : sensitivity === "low" ? 1 - t002 : 1 + t002;
+  if (t.kg === 0 || k === null) return null;
+  const { baseline: b, laundry: l } = t;
+  const comparisonCo2e = (b.process + b.delivery) * k;
+  const serviceCo2e = l.process + l.delivery;
+  const processSaved = b.process * k - l.process;
+  const deliveryDelta = l.delivery - b.delivery * k; // positive: the service delivers more than the comparison does
+  const afterProcess = comparisonCo2e - processSaved;
+  const waterfall: WaterfallStep[] = [
+    { label: "Comparison", start: 0, end: comparisonCo2e, delta: comparisonCo2e, kind: "total" },
+    { label: "Process saved", start: comparisonCo2e, end: afterProcess, delta: -processSaved, kind: "decrease" },
+    { label: "Delivery", start: afterProcess, end: afterProcess + deliveryDelta, delta: deliveryDelta, kind: deliveryDelta > 0 ? "increase" : "decrease" },
+    { label: "Service", start: 0, end: serviceCo2e, delta: serviceCo2e, kind: "total" },
+  ];
+  const waste = wasteSplit(data, scope);
+  return {
+    scope: factScope(data, { customerId: scope.customerId }),
+    period: scope.period,
+    baseline: baseline.baseline_name,
+    sensitivity,
+    metrics: {
+      water: { label: "Water", comparison: b.water * k, service: l.water, unit: "L" },
+      energy: { label: "Energy", comparison: b.energy * k, service: l.energy, unit: "kWh" },
+      co2e: { label: "Net CO2e", comparison: comparisonCo2e, service: serviceCo2e, unit: "kgCO2e" },
+    },
+    waterfall,
+    netSaving: comparisonCo2e - serviceCo2e,
+    composition: {
+      emissions: [
+        { label: "Process", value: l.process, unit: "kgCO2e" },
+        { label: "Delivery", value: l.delivery, unit: "kgCO2e" },
+      ],
+      waste: waste && [
+        { label: "Recycled or reused", value: waste.recovered, unit: "kg" },
+        { label: "Other treatment", value: waste.total - waste.recovered, unit: "kg" },
+      ],
+    },
+  };
 }
