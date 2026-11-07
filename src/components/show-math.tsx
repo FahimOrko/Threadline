@@ -1,5 +1,6 @@
 "use client";
 
+import { createContext, useContext } from "react";
 import { CaretRight } from "@phosphor-icons/react";
 import {
   Popover,
@@ -80,6 +81,13 @@ function ShowMathBody({
   );
 }
 
+const InlineContext = createContext(false);
+
+/** Print route only: Show math under it renders expanded in the page flow instead of as a popover. */
+export function ShowMathInlineProvider({ inline, children }: { inline: boolean; children: React.ReactNode }) {
+  return <InlineContext.Provider value={inline}>{children}</InlineContext.Provider>;
+}
+
 // The only Show math pattern. It floats, so a card or table never changes size when it opens.
 // One open at a time (opening another is an outside press); Esc and an outside press close it.
 // The accent thread line is the popup's left border.
@@ -91,6 +99,14 @@ export function ShowMathPopover({
   defaultOpen?: boolean;
   align?: "start" | "center" | "end";
 }) {
+  const inline = useContext(InlineContext);
+  if (inline) {
+    return (
+      <div data-slot="show-math-inline" className="space-y-2 break-inside-avoid border-l-2 border-l-primary pl-3 text-xs">
+        <ShowMathBody {...props} />
+      </div>
+    );
+  }
   // The flex wrapper keeps base-ui's 1px focus-guard spans out of a parent's `space-y` flow, which otherwise grew the card by 3px.
   return (
     <div className="flex">

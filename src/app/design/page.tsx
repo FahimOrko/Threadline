@@ -11,7 +11,8 @@ import { PriorityPicker } from "@/components/priority-picker";
 import { ProvenanceChip } from "@/components/provenance-chip";
 import { SiteTable, SiteTableSkeleton } from "@/components/site-table";
 import { SectionHeader } from "@/components/section-header";
-import { ShowMathPopover } from "@/components/show-math";
+import { PrintButton } from "@/components/print-button";
+import { ShowMathInlineProvider, ShowMathPopover } from "@/components/show-math";
 import { StatCard } from "@/components/stat-card";
 import { StoryChapter } from "@/components/story-chapter";
 import { EmptyState, ErrorState, StatCardSkeleton } from "@/components/states";
@@ -116,6 +117,23 @@ export default function DesignPage() {
           <div className="min-h-[34rem]">
             <ShowMathPopover {...sampleMathWorstCase} defaultOpen />
           </div>
+        </Panel>
+        <Panel className="space-y-2">
+          <SampleLabel />
+          <h3 className="text-sm font-medium">Show math inline (print)</h3>
+          <p className="max-w-[65ch] text-sm text-muted-foreground">
+            Inside ShowMathInlineProvider the same ShowMathPopover renders expanded in the page flow, with the thread line, no trigger. Used by the print route.
+          </p>
+          <ShowMathInlineProvider inline>
+            <ShowMathPopover {...sampleMathWorstCase} />
+          </ShowMathInlineProvider>
+        </Panel>
+        <Panel className="space-y-2">
+          <h3 className="text-sm font-medium">PrintButton and print scope</h3>
+          <p className="max-w-[65ch] text-sm text-muted-foreground">
+            PrintButton opens the browser print dialog and is hidden when printing. The <code>.print-scope</code> class re-declares the light tokens so a dark app theme cannot reach the printed story.
+          </p>
+          <PrintButton />
         </Panel>
       </section>
 

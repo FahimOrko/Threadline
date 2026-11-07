@@ -91,6 +91,28 @@
   --sidebar-ring: oklch(0.48 0.095 195);
 }
 
+/* Print scope: re-declares the light tokens so a dark app theme cannot reach the printed story. Keep in step with :root. */
+.print-scope {
+  --background: oklch(0.985 0.003 250);
+  --foreground: oklch(0.2 0.015 250);
+  --card: oklch(0.995 0.002 250);
+  --card-foreground: oklch(0.2 0.015 250);
+  --primary: oklch(0.48 0.095 195);
+  --primary-foreground: oklch(0.99 0.003 195);
+  --secondary: oklch(0.95 0.006 250);
+  --secondary-foreground: oklch(0.2 0.015 250);
+  --muted: oklch(0.95 0.006 250);
+  --muted-foreground: oklch(0.45 0.015 250);
+  --accent: oklch(0.95 0.006 250);
+  --accent-foreground: oklch(0.2 0.015 250);
+  --border: oklch(0.88 0.008 250);
+  --certain: oklch(0.94 0.006 250);
+  --certain-foreground: oklch(0.25 0.015 250);
+  --uncertain: oklch(0.93 0.07 90);
+  --uncertain-foreground: oklch(0.38 0.08 65);
+  color-scheme: light;
+}
+
 .dark {
   --background: oklch(0.16 0.01 250);
   --foreground: oklch(0.96 0.005 250);
@@ -145,4 +167,36 @@
 .num {
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
+}
+
+@page {
+  size: A4;
+  margin: 15mm;
+}
+
+@media print {
+  html,
+  body {
+    background: #fff;
+  }
+  .print-scope {
+    max-width: none;
+    padding: 0;
+  }
+  .print-scope [data-slot="story-chapter"] {
+    break-inside: auto;
+    break-before: page;
+  }
+  .print-scope [data-slot="story-chapter"]:first-of-type {
+    break-before: auto;
+  }
+  .print-scope [data-slot="panel"],
+  .print-scope tr,
+  .print-scope li,
+  .print-scope [data-slot="observation-card"] {
+    break-inside: avoid;
+  }
+  [data-print="hide"] {
+    display: none !important;
+  }
 }

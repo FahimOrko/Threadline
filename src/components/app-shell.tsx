@@ -11,6 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { resolveCustomer } from "@/lib/customer";
 import { SENSITIVITY_LEVELS } from "@/lib/engine";
+import { STORY_PRINT_PATH } from "@/lib/story/print";
 import { resolveBaseline, resolveSensitivity } from "@/lib/selection";
 import { useRoleStore, type Role } from "@/store/role-store";
 
@@ -115,7 +116,9 @@ function ViewLinks({ customers, baselines }: { customers: ShellCustomer[]; basel
   return <ViewLinkList pathname={pathname} query={q.size ? `?${q.toString()}` : ""} />;
 }
 
-export function AppShell({ children, customers, baselines }: { children: React.ReactNode; customers: ShellCustomer[]; baselines: ShellBaseline[] }) {
+type ShellProps = { children: React.ReactNode; customers: ShellCustomer[]; baselines: ShellBaseline[] };
+
+function Frame({ children, customers, baselines }: ShellProps) {
   const role = useRoleStore((s) => s.role);
   const setRole = useRoleStore((s) => s.setRole);
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -179,5 +182,20 @@ export function AppShell({ children, customers, baselines }: { children: React.R
         )}
       </div>
     </div>
+  );
+}
+
+// usePathname suspends on routes with a dynamic param (site pages), so it is read inside Suspense; the fallback is the full shell.
+// shortcut: print route detected by pathname, not a route group; switch to (app)/(print) groups if more bare routes appear.
+function ShellOrBare(props: ShellProps) {
+  const pathname = usePathname();
+  return pathname === STORY_PRINT_PATH ? <>{props.children}</> : <Frame {...props} />;
+}
+
+export function AppShell(props: ShellProps) {
+  return (
+    <Suspense fallback={<Frame {...props} />}>
+      <ShellOrBare {...props} />
+    </Suspense>
   );
 }
