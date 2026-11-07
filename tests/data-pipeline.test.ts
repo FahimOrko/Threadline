@@ -4,6 +4,14 @@ import { buildData, checkHeader, dictionaryColumns, HeaderMismatchError, Unknown
 const saColumns = ["month", "customer_id", "site_id", "laundry_id", "product_id", "active_wearers", "allocated_pieces", "active_assets_scanned", "washed_pieces", "packed_pieces", "washing_pct", "customer_washed_kg", "service_requests", "data_status"];
 const productColumns = ["product_id", "product_name", "product_group", "avg_weight_kg", "synthetic_product_footprint_kgco2e", "synthetic_purchase_cost_eur", "material_note"];
 const productRow = "P1,Jacket,Jackets,0.85,18.5,54,poly-cotton";
+const cycleColumns = ["asset_id", "cycle_number", "customer_id", "site_id", "laundry_id", "product_id", "pickup_timestamp", "in_laundry_timestamp", "out_laundry_timestamp", "delivered_timestamp", "cycle_hours", "performance_flag", "data_status"];
+const wasteColumns = ["month", "laundry_id", "recycling_kg", "reuse_kg", "energy_recovery_kg", "incineration_kg", "textile_waste_total_kg", "waste_kg_per_washed_kg", "data_status"];
+const impactColumns = ["month", "customer_id", "site_id", "laundry_id", "product_id", "customer_washed_kg", "share_of_laundry_washed_kg", "allocated_water_l", "allocated_energy_kwh", "allocated_process_kgco2e", "allocated_delivery_kgco2e", "allocated_textile_waste_kg", "water_saving_vs_local_l", "energy_saving_vs_local_kwh", "emissions_saving_vs_local_kgco2e", "data_status"];
+const cycle = (asset: string, n: number, pickup: string, flag = "ON_TIME", site = "S001") =>
+  `${asset},${n},CUST001,${site},L001,P1,${pickup},2025-01-02T00:00:00,2025-01-03T00:00:00,2025-01-04T00:00:00,72,${flag},S`;
+const cycles = (...rows: string[]) => `${cycleColumns.join(",")}\n${rows.join("\n")}`;
+const wasteRow = "2025-01,L001,80,10,5,5,100,0.02,S";
+const impactRow = (month: string, laundry = "L001") => `${month},CUST001,S001,${laundry},P1,10,0.1,1,1,1,1,10,1,1,1,S`;
 const saRow = "2025-01,CUST001,S001,L001,P1,5,7,4,10,9,150.5,12.5,1,S";
 
 const dictionary = [
@@ -24,6 +32,9 @@ const dictionary = [
   ].map((f) => `Repairs,${f},x,,`),
   ...saColumns.map((f) => `Service_Activity,${f},x,,`),
   ...productColumns.map((f) => `Products,${f},x,,`),
+  ...cycleColumns.map((f) => `Service_Cycles,${f},x,,`),
+  ...wasteColumns.map((f) => `Waste_Circularity,${f},x,,`),
+  ...impactColumns.map((f) => `Customer_Impacts,${f},x,,`),
 ].join("\n");
 
 const repairsHeader =
@@ -38,6 +49,9 @@ const files = (repairs: string): Record<string, string> => ({
   assumptions: "assumption_id,assumption,value_or_rule,rationale,category,confidence,treatment\nA002,a,b,c,d,Low-Medium,e",
   service_activity: `${saColumns.join(",")}\n${saRow}`,
   products: `${productColumns.join(",")}\n${productRow}`,
+  service_cycles: cycles(cycle("A1", 1, "2025-01-01T00:00:00")),
+  waste_circularity: `${wasteColumns.join(",")}\n${wasteRow}`,
+  customer_impacts: `${impactColumns.join(",")}\n${impactRow("2025-01")}`,
 });
 
 describe("checkHeader", () => {
@@ -115,7 +129,7 @@ describe("service_activity sheet", () => {
   });
   it("reads all 1,248 rows of the pack without invalid rows", async () => {
     const { readFileSync } = await import("node:fs");
-    const stems = ["data_dictionary", "repairs", "sites", "customers", "assumptions", "service_activity", "products"];
+    const stems = ["data_dictionary", "repairs", "sites", "customers", "assumptions", "service_activity", "products", "service_cycles", "waste_circularity", "customer_impacts"];
     const { report } = buildData(Object.fromEntries(stems.map((x) => [x, readFileSync(`data/raw/${x}.csv`, "utf8")])));
     expect(report.files.serviceActivity).toMatchObject({ read: 1248, valid: 1248, invalid: [] });
   });
@@ -134,7 +148,7 @@ describe("products sheet", () => {
   });
   it("reads the 6 products of the pack without invalid rows", async () => {
     const { readFileSync } = await import("node:fs");
-    const stems = ["data_dictionary", "repairs", "sites", "customers", "assumptions", "service_activity", "products"];
+    const stems = ["data_dictionary", "repairs", "sites", "customers", "assumptions", "service_activity", "products", "service_cycles", "waste_circularity", "customer_impacts"];
     const { report } = buildData(Object.fromEntries(stems.map((x) => [x, readFileSync(`data/raw/${x}.csv`, "utf8")])));
     expect(report.files.products).toMatchObject({ read: 6, valid: 6, invalid: [] });
     expect(report.files.repairs.crossChecks.at(-1)).toMatchObject({ passed: true });
@@ -161,5 +175,63 @@ describe("product_id references", () => {
   it("does not count a row that failed validation", () => {
     const badRow = unknownRepair.replace(",9,0.49", ",abc,0.49");
     expect(buildData(files(`${repairsHeader}\n${good}\n${badRow}`)).report.files.repairs.invalid).toHaveLength(1);
+  });
+});
+
+describe("service_cycles sheet", () => {
+  const withCycles = (text: string) => ({ ...files(`${repairsHeader}\n${good}`), service_cycles: text });
+  it("ships per-site counts, not raw cycles", () => {
+    const { data } = buildData(
+      withCycles(cycles(cycle("A1", 1, "2025-01-01T00:00:00"), cycle("A1", 2, "2025-02-01T00:00:00", "LATE"), cycle("A2", 1, "2025-01-05T00:00:00", "ON_TIME", "S002"))),
+    );
+    expect(data.cycleCounts).toEqual([
+      { customer_id: "CUST001", site_id: "S001", cycles: 2, on_time: 1 },
+      { customer_id: "CUST001", site_id: "S002", cycles: 1, on_time: 1 },
+    ]);
+    expect("serviceCycles" in data).toBe(false);
+  });
+  it("counts 0 out-of-order scans for clean data", () => {
+    const { report } = buildData(withCycles(cycles(cycle("A1", 1, "2025-01-01T00:00:00"), cycle("A1", 2, "2025-02-01T00:00:00"))));
+    expect(report.files.serviceCycles.crossChecks[0].disagreements).toHaveLength(0);
+  });
+  it("counts a cycle picked up before the previous cycle number, wherever it sits in the file, and still builds", () => {
+    const { data, report } = buildData(
+      withCycles(cycles(cycle("A1", 3, "2025-01-10T00:00:00"), cycle("A1", 2, "2025-03-01T00:00:00"), cycle("A1", 1, "2025-01-01T00:00:00"))),
+    );
+    const c = report.files.serviceCycles.crossChecks[0];
+    expect(c.disagreements).toEqual([{ asset_id: "A1", cycle_number: 3, pickup_timestamp: "2025-01-10T00:00:00" }]);
+    expect(c.info).toBe(true);
+    expect(data.cycleCounts[0].cycles).toBe(3);
+  });
+  it("rejects an unknown performance flag as an invalid row", () => {
+    const { report } = buildData(withCycles(cycles(cycle("A1", 1, "2025-01-01T00:00:00"), cycle("A1", 2, "2025-02-01T00:00:00", "MAYBE"))));
+    expect(report.files.serviceCycles).toMatchObject({ read: 2, valid: 1 });
+  });
+  it("fails on a header mismatch for each new sheet", () => {
+    const f = files(`${repairsHeader}\n${good}`);
+    expect(() => buildData({ ...f, service_cycles: `${cycleColumns.slice(1).join(",")}\n` })).toThrow(/service_cycles\.csv: missing \[asset_id\]/);
+    expect(() => buildData({ ...f, waste_circularity: `${wasteColumns.slice(1).join(",")}\n` })).toThrow(/waste_circularity\.csv: missing \[month\]/);
+    expect(() => buildData({ ...f, customer_impacts: `${impactColumns.slice(1).join(",")}\n` })).toThrow(/customer_impacts\.csv: missing \[month\]/);
+  });
+});
+
+describe("waste reference", () => {
+  it("fails the build naming the missing laundry-months", () => {
+    const f = {
+      ...files(`${repairsHeader}\n${good}`),
+      customer_impacts: `${impactColumns.join(",")}\n${impactRow("2025-01")}\n${impactRow("2025-05")}\n${impactRow("2025-06", "L002")}`,
+    };
+    const run = () => buildData(f);
+    expect(run).toThrow(UnknownReferenceError);
+    expect(run).toThrow("customer_impacts: no waste_circularity row for laundry-month [L001 2025-05, L002 2025-06]");
+  });
+  it("passes on the pack and aggregates waste per customer, laundry and month", async () => {
+    const { readFileSync } = await import("node:fs");
+    const stems = ["data_dictionary", "repairs", "sites", "customers", "assumptions", "service_activity", "products", "service_cycles", "waste_circularity", "customer_impacts"];
+    const { data, report } = buildData(Object.fromEntries(stems.map((x) => [x, readFileSync(`data/raw/${x}.csv`, "utf8")])));
+    expect(report.files.customerImpacts.crossChecks[0]).toMatchObject({ passed: true });
+    expect(data.wasteAllocation).toHaveLength(60);
+    expect(data.cycleCounts.reduce((s, c) => s + c.cycles, 0)).toBe(16415);
+    expect(report.files.serviceCycles.crossChecks[0].disagreements).toHaveLength(1107);
   });
 });

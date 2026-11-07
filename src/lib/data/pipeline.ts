@@ -1,6 +1,6 @@
 // CSV text in, validated data and a data-quality report out. No file access here (the script does IO).
 import Papa from "papaparse";
-import { SHEETS, type AppData } from "./schemas";
+import { SHEETS, type AppData, type CustomerImpact, type CycleCount, type ServiceCycle, type WasteAllocation } from "./schemas";
 
 export type InvalidRow = { row: number; reason: string };
 export type CrossCheck = {
@@ -8,6 +8,8 @@ export type CrossCheck = {
   checked: number;
   passed: boolean;
   disagreements: Record<string, string | number>[];
+  /** Reported only: a non-empty list is a data-quality finding, not a failure. */
+  info?: true;
 };
 export type FileReport = {
   read: number;
@@ -71,12 +73,12 @@ function crossCheckRepairs(rows: AppData["repairs"]): CrossCheck {
   };
 }
 
-export type ReferenceProblem = { sheet: string; ids: string[] };
+export type ReferenceProblem = { sheet: string; what: string; ids: string[] };
 
 /** A computation depends on these references, so a miss fails the build (unlike an unmapped row, which is only reported). */
 export class UnknownReferenceError extends Error {
   constructor(public problems: ReferenceProblem[]) {
-    super(problems.map((p) => `${p.sheet}: unknown product_id [${p.ids.join(", ")}]`).join("\n"));
+    super(problems.map((p) => `${p.sheet}: ${p.what} [${p.ids.join(", ")}]`).join("\n"));
     this.name = "UnknownReferenceError";
   }
 }
@@ -90,6 +92,43 @@ function crossCheckProducts(sheet: string, rows: { product_id: string }[], known
     passed: missing.length === 0,
     disagreements: missing.map((product_id) => ({ product_id })),
   };
+}
+
+/** Cycles whose pickup is earlier than the previous cycle's of the same asset, by cycle number (product spec definition). */
+function crossCheckCycleOrder(cycles: ServiceCycle[]): CrossCheck {
+  const byAsset = new Map<string, ServiceCycle[]>();
+  for (const c of cycles) byAsset.set(c.asset_id, [...(byAsset.get(c.asset_id) ?? []), c]);
+  const disagreements: CrossCheck["disagreements"] = [];
+  for (const list of byAsset.values()) {
+    list.sort((a, b) => a.cycle_number - b.cycle_number);
+    for (let i = 1; i < list.length; i++)
+      if (list[i].pickup_timestamp < list[i - 1].pickup_timestamp)
+        disagreements.push({ asset_id: list[i].asset_id, cycle_number: list[i].cycle_number, pickup_timestamp: list[i].pickup_timestamp });
+  }
+  return { id: "service_cycles.out-of-order scans (cycle number vs pickup timestamp)", checked: cycles.length, passed: disagreements.length === 0, disagreements, info: true };
+}
+
+function countCycles(cycles: ServiceCycle[]): CycleCount[] {
+  const by = new Map<string, CycleCount>();
+  for (const c of cycles) {
+    const k = `${c.customer_id}|${c.site_id}`;
+    const n = by.get(k) ?? { customer_id: c.customer_id, site_id: c.site_id, cycles: 0, on_time: 0 };
+    n.cycles++;
+    if (c.performance_flag === "ON_TIME") n.on_time++;
+    by.set(k, n);
+  }
+  return [...by.values()].sort((a, b) => a.customer_id.localeCompare(b.customer_id) || a.site_id.localeCompare(b.site_id));
+}
+
+function allocateWaste(impacts: CustomerImpact[]): WasteAllocation[] {
+  const by = new Map<string, WasteAllocation>();
+  for (const r of impacts) {
+    const k = `${r.customer_id}|${r.laundry_id}|${r.month}`;
+    const a = by.get(k) ?? { customer_id: r.customer_id, laundry_id: r.laundry_id, month: r.month, allocated_textile_waste_kg: 0 };
+    a.allocated_textile_waste_kg += r.allocated_textile_waste_kg;
+    by.set(k, a);
+  }
+  return [...by.values()].sort((a, b) => a.customer_id.localeCompare(b.customer_id) || a.laundry_id.localeCompare(b.laundry_id) || a.month.localeCompare(b.month));
 }
 
 /** `files` maps a file stem (`repairs`, `data_dictionary`, ...) to its CSV text. */
@@ -115,7 +154,7 @@ export function buildData(files: Record<string, string>): { data: AppData; repor
   });
   if (problems.length) throw new HeaderMismatchError(problems);
 
-  const data = { repairs: [], sites: [], customers: [], assumptions: [], serviceActivity: [], products: [] } as AppData;
+  const rows: Record<string, unknown[]> = {};
   const report: QualityReport = { files: {} };
   for (const p of parsed) {
     const { def, res } = p!;
@@ -130,9 +169,18 @@ export function buildData(files: Record<string, string>): { data: AppData; repor
           reason: r.error.issues.map((x) => `${x.path.join(".") || "row"}: ${x.message}`).join("; "),
         });
     });
-    (data[def.key] as unknown[]) = valid;
+    rows[def.key] = valid;
     report.files[def.key] = { read: res.data.length, valid: valid.length, invalid, crossChecks: [] };
   }
+  const cycles = rows.serviceCycles as ServiceCycle[];
+  const data = {
+    ...rows,
+    cycleCounts: countCycles(cycles),
+    wasteAllocation: allocateWaste(rows.customerImpacts as CustomerImpact[]),
+  } as unknown as AppData & { serviceCycles?: never; customerImpacts?: never };
+  delete data.serviceCycles; // raw cycles and impacts are validated and reported, never shipped
+  delete data.customerImpacts;
+  report.files.serviceCycles.crossChecks.push(crossCheckCycleOrder(cycles));
   report.files.repairs.crossChecks.push(crossCheckRepairs(data.repairs));
   const known = new Set(data.products.map((p) => p.product_id));
   const refs = [
@@ -141,6 +189,17 @@ export function buildData(files: Record<string, string>): { data: AppData; repor
   ].map((s) => ({ ...s, check: crossCheckProducts(s.sheet, s.rows, known) }));
   for (const s of refs) report.files[s.key].crossChecks.push(s.check);
   const bad = refs.filter((s) => !s.check.passed);
-  if (bad.length) throw new UnknownReferenceError(bad.map((s) => ({ sheet: s.sheet, ids: s.check.disagreements.map((d) => String(d.product_id)) })));
+  const problems2: ReferenceProblem[] = bad.map((s) => ({ sheet: s.sheet, what: "unknown product_id", ids: s.check.disagreements.map((d) => String(d.product_id)) }));
+  // The waste share needs a waste_circularity row for every laundry-month that has allocated waste.
+  const haveWaste = new Set(data.wasteCircularity.map((w) => `${w.laundry_id} ${w.month}`));
+  const missingWaste = [...new Set(data.wasteAllocation.filter((a) => a.allocated_textile_waste_kg > 0).map((a) => `${a.laundry_id} ${a.month}`))].filter((k) => !haveWaste.has(k)).sort();
+  report.files.customerImpacts.crossChecks.push({
+    id: "customer_impacts.laundry-month in waste_circularity",
+    checked: data.wasteAllocation.length,
+    passed: missingWaste.length === 0,
+    disagreements: missingWaste.map((laundry_month) => ({ laundry_month })),
+  });
+  if (missingWaste.length) problems2.push({ sheet: "customer_impacts", what: "no waste_circularity row for laundry-month", ids: missingWaste });
+  if (problems2.length) throw new UnknownReferenceError(problems2);
   return { data, report };
 }

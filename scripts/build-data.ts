@@ -8,7 +8,7 @@ const rawDir = process.argv[2] ?? "data/raw";
 const outDir = process.argv[3] ?? "data/generated";
 
 // readme.csv and data_dictionary.csv are not data sheets; only the dictionary is read, as the header reference.
-const stems = ["data_dictionary", "repairs", "sites", "customers", "assumptions", "service_activity", "products"];
+const stems = ["data_dictionary", "repairs", "sites", "customers", "assumptions", "service_activity", "products", "service_cycles", "waste_circularity", "customer_impacts"];
 const files: Record<string, string> = {};
 for (const stem of stems) {
   const path = join(rawDir, `${stem}.csv`);
@@ -21,7 +21,7 @@ try {
   for (const [key, rows] of Object.entries(data)) writeFileSync(join(outDir, `${key}.json`), JSON.stringify(rows));
   writeFileSync(join(outDir, "data-quality.json"), JSON.stringify(report, null, 2));
   for (const [key, f] of Object.entries(report.files)) {
-    const checks = f.crossChecks.map((c) => `${c.passed ? "pass" : "FAIL"} ${c.id} (${c.checked})`).join("; ");
+    const checks = f.crossChecks.map((c) => c.info ? `info ${c.id} (${c.disagreements.length} of ${c.checked})` : `${c.passed ? "pass" : "FAIL"} ${c.id} (${c.checked})`).join("; ");
     console.log(`${key}: read ${f.read}, valid ${f.valid}, invalid ${f.invalid.length}${checks ? ` | ${checks}` : ""}`);
   }
 } catch (e) {
@@ -30,7 +30,7 @@ try {
     process.exit(1);
   }
   if (e instanceof UnknownReferenceError) {
-    console.error(`data:build failed, a row refers to a product that is not in products.csv:\n${e.message}`);
+    console.error(`data:build failed, a row refers to data that is missing from its reference sheet:\n${e.message}`);
     process.exit(1);
   }
   throw e;

@@ -81,10 +81,64 @@ export const productSchema = z.strictObject({
   material_note: text,
 });
 
+export const serviceCycleSchema = z.strictObject({
+  asset_id: text,
+  cycle_number: count,
+  customer_id: text,
+  site_id: text,
+  laundry_id: text,
+  product_id: text,
+  pickup_timestamp: text,
+  in_laundry_timestamp: text,
+  out_laundry_timestamp: text,
+  delivered_timestamp: text,
+  cycle_hours: num,
+  performance_flag: z.enum(["ON_TIME", "LATE"]),
+  data_status: text,
+});
+
+export const wasteCircularitySchema = z.strictObject({
+  month,
+  laundry_id: text,
+  recycling_kg: num,
+  reuse_kg: num,
+  energy_recovery_kg: num,
+  incineration_kg: num,
+  textile_waste_total_kg: num,
+  waste_kg_per_washed_kg: num,
+  data_status: text,
+});
+
+export const customerImpactSchema = z.strictObject({
+  month,
+  customer_id: text,
+  site_id: text,
+  laundry_id: text,
+  product_id: text,
+  customer_washed_kg: num,
+  share_of_laundry_washed_kg: num,
+  allocated_water_l: num,
+  allocated_energy_kwh: num,
+  allocated_process_kgco2e: num,
+  allocated_delivery_kgco2e: num,
+  allocated_textile_waste_kg: num,
+  water_saving_vs_local_l: num,
+  energy_saving_vs_local_kwh: num,
+  emissions_saving_vs_local_kgco2e: num,
+  data_status: text,
+});
+
 export type Repair = z.infer<typeof repairSchema>;
 export type Site = z.infer<typeof siteSchema>;
 export type ServiceActivity = z.infer<typeof serviceActivitySchema>;
 export type Product = z.infer<typeof productSchema>;
+export type ServiceCycle = z.infer<typeof serviceCycleSchema>;
+export type WasteCircularity = z.infer<typeof wasteCircularitySchema>;
+export type CustomerImpact = z.infer<typeof customerImpactSchema>;
+/** Build-time aggregate of service_cycles: raw cycles never reach the browser. */
+export type CycleCount = { customer_id: string; site_id: string; cycles: number; on_time: number };
+/** Build-time aggregate of customer_impacts: only the allocated waste the waste KPI reads. */
+export type WasteAllocation = { customer_id: string; laundry_id: string; month: string; allocated_textile_waste_kg: number };
 export type Customer = z.infer<typeof customerSchema>;
 export type Assumption = z.infer<typeof assumptionSchema>;
 
@@ -95,6 +149,9 @@ export type AppData = {
   assumptions: Assumption[];
   serviceActivity: ServiceActivity[];
   products: Product[];
+  cycleCounts: CycleCount[];
+  wasteCircularity: WasteCircularity[];
+  wasteAllocation: WasteAllocation[];
 };
 
 /** Sheet name (as in data_dictionary.csv) to schema; the file is `<sheet lower-case>.csv`. */
@@ -105,4 +162,7 @@ export const SHEETS = {
   Assumptions: { key: "assumptions", schema: assumptionSchema },
   Service_Activity: { key: "serviceActivity", schema: serviceActivitySchema },
   Products: { key: "products", schema: productSchema },
+  Service_Cycles: { key: "serviceCycles", schema: serviceCycleSchema },
+  Waste_Circularity: { key: "wasteCircularity", schema: wasteCircularitySchema },
+  Customer_Impacts: { key: "customerImpacts", schema: customerImpactSchema },
 } as const;

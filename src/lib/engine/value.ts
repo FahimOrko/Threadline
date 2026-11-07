@@ -28,7 +28,7 @@ export function teamAssumptionInputs(name: string, a: TeamAssumption): Inputs {
   ];
 }
 
-function build(
+export function build(
   data: ValueData,
   { customerId, period }: OperationalScope,
   f: Pick<Fact, "id" | "label" | "value" | "unit" | "methods" | "source" | "assumptionIds" | "confidence" | "formula" | "inputs">,

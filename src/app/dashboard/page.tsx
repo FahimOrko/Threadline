@@ -6,7 +6,7 @@ import { StatCardSkeleton } from "@/components/states";
 import { SiteTable, SiteTableSkeleton } from "@/components/site-table";
 import { resolveCustomer } from "@/lib/customer";
 import { generatedSource } from "@/lib/data/generated";
-import { operationalFacts, operationalSiteRows, valueFacts } from "@/lib/engine";
+import { operationalFacts, operationalSiteRows, percentageFacts, valueFacts } from "@/lib/engine";
 import { formatPeriod } from "@/lib/format";
 
 // Full year 2025, fixed in this version. Every engine call takes it as an argument, so a period picker only changes this.
@@ -64,6 +64,17 @@ async function DashboardContent({ searchParams }: { searchParams: PageProps<"/da
         />
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {valueFacts(data, scope).map((f) => (
+            <FactStatCard key={f.id} fact={f} />
+          ))}
+        </div>
+      </section>
+      <section className="space-y-4">
+        <SectionHeader
+          title="Percentages"
+          description="On-time rate is over sampled cycles; repair rates are full-year repairs over December pieces; waste share is allocated by washed-kg share."
+        />
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {percentageFacts(data, scope).map((f) => (
             <FactStatCard key={f.id} fact={f} />
           ))}
         </div>

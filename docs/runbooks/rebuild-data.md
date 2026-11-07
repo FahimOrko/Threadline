@@ -11,7 +11,7 @@
 ## Rebuild
 
 1. Run `npm run data:build`.
-2. Read the one-line summary per file (repairs, sites, customers, assumptions, serviceActivity, products) and `data/generated/data-quality.json`: rows read, valid, invalid with reasons, the repairs cross-check and the product_id checks. A `product_id` in repairs or service_activity that is missing from `products.csv` fails the build and names the ids and the sheet.
+2. Read the one-line summary per file (repairs, sites, customers, assumptions, serviceActivity, products, serviceCycles, wasteCircularity, customerImpacts) and `data/generated/data-quality.json`: rows read, valid, invalid with reasons, the repairs cross-check and the product_id checks. A `product_id` in repairs or service_activity that is missing from `products.csv` fails the build and names the ids and the sheet. So does a laundry-month with allocated waste in `customer_impacts` that has no `waste_circularity` row.
 3. Run `npm test` and `npm run build`. Tests run the pipeline on `data/raw/` themselves and do not need `data/generated/`.
 
 ## Known data caveats
@@ -19,3 +19,5 @@
 - `washing_pct` in `service_activity` is loaded into `data/generated/serviceActivity.json` but unused: it is mostly above 100% and its definition is unclear. Keep it out of claims until Lindström confirms.
 - `serviceActivity.json` holds 1,248 rows; expect `valid 1248, invalid 0` on the pack.
 - `products.json` holds the 6 products (`synthetic_purchase_cost_eur` feeds the money KPIs); expect `valid 6, invalid 0` on the pack.
+- `service_cycles` (16,415 rows) and `customer_impacts` (1,248 rows) are validated and reported but written only as aggregates: `cycleCounts.json` (per site) and `wasteAllocation.json` (per customer, laundry, month, 60 rows on the pack). Expect `valid 16415` and `valid 1248`, invalid 0.
+- The `info` line for `service_cycles` is the out-of-order scan count (cycle number order disagrees with pickup timestamp order for the same asset): 1,107 on the pack, matching the product spec. It is reported, never a failure.
