@@ -14,7 +14,7 @@ import {
   type TeamAssumptions,
 } from "@/lib/engine";
 
-const stems = ["data_dictionary", "repairs", "sites", "customers", "assumptions", "service_activity", "products", "service_cycles", "waste_circularity", "customer_impacts"];
+const stems = ["data_dictionary", "repairs", "sites", "customers", "assumptions", "service_activity", "products", "service_cycles", "waste_circularity", "customer_impacts", "laundry_resources", "baselines"];
 const { data } = buildData(Object.fromEntries(stems.map((s) => [s, readFileSync(`data/raw/${s}.csv`, "utf8")])));
 const period = { from: "2025-01", to: "2025-12" };
 const north = { customerId: "CUST001", period };

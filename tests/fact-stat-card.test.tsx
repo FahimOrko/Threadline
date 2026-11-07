@@ -54,7 +54,7 @@ describe("FactStatCard", () => {
 });
 
 describe("FactStatCard without a value", () => {
-  const stems = ["data_dictionary", "repairs", "sites", "customers", "assumptions", "service_activity", "products", "service_cycles", "waste_circularity", "customer_impacts"];
+  const stems = ["data_dictionary", "repairs", "sites", "customers", "assumptions", "service_activity", "products", "service_cycles", "waste_circularity", "customer_impacts", "laundry_resources", "baselines"];
   const { data } = buildData(Object.fromEntries(stems.map((x) => [x, readFileSync(`data/raw/${x}.csv`, "utf8")])));
   const unset = costOfUnusedAllocation(data, { customerId: "CUST001", period: { from: "2025-01", to: "2025-12" } });
 

@@ -128,6 +128,36 @@ export const customerImpactSchema = z.strictObject({
   data_status: text,
 });
 
+export const laundryResourceSchema = z.strictObject({
+  month,
+  laundry_id: text,
+  laundry_name: text,
+  country: text,
+  washed_kg: num,
+  energy_kwh_per_kg: num,
+  fresh_water_l_per_kg: num,
+  process_energy_kwh: num,
+  fresh_water_l: num,
+  process_emissions_kgco2e: num,
+  delivery_emissions_kgco2e: num,
+  data_status: text,
+});
+
+export const baselineSchema = z.strictObject({
+  baseline_id: text,
+  baseline_name: text,
+  selection_status: text,
+  water_l_per_kg: num,
+  energy_kwh_per_kg: num,
+  process_kgco2e_per_kg: num,
+  delivery_kgco2e_per_kg: num,
+  mixed_waste_share: num,
+  assumption_note: text,
+});
+
+/** The baseline the dashboard compares against (assumption A001); Slice 4 replaces the lookup with the selected id. */
+export const DEFAULT_BASELINE_ID = "B_LOCAL";
+
 export type Repair = z.infer<typeof repairSchema>;
 export type Site = z.infer<typeof siteSchema>;
 export type ServiceActivity = z.infer<typeof serviceActivitySchema>;
@@ -135,10 +165,12 @@ export type Product = z.infer<typeof productSchema>;
 export type ServiceCycle = z.infer<typeof serviceCycleSchema>;
 export type WasteCircularity = z.infer<typeof wasteCircularitySchema>;
 export type CustomerImpact = z.infer<typeof customerImpactSchema>;
+export type LaundryResource = z.infer<typeof laundryResourceSchema>;
+export type Baseline = z.infer<typeof baselineSchema>;
 /** Build-time aggregate of service_cycles: raw cycles never reach the browser. */
 export type CycleCount = { customer_id: string; site_id: string; cycles: number; on_time: number };
-/** Build-time aggregate of customer_impacts: only the allocated waste the waste KPI reads. */
-export type WasteAllocation = { customer_id: string; laundry_id: string; month: string; allocated_textile_waste_kg: number };
+/** Build-time aggregate of customer_impacts: the customer's washed kg and allocated waste per laundry-month. */
+export type ImpactAllocation = { customer_id: string; laundry_id: string; month: string; customer_washed_kg: number; allocated_textile_waste_kg: number };
 export type Customer = z.infer<typeof customerSchema>;
 export type Assumption = z.infer<typeof assumptionSchema>;
 
@@ -151,7 +183,9 @@ export type AppData = {
   products: Product[];
   cycleCounts: CycleCount[];
   wasteCircularity: WasteCircularity[];
-  wasteAllocation: WasteAllocation[];
+  impactAllocation: ImpactAllocation[];
+  laundryResources: LaundryResource[];
+  baselines: Baseline[];
 };
 
 /** Sheet name (as in data_dictionary.csv) to schema; the file is `<sheet lower-case>.csv`. */
@@ -165,4 +199,6 @@ export const SHEETS = {
   Service_Cycles: { key: "serviceCycles", schema: serviceCycleSchema },
   Waste_Circularity: { key: "wasteCircularity", schema: wasteCircularitySchema },
   Customer_Impacts: { key: "customerImpacts", schema: customerImpactSchema },
+  Laundry_Resources: { key: "laundryResources", schema: laundryResourceSchema },
+  Baselines: { key: "baselines", schema: baselineSchema },
 } as const;

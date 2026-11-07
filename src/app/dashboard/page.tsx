@@ -6,7 +6,7 @@ import { StatCardSkeleton } from "@/components/states";
 import { SiteTable, SiteTableSkeleton } from "@/components/site-table";
 import { resolveCustomer } from "@/lib/customer";
 import { generatedSource } from "@/lib/data/generated";
-import { operationalFacts, operationalSiteRows, percentageFacts, valueFacts } from "@/lib/engine";
+import { DEFAULT_BASELINE_ID, footprintFacts, footprintGroup, operationalFacts, operationalSiteRows, percentageFacts, valueFacts } from "@/lib/engine";
 import { formatPeriod } from "@/lib/format";
 
 // Full year 2025, fixed in this version. Every engine call takes it as an argument, so a period picker only changes this.
@@ -40,6 +40,15 @@ async function DashboardContent({ searchParams }: { searchParams: PageProps<"/da
   const { customer, rejected } = resolveCustomer(params.customer, data.customers);
   const scope = { customerId: customer.customer_id, period: PERIOD };
   const facts = operationalFacts(data, scope);
+  // Slice 4 replaces this lookup with the selected baseline id.
+  const baseline = data.baselines.find((b) => b.baseline_id === DEFAULT_BASELINE_ID);
+  if (!baseline) throw new Error(`Baseline ${DEFAULT_BASELINE_ID} is missing from the baselines data`);
+  const footprint = footprintFacts(data, scope, baseline);
+  const footprintGroups = [
+    { title: "Saved vs local laundry", group: "saved" },
+    { title: "Service footprint", group: "service" },
+    { title: "Delivery footprint", group: "delivery" },
+  ] as const;
   return (
     <div className="space-y-6">
       {rejected !== null && (
@@ -78,6 +87,22 @@ async function DashboardContent({ searchParams }: { searchParams: PageProps<"/da
             <FactStatCard key={f.id} fact={f} />
           ))}
         </div>
+      </section>
+      <section className="space-y-4">
+        <SectionHeader
+          title="Footprint"
+          description="Full year 2025 against the local laundry baseline (A001). Baseline values are illustrative. Route kilometres are not in the data pack, so delivery is not estimated from distance."
+        />
+        {footprintGroups.map(({ title, group }) => (
+          <div key={group} className="space-y-2">
+            <h3 className="text-sm font-medium text-muted-foreground">{title}</h3>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {footprintGroup(footprint, group).map((f) => (
+                <FactStatCard key={f.id} fact={f} />
+              ))}
+            </div>
+          </div>
+        ))}
       </section>
       <section className="space-y-4">
         <SectionHeader title="Sites" description="Wearers and garments are December 2025; repairs and requests are the full year." />

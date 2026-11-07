@@ -7,6 +7,10 @@ const productRow = "P1,Jacket,Jackets,0.85,18.5,54,poly-cotton";
 const cycleColumns = ["asset_id", "cycle_number", "customer_id", "site_id", "laundry_id", "product_id", "pickup_timestamp", "in_laundry_timestamp", "out_laundry_timestamp", "delivered_timestamp", "cycle_hours", "performance_flag", "data_status"];
 const wasteColumns = ["month", "laundry_id", "recycling_kg", "reuse_kg", "energy_recovery_kg", "incineration_kg", "textile_waste_total_kg", "waste_kg_per_washed_kg", "data_status"];
 const impactColumns = ["month", "customer_id", "site_id", "laundry_id", "product_id", "customer_washed_kg", "share_of_laundry_washed_kg", "allocated_water_l", "allocated_energy_kwh", "allocated_process_kgco2e", "allocated_delivery_kgco2e", "allocated_textile_waste_kg", "water_saving_vs_local_l", "energy_saving_vs_local_kwh", "emissions_saving_vs_local_kgco2e", "data_status"];
+const laundryColumns = ["month", "laundry_id", "laundry_name", "country", "washed_kg", "energy_kwh_per_kg", "fresh_water_l_per_kg", "process_energy_kwh", "fresh_water_l", "process_emissions_kgco2e", "delivery_emissions_kgco2e", "data_status"];
+const baselineColumns = ["baseline_id", "baseline_name", "selection_status", "water_l_per_kg", "energy_kwh_per_kg", "process_kgco2e_per_kg", "delivery_kgco2e_per_kg", "mixed_waste_share", "assumption_note"];
+const laundryRow = (month: string, laundry = "L001", kg = 100) => `${month},${laundry},Aurora,FI,${kg},0.7,5,70,500,8,4,S`;
+const baselineRow = "B_LOCAL,Outsourced local laundry,DEFAULT,9.5,1.05,0.62,0.035,1,note";
 const cycle = (asset: string, n: number, pickup: string, flag = "ON_TIME", site = "S001") =>
   `${asset},${n},CUST001,${site},L001,P1,${pickup},2025-01-02T00:00:00,2025-01-03T00:00:00,2025-01-04T00:00:00,72,${flag},S`;
 const cycles = (...rows: string[]) => `${cycleColumns.join(",")}\n${rows.join("\n")}`;
@@ -35,6 +39,8 @@ const dictionary = [
   ...cycleColumns.map((f) => `Service_Cycles,${f},x,,`),
   ...wasteColumns.map((f) => `Waste_Circularity,${f},x,,`),
   ...impactColumns.map((f) => `Customer_Impacts,${f},x,,`),
+  ...laundryColumns.map((f) => `Laundry_Resources,${f},x,,`),
+  ...baselineColumns.map((f) => `Baselines,${f},x,,`),
 ].join("\n");
 
 const repairsHeader =
@@ -52,6 +58,8 @@ const files = (repairs: string): Record<string, string> => ({
   service_cycles: cycles(cycle("A1", 1, "2025-01-01T00:00:00")),
   waste_circularity: `${wasteColumns.join(",")}\n${wasteRow}`,
   customer_impacts: `${impactColumns.join(",")}\n${impactRow("2025-01")}`,
+  laundry_resources: `${laundryColumns.join(",")}\n${laundryRow("2025-01")}`,
+  baselines: `${baselineColumns.join(",")}\n${baselineRow}`,
 });
 
 describe("checkHeader", () => {
@@ -129,7 +137,7 @@ describe("service_activity sheet", () => {
   });
   it("reads all 1,248 rows of the pack without invalid rows", async () => {
     const { readFileSync } = await import("node:fs");
-    const stems = ["data_dictionary", "repairs", "sites", "customers", "assumptions", "service_activity", "products", "service_cycles", "waste_circularity", "customer_impacts"];
+    const stems = ["data_dictionary", "repairs", "sites", "customers", "assumptions", "service_activity", "products", "service_cycles", "waste_circularity", "customer_impacts", "laundry_resources", "baselines"];
     const { report } = buildData(Object.fromEntries(stems.map((x) => [x, readFileSync(`data/raw/${x}.csv`, "utf8")])));
     expect(report.files.serviceActivity).toMatchObject({ read: 1248, valid: 1248, invalid: [] });
   });
@@ -148,7 +156,7 @@ describe("products sheet", () => {
   });
   it("reads the 6 products of the pack without invalid rows", async () => {
     const { readFileSync } = await import("node:fs");
-    const stems = ["data_dictionary", "repairs", "sites", "customers", "assumptions", "service_activity", "products", "service_cycles", "waste_circularity", "customer_impacts"];
+    const stems = ["data_dictionary", "repairs", "sites", "customers", "assumptions", "service_activity", "products", "service_cycles", "waste_circularity", "customer_impacts", "laundry_resources", "baselines"];
     const { report } = buildData(Object.fromEntries(stems.map((x) => [x, readFileSync(`data/raw/${x}.csv`, "utf8")])));
     expect(report.files.products).toMatchObject({ read: 6, valid: 6, invalid: [] });
     expect(report.files.repairs.crossChecks.at(-1)).toMatchObject({ passed: true });
@@ -212,6 +220,8 @@ describe("service_cycles sheet", () => {
     expect(() => buildData({ ...f, service_cycles: `${cycleColumns.slice(1).join(",")}\n` })).toThrow(/service_cycles\.csv: missing \[asset_id\]/);
     expect(() => buildData({ ...f, waste_circularity: `${wasteColumns.slice(1).join(",")}\n` })).toThrow(/waste_circularity\.csv: missing \[month\]/);
     expect(() => buildData({ ...f, customer_impacts: `${impactColumns.slice(1).join(",")}\n` })).toThrow(/customer_impacts\.csv: missing \[month\]/);
+    expect(() => buildData({ ...f, laundry_resources: `${laundryColumns.slice(1).join(",")}\n` })).toThrow(/laundry_resources\.csv: missing \[month\]/);
+    expect(() => buildData({ ...f, baselines: `${baselineColumns.slice(1).join(",")}\n` })).toThrow(/baselines\.csv: missing \[baseline_id\]/);
   });
 });
 
@@ -227,11 +237,42 @@ describe("waste reference", () => {
   });
   it("passes on the pack and aggregates waste per customer, laundry and month", async () => {
     const { readFileSync } = await import("node:fs");
-    const stems = ["data_dictionary", "repairs", "sites", "customers", "assumptions", "service_activity", "products", "service_cycles", "waste_circularity", "customer_impacts"];
+    const stems = ["data_dictionary", "repairs", "sites", "customers", "assumptions", "service_activity", "products", "service_cycles", "waste_circularity", "customer_impacts", "laundry_resources", "baselines"];
     const { data, report } = buildData(Object.fromEntries(stems.map((x) => [x, readFileSync(`data/raw/${x}.csv`, "utf8")])));
     expect(report.files.customerImpacts.crossChecks[0]).toMatchObject({ passed: true });
-    expect(data.wasteAllocation).toHaveLength(60);
+    expect(data.impactAllocation).toHaveLength(60);
+    expect(data.laundryResources).toHaveLength(48);
+    expect(data.baselines).toHaveLength(3);
+    expect(report.files.laundryResources).toMatchObject({ read: 48, valid: 48, invalid: [] });
+    expect(report.files.baselines).toMatchObject({ read: 3, valid: 3, invalid: [] });
+    expect(report.files.customerImpacts.crossChecks.every((c) => c.passed)).toBe(true);
+    expect(report.files.baselines.crossChecks[0]).toMatchObject({ passed: true });
+    const csvKg = readFileSync("data/raw/customer_impacts.csv", "utf8").split("\n").slice(1).filter(Boolean).map((l) => l.split(",")).filter((c) => c[1] === "CUST001").reduce((s, c) => s + Number(c[5]), 0);
+    expect(data.impactAllocation.filter((a) => a.customer_id === "CUST001").reduce((s, a) => s + a.customer_washed_kg, 0)).toBeCloseTo(csvKg, 3);
     expect(data.cycleCounts.reduce((s, c) => s + c.cycles, 0)).toBe(16415);
     expect(report.files.serviceCycles.crossChecks[0].disagreements).toHaveLength(1107);
+  });
+});
+
+describe("footprint references", () => {
+  const withImpacts = (rows: string[], laundry: string) => ({
+    ...files(`${repairsHeader}\n${good}`),
+    customer_impacts: `${impactColumns.join(",")}\n${rows.join("\n")}`,
+    laundry_resources: `${laundryColumns.join(",")}\n${laundry}`,
+  });
+  it("fails naming the laundry-month and sheet when laundry_resources has no row", () => {
+    const f = withImpacts([impactRow("2025-01")], laundryRow("2025-02"));
+    expect(() => buildData(f)).toThrow(UnknownReferenceError);
+    expect(() => buildData(f)).toThrow("laundry_resources: no row with washed_kg > 0 for laundry-month [L001 2025-01]");
+  });
+  it("fails when the laundry-month has zero washed kg", () => {
+    expect(() => buildData(withImpacts([impactRow("2025-01")], laundryRow("2025-01", "L001", 0)))).toThrow("[L001 2025-01]");
+  });
+  it("fails naming the default baseline when it is missing", () => {
+    const f = { ...files(`${repairsHeader}\n${good}`), baselines: `${baselineColumns.join(",")}\n${baselineRow.replace("B_LOCAL", "B_OTHER")}` };
+    expect(() => buildData(f)).toThrow("baselines: default baseline id missing [B_LOCAL]");
+  });
+  it("passes when every reference resolves", () => {
+    expect(() => buildData(withImpacts([impactRow("2025-01")], laundryRow("2025-01")))).not.toThrow();
   });
 });

@@ -780,3 +780,4 @@ All data is 2025, monthly, 100% synthetic.
 - Is a CO2-per-tree illustration acceptable if labelled illustrative with a source? Same for bathtub and car km equivalents.
 - Can we get average route kilometres per customer, even as a synthetic example?
 - Which KPIs typically appear in contracts or procurement reviews?
+- Should the illustrative local laundry baseline process factor (0.62 kgCO2e/kg, against 0.028 to 0.369 at the laundries) be reviewed? It drives CO2e saved of about 78 to 87%.

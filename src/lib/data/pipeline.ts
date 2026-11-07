@@ -1,6 +1,6 @@
 // CSV text in, validated data and a data-quality report out. No file access here (the script does IO).
 import Papa from "papaparse";
-import { SHEETS, type AppData, type CustomerImpact, type CycleCount, type ServiceCycle, type WasteAllocation } from "./schemas";
+import { DEFAULT_BASELINE_ID, SHEETS, type AppData, type CustomerImpact, type CycleCount, type ImpactAllocation, type ServiceCycle } from "./schemas";
 
 export type InvalidRow = { row: number; reason: string };
 export type CrossCheck = {
@@ -120,11 +120,12 @@ function countCycles(cycles: ServiceCycle[]): CycleCount[] {
   return [...by.values()].sort((a, b) => a.customer_id.localeCompare(b.customer_id) || a.site_id.localeCompare(b.site_id));
 }
 
-function allocateWaste(impacts: CustomerImpact[]): WasteAllocation[] {
-  const by = new Map<string, WasteAllocation>();
+function allocateImpacts(impacts: CustomerImpact[]): ImpactAllocation[] {
+  const by = new Map<string, ImpactAllocation>();
   for (const r of impacts) {
     const k = `${r.customer_id}|${r.laundry_id}|${r.month}`;
-    const a = by.get(k) ?? { customer_id: r.customer_id, laundry_id: r.laundry_id, month: r.month, allocated_textile_waste_kg: 0 };
+    const a = by.get(k) ?? { customer_id: r.customer_id, laundry_id: r.laundry_id, month: r.month, customer_washed_kg: 0, allocated_textile_waste_kg: 0 };
+    a.customer_washed_kg += r.customer_washed_kg;
     a.allocated_textile_waste_kg += r.allocated_textile_waste_kg;
     by.set(k, a);
   }
@@ -176,7 +177,7 @@ export function buildData(files: Record<string, string>): { data: AppData; repor
   const data = {
     ...rows,
     cycleCounts: countCycles(cycles),
-    wasteAllocation: allocateWaste(rows.customerImpacts as CustomerImpact[]),
+    impactAllocation: allocateImpacts(rows.customerImpacts as CustomerImpact[]),
   } as unknown as AppData & { serviceCycles?: never; customerImpacts?: never };
   delete data.serviceCycles; // raw cycles and impacts are validated and reported, never shipped
   delete data.customerImpacts;
@@ -192,14 +193,32 @@ export function buildData(files: Record<string, string>): { data: AppData; repor
   const problems2: ReferenceProblem[] = bad.map((s) => ({ sheet: s.sheet, what: "unknown product_id", ids: s.check.disagreements.map((d) => String(d.product_id)) }));
   // The waste share needs a waste_circularity row for every laundry-month that has allocated waste.
   const haveWaste = new Set(data.wasteCircularity.map((w) => `${w.laundry_id} ${w.month}`));
-  const missingWaste = [...new Set(data.wasteAllocation.filter((a) => a.allocated_textile_waste_kg > 0).map((a) => `${a.laundry_id} ${a.month}`))].filter((k) => !haveWaste.has(k)).sort();
+  const missingWaste = [...new Set(data.impactAllocation.filter((a) => a.allocated_textile_waste_kg > 0).map((a) => `${a.laundry_id} ${a.month}`))].filter((k) => !haveWaste.has(k)).sort();
   report.files.customerImpacts.crossChecks.push({
     id: "customer_impacts.laundry-month in waste_circularity",
-    checked: data.wasteAllocation.length,
+    checked: data.impactAllocation.length,
     passed: missingWaste.length === 0,
     disagreements: missingWaste.map((laundry_month) => ({ laundry_month })),
   });
   if (missingWaste.length) problems2.push({ sheet: "customer_impacts", what: "no waste_circularity row for laundry-month", ids: missingWaste });
+  // Footprint factors need a laundry_resources row with washed kg for every laundry-month the customers have washed kg in.
+  const haveResources = new Set(data.laundryResources.filter((l) => l.washed_kg > 0).map((l) => `${l.laundry_id} ${l.month}`));
+  const missingResources = [...new Set(data.impactAllocation.filter((a) => a.customer_washed_kg > 0).map((a) => `${a.laundry_id} ${a.month}`))].filter((k) => !haveResources.has(k)).sort();
+  report.files.customerImpacts.crossChecks.push({
+    id: "customer_impacts.laundry-month in laundry_resources with washed_kg > 0",
+    checked: data.impactAllocation.length,
+    passed: missingResources.length === 0,
+    disagreements: missingResources.map((laundry_month) => ({ laundry_month })),
+  });
+  if (missingResources.length) problems2.push({ sheet: "laundry_resources", what: "no row with washed_kg > 0 for laundry-month", ids: missingResources });
+  const baselineFound = data.baselines.some((b) => b.baseline_id === DEFAULT_BASELINE_ID);
+  report.files.baselines.crossChecks.push({
+    id: "baselines.default baseline id present",
+    checked: data.baselines.length,
+    passed: baselineFound,
+    disagreements: baselineFound ? [] : [{ baseline_id: DEFAULT_BASELINE_ID }],
+  });
+  if (!baselineFound) problems2.push({ sheet: "baselines", what: "default baseline id missing", ids: [DEFAULT_BASELINE_ID] });
   if (problems2.length) throw new UnknownReferenceError(problems2);
   return { data, report };
 }

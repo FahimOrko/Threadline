@@ -6,7 +6,7 @@ import { build } from "./value";
 
 type PercentageData = Pick<
   AppData,
-  "sites" | "customers" | "assumptions" | "repairs" | "serviceActivity" | "products" | "cycleCounts" | "wasteCircularity" | "wasteAllocation"
+  "sites" | "customers" | "assumptions" | "repairs" | "serviceActivity" | "products" | "cycleCounts" | "wasteCircularity" | "impactAllocation"
 >;
 
 const NO_RATING = "Not rated (no assumption applies)";
@@ -82,7 +82,7 @@ export function repairRateByProduct(data: PercentageData, scope: OperationalScop
 
 /** Share of the customer's allocated textile waste that is recycled or reused, weighted by allocated kg. */
 export function recyclingReuseShare(data: PercentageData, scope: OperationalScope): Fact | null {
-  const rows = data.wasteAllocation.filter(
+  const rows = data.impactAllocation.filter(
     (a) => a.customer_id === scope.customerId && a.month >= scope.period.from && a.month <= scope.period.to,
   );
   let total = 0;

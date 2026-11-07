@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { repairSchema, serviceActivitySchema } from "@/lib/data/schemas";
+import { baselineSchema, laundryResourceSchema, repairSchema, serviceActivitySchema } from "@/lib/data/schemas";
 
 const row = {
   month: "2025-01", customer_id: "CUST001", site_id: "S001", product_id: "P1002", laundry_id: "L001",
@@ -46,4 +46,25 @@ describe("serviceActivitySchema", () => {
   it("rejects an unknown column", () => {
     expect(serviceActivitySchema.safeParse({ ...sa, extra: "1" }).success).toBe(false);
   });
+});
+
+const laundryRow = {
+  month: "2025-01", laundry_id: "L001", laundry_name: "Aurora", country: "Finland", washed_kg: "120569.0",
+  energy_kwh_per_kg: "0.74", fresh_water_l_per_kg: "4.95", process_energy_kwh: "89233.8", fresh_water_l: "596277.9",
+  process_emissions_kgco2e: "8031.0", delivery_emissions_kgco2e: "5681.1", data_status: "S",
+};
+describe("laundryResourceSchema", () => {
+  it("accepts a valid row", () => expect(laundryResourceSchema.parse(laundryRow).washed_kg).toBe(120569));
+  it("rejects a blank number", () => expect(laundryResourceSchema.safeParse({ ...laundryRow, washed_kg: "" }).success).toBe(false));
+  it("rejects an unknown column", () => expect(laundryResourceSchema.safeParse({ ...laundryRow, extra: "x" }).success).toBe(false));
+});
+
+const baselineRow = {
+  baseline_id: "B_LOCAL", baseline_name: "Outsourced local laundry", selection_status: "DEFAULT", water_l_per_kg: "9.5",
+  energy_kwh_per_kg: "1.05", process_kgco2e_per_kg: "0.62", delivery_kgco2e_per_kg: "0.035", mixed_waste_share: "1", assumption_note: "n",
+};
+describe("baselineSchema", () => {
+  it("accepts a valid row", () => expect(baselineSchema.parse(baselineRow).process_kgco2e_per_kg).toBe(0.62));
+  it("rejects a blank number", () => expect(baselineSchema.safeParse({ ...baselineRow, water_l_per_kg: "" }).success).toBe(false));
+  it("rejects an unknown column", () => expect(baselineSchema.safeParse({ ...baselineRow, extra: "x" }).success).toBe(false));
 });

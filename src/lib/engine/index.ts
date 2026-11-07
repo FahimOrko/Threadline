@@ -21,6 +21,8 @@ export {
   valueFacts,
 } from "./value";
 export { onTimeCycleRate, percentageFacts, recyclingReuseShare, repairRateByProduct } from "./percentage";
+export { baselineShortName, DEFAULT_BASELINE_ID, footprintFacts, footprintGroup, FOOTPRINT_GROUPS } from "./footprint";
+export type { Baseline } from "./footprint";
 export { TEAM_ASSUMPTIONS } from "./assumptions-config";
 export type { TeamAssumption, TeamAssumptions } from "./assumptions-config";
 export type { OperationalScope, SiteColumn, SiteColumnKey, SiteRow, SiteRows } from "./operational";

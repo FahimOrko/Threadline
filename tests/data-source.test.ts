@@ -5,7 +5,7 @@ import { jsonDataSource } from "@/lib/data/source";
 
 describe("jsonDataSource", () => {
   it("returns plain serialisable objects", async () => {
-    const stems = ["data_dictionary", "repairs", "sites", "customers", "assumptions", "service_activity", "products", "service_cycles", "waste_circularity", "customer_impacts"];
+    const stems = ["data_dictionary", "repairs", "sites", "customers", "assumptions", "service_activity", "products", "service_cycles", "waste_circularity", "customer_impacts", "laundry_resources", "baselines"];
     const files = Object.fromEntries(stems.map((s) => [s, readFileSync(`data/raw/${s}.csv`, "utf8")]));
     const { data } = buildData(files);
     const loaded = await jsonDataSource(data).load();
