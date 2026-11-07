@@ -18,3 +18,5 @@ export const TEAM_ASSUMPTIONS = {
     certainty: "assumed",
   },
 } as const satisfies Record<string, TeamAssumption>;
+
+export type TeamAssumptions = Record<keyof typeof TEAM_ASSUMPTIONS, TeamAssumption>;

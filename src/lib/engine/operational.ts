@@ -12,7 +12,7 @@ const inPeriod = (month: string, p: Period) => month >= p.from && month <= p.to;
 const sum = (xs: number[]) => xs.reduce((a, b) => a + b, 0);
 
 /** Service-activity rows of the customer in the latest month of the period. */
-const latestRows = (data: OperationalData, { customerId, period }: OperationalScope) =>
+export const latestRows = (data: OperationalData, { customerId, period }: OperationalScope) =>
   data.serviceActivity.filter((r) => r.customer_id === customerId && r.month === period.to);
 
 /** Active-wearers rule: maximum across product rows per site (rows repeat the same people), then sum sites. */

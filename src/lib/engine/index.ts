@@ -11,4 +11,15 @@ export {
   serviceRequests,
   serviceRequestsPer100Wearers,
 } from "./operational";
+export {
+  avoidedPurchaseCost,
+  costOfUnusedAllocation,
+  garmentUtilization,
+  garmentValueKeptInUse,
+  productCost,
+  teamAssumptionInputs,
+  valueFacts,
+} from "./value";
+export { TEAM_ASSUMPTIONS } from "./assumptions-config";
+export type { TeamAssumption, TeamAssumptions } from "./assumptions-config";
 export type { OperationalScope, SiteColumn, SiteColumnKey, SiteRow, SiteRows } from "./operational";
