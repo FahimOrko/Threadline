@@ -58,6 +58,28 @@ export const sampleFact: Fact = {
   range: { low: null, base: 12480, high: null },
 };
 
+// A Fact whose team assumption is unset (value null): FactStatCard shows "Needs input". Not engine output.
+export const sampleNeedsInputFact: Fact = {
+  id: "sample_needs_input",
+  label: "Cost of unused allocation (Dec, per week)",
+  value: null,
+  unit: "EUR per week",
+  methods: ["ESTIMATED"],
+  source: "ASSUMPTION",
+  assumptionIds: ["T000"],
+  confidence: "Assumed",
+  formula: "sample cost = unused pieces x T000 rental fee per piece per week",
+  inputs: [
+    { label: "Unused pieces (Dec)", value: 1234, unit: "pieces" },
+    { label: "T000 rental fee per piece per week", value: "not set" },
+    { label: "T000 note", note: true, value: "Sample note: the rental fee is asked of Lindström and has not been supplied yet." },
+  ],
+  scope: { customerId: "SAMPLE", customerName: "Sample customer" },
+  period: { from: "2025-01", to: "2025-12" },
+  baseline: null,
+  range: { low: null, base: null, high: null },
+};
+
 // Fixture for SiteTable. Not engine output.
 const sampleColumn = (label: string, unit: string, methods: SiteRows["columns"]["wearers"]["methods"], formula: string) => ({
   label, unit, methods, source: "SYNTHETIC" as const, formula, inputs: [], assumptionIds: [], confidence: "Not rated (no assumption applies)",

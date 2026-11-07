@@ -14,7 +14,7 @@ import { EmptyState, ErrorState, StatCardSkeleton } from "@/components/states";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Tooltip } from "@/components/tooltip";
 import { METHODS, SOURCES } from "@/lib/provenance";
-import { SAMPLE_LABEL, sampleFact, sampleMathWorstCase, sampleStats, sampleSiteTable, stressChip } from "./_sample/data";
+import { SAMPLE_LABEL, sampleFact, sampleNeedsInputFact, sampleMathWorstCase, sampleStats, sampleSiteTable, stressChip } from "./_sample/data";
 
 const sections = ["Tokens", "Provenance", "Data display", "Controls", "States", "Effects"];
 const tokenNames = [
@@ -137,6 +137,16 @@ export default function DesignPage() {
           </p>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <FactStatCard fact={sampleFact} />
+          </div>
+        </div>
+        <div className="space-y-2">
+          <h3 className="text-sm font-medium">Needs input</h3>
+          <p className="max-w-[65ch] text-sm text-muted-foreground">
+            A Fact with a null value, because a team assumption is unset (ADR 0016), shows &quot;Needs input&quot; and a hint instead of a number. The amber assumed chip and Show math stay; Show math lists the assumption as &quot;not set&quot;. Same box as a card with a value.
+          </p>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <FactStatCard fact={sampleFact} />
+            <FactStatCard fact={sampleNeedsInputFact} />
           </div>
         </div>
         <div className="space-y-2">

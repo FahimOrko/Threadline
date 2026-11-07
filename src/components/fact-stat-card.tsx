@@ -1,22 +1,23 @@
 import { ProvenanceChip } from "@/components/provenance-chip";
 import { ShowMathPopover } from "@/components/show-math";
 import { StatCard } from "@/components/stat-card";
-import { requireValue, type Fact } from "@/lib/engine";
+import type { Fact } from "@/lib/engine";
 import { formatNumber, formatPeriod, formatQuantity } from "@/lib/format";
 
 const NOT_MODELLED = "not yet modelled";
+const NOT_AVAILABLE = "not available";
 
 // The only place a Fact becomes StatCard, ProvenanceChip and ShowMathPopover props.
 export function FactStatCard({ fact }: { fact: Fact }) {
   const { range } = fact;
-  // shortcut: a Fact without a value cannot render yet; the "Needs input" state arrives in task 4.1 of dashboard-money-kpis.
-  const value = requireValue(fact);
-  if (range.base === null) throw new Error(`Fact ${fact.id} has no value`);
+  // A null value means a team assumption is unset (ADR 0016): show "Needs input", never 0 or an empty value.
+  const missing = fact.assumptionIds.filter((id) => id.startsWith("T")).join(", ");
   return (
     <StatCard
       label={fact.label}
-      value={formatNumber(value)}
+      value={fact.value === null ? undefined : formatNumber(fact.value)}
       unit={fact.unit}
+      needsInput={fact.value === null ? `Set ${missing || "the missing assumption"} in the assumptions config. See Show math.` : undefined}
       provenance={<ProvenanceChip methods={fact.methods} source={fact.source} />}
     >
       <ShowMathPopover
@@ -37,7 +38,7 @@ export function FactStatCard({ fact }: { fact: Fact }) {
         baseline={fact.baseline ?? "not applicable"}
         range={{
           low: range.low === null ? NOT_MODELLED : formatNumber(range.low),
-          base: formatNumber(range.base),
+          base: range.base === null ? NOT_AVAILABLE : formatNumber(range.base),
           high: range.high === null ? NOT_MODELLED : formatNumber(range.high),
         }}
       />

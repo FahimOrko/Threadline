@@ -24,8 +24,8 @@ Read first: `docs/conventions.md`, `docs/adr/README.md` (ADRs 0004, 0005, 0010, 
 
 ## 4. Needs-input card
 
-- [ ] 4.1 Add the optional `needsInput` hint prop to `StatCard` (replaces the value row, same box, sans font, muted) and make `FactStatCard` use it when `fact.value` is null, with range base shown as not available. Verify: extend `tests/fact-stat-card.test.tsx`: null value shows "Needs input" and the hint, no "0" or "NaN" text, the chip and the Show math control are present, and Show math lists T001 as "not set".
-- [ ] 4.2 Add the needs-input StatCard next to a normal one in `/design` (Data display), with a labelled fixture, and a `docs/design.md` note on the StatCard row. Verify: `/design` shows it in both themes at equal width; `npm run check:design-imports` and `npm run check:contrast` pass.
+- [x] 4.1 Add the optional `needsInput` hint prop to `StatCard` (replaces the value row, same box, sans font, muted) and make `FactStatCard` use it when `fact.value` is null, with range base shown as not available. Verify: extend `tests/fact-stat-card.test.tsx`: null value shows "Needs input" and the hint, no "0" or "NaN" text, the chip and the Show math control are present, and Show math lists T001 as "not set".
+- [x] 4.2 Add the needs-input StatCard next to a normal one in `/design` (Data display), with a labelled fixture, and a `docs/design.md` note on the StatCard row. Verify: `/design` shows it in both themes at equal width; `npm run check:design-imports` and `npm run check:contrast` pass.
 
 ## 5. Dashboard
 
