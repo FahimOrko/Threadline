@@ -106,13 +106,18 @@ describe("site by month matrix", () => {
       expect(row.cells.map((c) => c.value)).toEqual(series.points.map((p) => p.value));
     }
   });
-  it("levels run 0 to 4 with the lowest cell at 0 and the highest at 4", () => {
-    const m = monthlySeriesBySite(data, north, "repairs");
-    const cells = m.rows.flatMap((r) => r.cells);
-    expect(new Set(cells.map((c) => c.level)).has(0)).toBe(true);
-    expect(cells.find((c) => c.value === Math.max(...cells.map((x) => x.value)))!.level).toBe(4);
-    expect(cells.find((c) => c.value === Math.min(...cells.map((x) => x.value)))!.level).toBe(0);
-    expect(cells.every((c) => c.level >= 0 && c.level <= 4)).toBe(true);
+  it("repair highlights are exactly the spike months of the repair spike signal", () => {
+    const sig = repairSpikeSignal(data, north).sites;
+    for (const row of monthlySeriesBySite(data, north, "repairs").rows) {
+      expect(row.cells.filter((c) => c.highlight).map((c) => c.month)).toEqual(sig.find((s) => s.siteId === row.siteId)?.spikes.map((s) => s.month) ?? []);
+      expect(row.highlighted).toBe(row.cells.filter((c) => c.highlight).length);
+    }
+  });
+  it("utilization highlights are exactly the cells below the over-allocation cut-off", () => {
+    const cutoff = overAllocationCutoffPercent().percent!;
+    const cells = monthlySeriesBySite(data, north, "garment_utilization").rows.flatMap((r) => r.cells);
+    expect(cells.some((c) => c.highlight)).toBe(true);
+    for (const c of cells) expect(c.highlight).toBe(c.value < cutoff);
   });
 });
 
@@ -155,29 +160,33 @@ describe("footprint comparison", () => {
         expect(c.metrics.co2e.comparison - c.metrics.co2e.service).toBeCloseTo(saved("co2e_saved"), 4);
         expect(c.netSaving).toBeCloseTo(saved("co2e_saved"), 4);
       });
-  it("the waterfall is continuous and its last step ends at the service total", () => {
-    for (const baseline of [local, home]) {
-      const c = footprintComparison(data, north, baseline, "base")!;
-      const service = requireValue(footprintFacts(data, north, baseline, "base").find((f) => f.id === "service_footprint")!);
-      const w = c.waterfall;
-      expect(w.at(-1)!.end).toBeCloseTo(service, 4);
-      expect(w[1].start).toBeCloseTo(w[0].end, 6);
-      expect(w[2].start).toBeCloseTo(w[1].end, 6);
-      expect(w[2].end).toBeCloseTo(service, 4);
-      for (const step of w.slice(1, 3)) expect(step.delta).toBeCloseTo(step.end - step.start, 6);
-    }
-    // Home washing has no delivery, so the service's delivery is a step up.
-    expect(footprintComparison(data, north, home, "base")!.waterfall[2].kind).toBe("increase");
+  it("the comparison Fact equals the service total plus the net saving, and the net saving the CO2e saved Fact", () => {
+    for (const baseline of [local, home])
+      for (const sensitivity of SENSITIVITY_LEVELS) {
+        const c = footprintComparison(data, north, baseline, sensitivity)!;
+        const facts = footprintFacts(data, north, baseline, sensitivity);
+        const v = (id: string) => requireValue(facts.find((f) => f.id === id)!);
+        expect(v("comparison_footprint")).toBeCloseTo(v("service_footprint") + v("co2e_saved"), 4);
+        expect(c.netSaving).toBeCloseTo(v("co2e_saved"), 4);
+        expect(c.metrics.co2e.comparison).toBeCloseTo(v("comparison_footprint"), 4);
+      }
   });
-  it("composition parts equal the service footprint and the recycling share", () => {
+  it("comparisonDelivery is 0 for home washing and positive for a local laundry", () => {
+    expect(footprintComparison(data, north, home, "base")!.comparisonDelivery).toBe(0);
+    expect(footprintComparison(data, north, local, "base")!.comparisonDelivery).toBeGreaterThan(0);
+  });
+  it("composition parts equal the service footprint and the four waste treatments the allocated waste and the recycling share", () => {
     const c = footprintComparison(data, north, local, "base")!;
     const facts = footprintFacts(data, north, local, "base");
     expect(c.composition.emissions.reduce((a, p) => a + p.value, 0)).toBeCloseTo(requireValue(facts.find((f) => f.id === "service_footprint")!), 4);
     expect(c.composition.emissions[1].value).toBeCloseTo(requireValue(facts.find((f) => f.id === "delivery_footprint")!), 4);
     const split = wasteSplit(data, north)!;
-    const [rec, other] = c.composition.waste!;
-    expect(rec.value + other.value).toBeCloseTo(split.total, 6);
-    expect((rec.value / split.total) * 100).toBeCloseTo(requireValue(recyclingReuseShare(data, north)!), 6);
+    const parts = c.composition.waste!;
+    expect(parts.map((p) => p.label)).toEqual(["Recycling", "Reuse", "Energy recovery", "Incineration"]);
+    // The pack rounds each treatment to 0.1 kg, so the four parts differ from the laundry total by source rounding (well under 0.05 %).
+    expect(Math.abs(parts.reduce((a, p) => a + p.value, 0) - split.total) / split.total).toBeLessThan(0.0005);
+    expect(parts[0].value + parts[1].value).toBeCloseTo(split.recovered, 6);
+    expect(((parts[0].value + parts[1].value) / split.total) * 100).toBeCloseTo(requireValue(recyclingReuseShare(data, north)!), 6);
   });
   it("is null for a customer without washed kg", () => {
     expect(footprintComparison(data, { customerId: "NOBODY", period }, local, "base")).toBeNull();

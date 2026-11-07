@@ -21,10 +21,15 @@ Pages are server components that resolve Facts; `FigurePanel`, `InlineStat`, `Ch
 9. **Flaky test.** Reproduce under `npm test` in full; check whether the first render of `AppShell` (base-ui, jsdom) is the slow step. If a cheap cause shows (for example a heavy static import in the test), fix it; otherwise raise this test's timeout with a comment saying it renders the whole shell and starves under parallel suites.
 10. **Docs.** ADR 0028 records the explainer pattern (supersedes nothing; extends 0004 and 0005); index row; `docs/design.md` rows for InfoPopover and ComparisonBars and removal of Waterfall; `docs/conventions.md` gains a rule: explanation text lives in the registry, digits only as tokens, banned words tested.
 
+11. **Round 2.** Sentences are `string | { text, ifMissing }`; `renderTemplate` drops a plain sentence whose token is null, so "Needs input" cannot appear mid-sentence, and a test nulls every token of every template. `CAN_BE_UNSET` lists the Facts whose value can be unset today; a test requires each to appear only in variant sentences and requires the list to cover every null Fact. `BANNED_ON_SCREEN` is one regex used by the registry, intro, observation and a source scan of the dashboard's prose strings. The six rule changes of the review (hatching, placeholder panel, "+N more", trend, `wide` panel, game line) are small component or page edits listed in `tasks.md`.
+12. **Heatmap level removed.** With neutral cells the five-step level has no use, so the engine drops it; `--heat-0..3` are deleted and `--heat-4` becomes `--chart-flag` (contrast pair kept).
+13. **Facts renamed on screen.** Fact labels that show on screen lose jargon at the source ("Sites with garments unused too long", "Sites with more garments than needed", "Cost of unused garments"); ids and Show math wording are unchanged.
+
 ## Risks / Trade-offs
 
 - A "highlight" colour needs contrast in both themes at 1230px and 1280px; verified with `check:contrast` and screenshots.
 - Plain wording loses precision (for example, "far above what is normal"): precision stays one click away in Show math.
 - Hover popovers are awkward on touch; click pins them, so touch still works.
 - Removing `waterfall` breaks any consumer of that field: the only consumer is the footprint page and `/design`.
-- Heatmap "when" (every month) and the "over-allocated sites" count (December only) can differ (G5); the legend and titles name the difference.
+- Heatmap "when" (every month) and the count of sites with more garments than needed (December only) can differ (G5); captions name the period.
+- The four waste treatments differ from the laundry total by the pack's own 0.1 kg rounding (under 0.05 %); the bar draws the four parts and the share Fact is unchanged.

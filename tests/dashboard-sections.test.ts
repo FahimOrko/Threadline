@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { buildData } from "@/lib/data/pipeline";
+import { BANNED_ON_SCREEN } from "@/lib/explain";
 import { SECTIONS, sectionFacts, sectionIntro } from "@/lib/dashboard";
 import { DEFAULT_SENSITIVITY, footprintFacts, operationalFacts, percentageFacts, valueFacts } from "@/lib/engine";
 
@@ -8,20 +9,23 @@ const stems = ["data_dictionary", "repairs", "sites", "customers", "assumptions"
 const { data } = buildData(Object.fromEntries(stems.map((s) => [s, readFileSync(`data/raw/${s}.csv`, "utf8")])));
 const scope = { customerId: "CUST001", period: { from: "2025-01", to: "2025-12" } };
 const baseline = data.baselines.find((b) => b.baseline_id === "B_LOCAL")!;
-const words = { customer: "NorthStar Foods Group", period: "2025", baseline: "local laundry", sensitivity: "Standard estimate" };
+const words = { customer: "NorthStar Foods Group", period: "2025", comparison: "local laundry", sensitivity: "Standard estimate" };
 const tokens = [...sectionFacts(data, scope).tokens, ...footprintFacts(data, scope, baseline, DEFAULT_SENSITIVITY)];
 
 describe("section intros", () => {
   it.each(SECTIONS)("$slug renders with no jargon or leftover tokens", ({ slug }) => {
     const text = sectionIntro(slug, tokens, words);
-    expect(text).not.toMatch(/\bFact\b|baseline factor|T0\d\d|\{|\}/);
+    expect(text).not.toMatch(BANNED_ON_SCREEN);
+    expect(text).not.toMatch(/\{|\}/);
   });
   it("Overview names the customer and the period", () => {
     expect(sectionIntro("overview", tokens, words)).toContain("NorthStar Foods Group's 2025");
   });
-  it("a missing value reads Needs input, never a number", () => {
+  it("a missing figure reads its own sentence, never a number or \"Needs input\"", () => {
     const nulled = tokens.map((f) => (f.id === "cost_of_unused_allocation" ? { ...f, value: null } : f));
-    expect(sectionIntro("costs", nulled, words)).toContain("Needs input");
+    const text = sectionIntro("costs", nulled, words);
+    expect(text).toContain("The cost of unused garments can be shown once Lindström provides a rental fee.");
+    expect(text).not.toMatch(/Needs input|needs input/);
   });
 });
 

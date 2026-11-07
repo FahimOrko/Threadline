@@ -13,7 +13,7 @@ import { SectionPage } from "../_section-page";
 export default function Page({ searchParams }: PageProps<"/dashboard/signals">) {
   return (
     <SectionPage slug="signals" searchParams={searchParams}>
-      {({ data, scope, customer, baseline, sensitivity }) => {
+      {({ data, scope, customer, baseline, sensitivity, explain }) => {
         const { observations, facts } = observationsFor(data, scope);
         const linkParams = { customer: customer.customer_id, baseline: baseline.baseline_id, sensitivity };
         const siteName = (id: string) => data.sites.find((s) => s.site_id === id)?.site_name ?? id;
@@ -33,6 +33,7 @@ export default function Page({ searchParams }: PageProps<"/dashboard/signals">) 
                     <ChartFrame
                       key={site.siteId}
                       title={`Is ${site.siteName} heading for a repair spike?`}
+                      explain={explain("chart:repair-spike")}
                       caption="Monthly repairs. The dashed line is the spike line: a month at or above it counts as a spike."
                       summary={`Monthly repairs at ${site.siteName}; spike in ${site.spikes.map((m) => formatMonth(m.month, true)).join(", ")}.`}
                       table={seriesTable(`Repairs by month, ${site.siteName}`, [{ label: "Repairs", unit: "repairs", points: b.months.map((m) => ({ month: m.month, value: m.repairs })) }])}
@@ -50,13 +51,14 @@ export default function Page({ searchParams }: PageProps<"/dashboard/signals">) 
             )}
             {stacks.length > 0 && (
               <ChartFrame
-                title="Which sites have been dormant longest?"
-                caption="Pickup gaps per site by tier: Watch, Risk and Critical, counted separately. Gaps are per site, never per person."
-                summary={`Dormant pickup gaps by tier for ${stacks.length} sites.`}
-                table={{ caption: "Pickup gaps by tier and site", head: ["Site", "Watch", "Risk", "Critical"], rows: stacks.map((s) => [s.siteName, s.watch, s.risk, s.critical]) }}
+                title="Which sites have gone longest without a pickup?"
+                explain={explain("chart:dormant-by-site")}
+                caption="Gaps between pickups per site, grouped by how long garments waited: long, very long and too long, counted separately. Gaps are per site, never per person."
+                summary={`Long pickup gaps by length of wait for ${stacks.length} sites.`}
+                table={{ caption: "Pickup gaps by length of wait and site", head: ["Site", "Long", "Very long", "Too long"], rows: stacks.map((s) => [s.siteName, s.watch, s.risk, s.critical]) }}
                 math={factShowMath(dormant.fact)}
               >
-                <StackedBars partLabels={["Watch", "Risk", "Critical"]} rows={stacks.map((s) => ({ key: s.siteId, label: s.siteName, href: siteHref(s.siteId, linkParams), parts: [{ label: "Watch", value: s.watch }, { label: "Risk", value: s.risk }, { label: "Critical", value: s.critical }] }))} />
+                <StackedBars partLabels={["Long", "Very long", "Too long"]} rows={stacks.map((s) => ({ key: s.siteId, label: s.siteName, href: siteHref(s.siteId, linkParams), parts: [{ label: "Long", value: s.watch }, { label: "Very long", value: s.risk }, { label: "Too long", value: s.critical }] }))} />
               </ChartFrame>
             )}
             {observations.length === 0 ? (

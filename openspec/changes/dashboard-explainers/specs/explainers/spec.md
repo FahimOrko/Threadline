@@ -23,7 +23,7 @@ Explanation text SHALL be fixed template text in one registry keyed by Fact id o
 - **THEN** the explanation reads "needs input" for it, never a number
 
 ### Requirement: Plain wording is tested
-No explanation SHALL contain a digit outside a token (the unit "CO2e" excepted) or any of: "Fact", an assumption id (T or A followed by digits), "baseline factor", "assumptions config", "tier", "trailing average".
+No explanation SHALL contain a digit outside a token (the unit "CO2e" excepted) or any of: "Fact", an assumption id (T or A followed by digits), "baseline", "assumptions config", "tier", "trailing average", "critical", "dormant", "cut-off". The same words SHALL NOT appear in the dashboard's labels, intros, captions or hints on screen; they stay in Show math.
 
 #### Scenario: Banned wording
 - **WHEN** the test scans every registry entry
@@ -35,3 +35,21 @@ Every key on the review list of this change SHALL exist in the registry with non
 #### Scenario: Coverage
 - **WHEN** the coverage test runs
 - **THEN** each listed key has an explanation and no rendered "i" lacks one
+
+### Requirement: An unset figure never reads inside a sentence
+A sentence in an intro or an explanation whose figure can be unset SHALL carry a separate sentence for the missing case (for the rental fee: "The cost of unused garments can be shown once Lindström provides a rental fee."). A plain sentence whose token has no value SHALL be left out. No rendered intro or explanation SHALL contain "Needs input" inside a sentence.
+
+#### Scenario: Rental fee unset
+- **WHEN** the Costs intro renders while the rental fee is unset
+- **THEN** it reads the missing-case sentence and contains no "Needs input"
+
+#### Scenario: Any token missing
+- **WHEN** any single token's Fact value is null
+- **THEN** no intro or explanation renders "Needs input"
+
+### Requirement: No unit followed by its noun
+An intro or explanation SHALL NOT print a figure with its unit and then the unit's noun again (for example "31 743 pieces garments").
+
+#### Scenario: Garments intro
+- **WHEN** the Garments intro renders
+- **THEN** it reads the garments figure once, as "pieces"

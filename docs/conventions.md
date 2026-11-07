@@ -58,3 +58,11 @@ Read before coding, together with `docs/adr/README.md`. Add a new convention her
 - The baseline and estimate are the scenario strip above the title of Overview and Environmental footprint (the pages whose figures depend on them), never the header. Trend badges state direction only; the tooltip names the periods (flows: last three months against the three before; utilization: December against September).
 - Provenance chips on cards are the one-line `label` variant, with one `ChipLegend` per page.
 - Dashboard motion is the five effects of `docs/design.md`; each is off under `prefers-reduced-motion` and none touches a number except the count-up, which lands on `formatCardValue`'s string.
+
+## Plain wording and the "i" (ADR 0028)
+
+- Explanation text lives in one registry, `src/lib/explain.ts`, keyed by Fact id or `chart:` / `panel:` id; a component receives finished text and never holds wording of its own. Digits only as `{{fact:id}}` tokens; the selected comparison is `{comparison}`.
+- A sentence whose figure can be unset is `{ text, ifMissing }` (section intros too). A page never prints "Needs input" inside a sentence; a figure on its own says what is missing in plain words (`needsInputHint`), with the T id only in Show math.
+- Banned on screen, and tested (`tests/explainers.test.ts`, `tests/on-screen-wording.test.ts`): "Fact", assumption ids, "baseline", "assumptions config", "tier", "trailing average", "critical", "dormant", "cut-off". Rename a label in the Fact when it shows on screen; keep the original wording in Show math.
+- A chart's title is the question it answers and carries an "i". A heatmap cell is highlighted only where the engine says so (`highlight`), never by a component rule. Hatching means a missing value only; an illustrative value gets no hatched bar.
+- A trend shows its signed percent with its comparison period next to the figure it belongs to, not on a panel header.

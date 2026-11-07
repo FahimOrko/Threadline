@@ -142,7 +142,7 @@ export function costOfUnusedAllocation(
   const fee = team.rentalFeePerPieceWeek;
   return build(data, scope, {
     id: "cost_of_unused_allocation",
-    label: "Cost of unused allocation (Dec, per week)",
+    label: "Cost of unused garments (Dec, per week)",
     value: fee.value === null ? null : unused * fee.value,
     unit: "EUR per week",
     methods: ["ESTIMATED"],

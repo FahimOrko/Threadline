@@ -1,7 +1,7 @@
 ## MODIFIED Requirements
 
 ### Requirement: Site by month matrix
-The engine SHALL provide, for utilization and for repairs, one row per site with one cell per month, each cell carrying its value, a level from 0 to 4 in five equal steps and a `highlight` flag, and each row carrying its count of highlighted months. For utilization a cell SHALL be highlighted when its value is below the over-allocation cut-off (none while the cut-off is unset); for repairs when the repair band flags that month as a spike.
+The engine SHALL provide, for utilization and for repairs, one row per site with one cell per month, each cell carrying its value and a `highlight` flag (the five-step level is removed: cells are neutral or highlighted), and each row carrying its count of highlighted months. For utilization a cell SHALL be highlighted when its value is below the over-allocation cut-off (none while the cut-off is unset); for repairs when the repair band flags that month as a spike.
 
 #### Scenario: Matrix equals series
 - **WHEN** a site's cells are compared with the monthly series for that site
@@ -24,4 +24,4 @@ The engine SHALL provide, for a baseline and a sensitivity level, the comparison
 
 #### Scenario: Waste parts
 - **WHEN** the four waste parts are added
-- **THEN** they equal the allocated waste total, and recycling plus reuse equals the recycled-or-reused amount behind the recycling share Fact
+- **THEN** they equal the allocated waste total within the pack's own rounding (each treatment is given to 0.1 kg; under 0.05 %), and recycling plus reuse equals the recycled-or-reused amount behind the recycling share Fact

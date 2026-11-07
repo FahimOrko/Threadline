@@ -61,7 +61,7 @@ const pairs: [string, string, number][] = [
   ["chart-subject", "card", 3],
   ["chart-comparison", "card", 3],
   ["chart-uncertain", "card", 3],
-  ["heat-4", "background", 3],
+  ["chart-flag", "background", 3],
   ["sidebar-accent-foreground", "sidebar-accent", 4.5],
   ["muted-foreground", "sidebar", 4.5], // group labels and the Theme label
   ["sidebar-border", "sidebar", 1.1],

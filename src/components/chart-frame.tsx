@@ -1,5 +1,6 @@
 import { factShowMath } from "@/components/fact-stat-card";
 import { FadeIn } from "@/components/fade-in";
+import { InfoPopover } from "@/components/info-popover";
 import { Panel } from "@/components/panel";
 import { ShowMathPopover, type ShowMathProps } from "@/components/show-math";
 import type { Fact } from "@/lib/engine";
@@ -12,11 +13,14 @@ export type ChartTable = { caption: string; head: string[]; rows: (string | numb
  * Every chart's frame (ADR 0024): the question as its title, a one-line caption, Show math for its series, a one-sentence summary and the same
  * numbers as a visually hidden table. The chart is a labelled group named by the summary; the hidden table is the text alternative (a chart that is itself a table, like the heatmap, omits it).
  */
-export function ChartFrame({ title, caption, summary, table, math, children, className, fade = true }: { title: string; caption?: string; summary: string; table?: ChartTable; math?: ShowMathProps; children: React.ReactNode; className?: string; fade?: boolean }) {
+export function ChartFrame({ title, caption, summary, table, math, explain, children, className, fade = true }: { title: string; /** The "i" text (ADR 0028), resolved by the page. */ explain?: string; caption?: string; summary: string; table?: ChartTable; math?: ShowMathProps; children: React.ReactNode; className?: string; fade?: boolean }) {
   const body = (
     <Panel data-slot="chart-frame" className={cn("space-y-3", className)}>
       <div className="space-y-0.5">
-        <h3 className="text-sm font-medium">{title}</h3>
+        <div className="flex items-start justify-between gap-2">
+          <h3 className="text-sm font-medium">{title}</h3>
+          {explain && <InfoPopover text={explain} className="-mt-0.5 -mr-1" />}
+        </div>
         {caption && <p className="text-xs text-muted-foreground">{caption}</p>}
       </div>
       <div role="group" aria-label={summary}>

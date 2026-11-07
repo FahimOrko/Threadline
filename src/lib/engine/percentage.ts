@@ -81,12 +81,13 @@ export function repairRateByProduct(data: PercentageData, scope: OperationalScop
 }
 
 /** The customer's allocated textile waste in kg and the part of it recycled or reused (A003: allocated by washed-kg share). Null without waste. */
-export function wasteSplit(data: Pick<AppData, "wasteCircularity" | "impactAllocation">, scope: OperationalScope): { total: number; recovered: number; rows: number } | null {
+export function wasteSplit(data: Pick<AppData, "wasteCircularity" | "impactAllocation">, scope: OperationalScope): { total: number; recovered: number; recycling: number; reuse: number; energyRecovery: number; incineration: number; rows: number } | null {
   const rows = data.impactAllocation.filter(
     (a) => a.customer_id === scope.customerId && a.month >= scope.period.from && a.month <= scope.period.to,
   );
   let total = 0;
   let recovered = 0;
+  const parts = { recycling: 0, reuse: 0, energyRecovery: 0, incineration: 0 };
   for (const a of rows) {
     const w = data.wasteCircularity.find((x) => x.laundry_id === a.laundry_id && x.month === a.month);
     // Backstop: the build already fails on a missing laundry-month (docs/conventions.md).
@@ -94,8 +95,14 @@ export function wasteSplit(data: Pick<AppData, "wasteCircularity" | "impactAlloc
       throw new Error(`No waste_circularity total for laundry ${a.laundry_id} in ${a.month}`);
     total += a.allocated_textile_waste_kg;
     recovered += (a.allocated_textile_waste_kg * (w.recycling_kg + w.reuse_kg)) / w.textile_waste_total_kg;
+    // A003: the same washed-kg allocation, per treatment.
+    const share = a.allocated_textile_waste_kg / w.textile_waste_total_kg;
+    parts.recycling += share * w.recycling_kg;
+    parts.reuse += share * w.reuse_kg;
+    parts.energyRecovery += share * w.energy_recovery_kg;
+    parts.incineration += share * w.incineration_kg;
   }
-  return total === 0 ? null : { total, recovered, rows: rows.length };
+  return total === 0 ? null : { total, recovered, ...parts, rows: rows.length };
 }
 
 /** Share of the customer's allocated textile waste that is recycled or reused, weighted by allocated kg. */

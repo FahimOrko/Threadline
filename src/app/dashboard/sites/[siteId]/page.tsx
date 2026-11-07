@@ -1,3 +1,4 @@
+import { explainer } from "@/lib/explain";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { SiteCrumb } from "@/components/app-header";
@@ -50,7 +51,8 @@ async function SiteContent({
   const scope = { customerId: customer.customer_id, period: PERIOD, siteId: site.site_id };
   const facts = siteFacts(data, scope);
   const all = [...facts.operational, ...facts.value, ...facts.percentages];
-  const fig = pick(all);
+  const explain = explainer(all, {});
+  const fig = pick(all, explain);
   const comparison = siteComparison(data, scope);
   const rates = repairRateByProduct(data, scope);
   const repairs = monthlySeries(data, scope, "repairs");
@@ -87,6 +89,7 @@ async function SiteContent({
             <Heading>Garments and use</Heading>
             <ChartFrame
               title="How does this site sit against the customer?"
+              explain={explain("chart:site-vs-customer")}
               caption={`This site next to all ${customer.customer_name} sites.`}
               summary={`${comparison.map((c) => `${c.title}: ${formatCardValue(c.site.value ?? 0, c.site.unit)} at this site, ${formatCardValue(c.customer.value ?? 0, c.customer.unit)} for all sites`).join("; ")}.`}
               table={{ caption: "This site against the customer", head: ["Measure", "This site", "All sites"], rows: comparison.map((c) => [c.title, formatCardValue(c.site.value ?? 0, c.site.unit), formatCardValue(c.customer.value ?? 0, c.customer.unit)]) }}
@@ -99,17 +102,18 @@ async function SiteContent({
         <section className="space-y-3">
           <Heading>Costs and service</Heading>
           <div className="grid gap-3 @[44rem]:auto-rows-fr @[44rem]:grid-cols-2">
-            {avoided && <FigurePanel title="Costs" hero={{ fact: avoided, label: "Purchases avoided, full year" }} stats={[...fig("garment_value_kept_in_use", { label: "Garment value in use" }), ...fig("cost_of_unused_allocation", { label: "Unused allocation, per week" })]} />}
+            {avoided && <FigurePanel title="Costs" hero={{ fact: avoided, label: "Purchases avoided, full year", explain: explain(avoided.id) }} stats={[...fig("garment_value_kept_in_use", { label: "Garment value in use" }), ...fig("cost_of_unused_allocation", { label: "Cost of unused garments, per week" })]} />}
             {fig("service_requests").length > 0 && <FigurePanel title="Service" hero={fig("service_requests", { label: "Service requests" })[0]} stats={fig("service_requests_per_100_wearers", { label: "Per 100 wearers" })} />}
           </div>
         </section>
         <section className="space-y-3">
           <Heading>Repairs</Heading>
           <div className="grid gap-3 @[44rem]:auto-rows-fr @[44rem]:grid-cols-2">
-            {repairsFact && <FigurePanel title="Repairs" hero={{ fact: repairsFact, label: "Repairs, full year" }} stats={fig("replacements_postponed", { label: "Replacements postponed" })} />}
+            {repairsFact && <FigurePanel title="Repairs" hero={{ fact: repairsFact, label: "Repairs, full year", explain: explain(repairsFact.id) }} stats={fig("replacements_postponed", { label: "Replacements postponed" })} />}
             {rates.length > 0 && (
               <ChartFrame
                 title="Which products need the most repair?"
+                explain={explain("chart:repair-by-product")}
                 caption="Full-year repairs per 100 garments in December, by product."
                 summary={`Repairs per 100 garments for ${rates.length} products at this site.`}
                 table={{ caption: "Repairs per 100 garments by product", head: ["Product", "Repairs per 100 garments"], rows: rates.map((f) => [productName(f.label), formatCardValue(f.value ?? 0, f.unit)]) }}
@@ -119,7 +123,7 @@ async function SiteContent({
               </ChartFrame>
             )}
           </div>
-          <ChartFrame title="Is this site's repair load rising or falling?" caption="Repairs per month, all products." summary="Monthly repairs at this site over the year; the same numbers are in the table." table={seriesTable("Repairs by month, this site", [repairs])} math={seriesMath(repairs.fact)}>
+          <ChartFrame title="Is this site's repair load rising or falling?" explain={explain("chart:repair-trend")} caption="Repairs per month, all products." summary="Monthly repairs at this site over the year; the same numbers are in the table." table={seriesTable("Repairs by month, this site", [repairs])} math={seriesMath(repairs.fact)}>
             <ThreadLine points={repairs.points} unit={repairs.unit} />
           </ChartFrame>
         </section>

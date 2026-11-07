@@ -131,11 +131,11 @@ describe("observation rules", () => {
     expect(r.observations.map((o) => o.id)).toEqual(["obs_rental_fee_missing", "obs_sites_not_classified"]);
   });
 
-  it("raises a gap for unmapped site types; dormant text names sites, not people", () => {
+  it("raises a gap for unmapped site types; dormant text names neither sites nor people", () => {
     expect(observations(fixture(), sc).observations.find((o) => o.id === "obs_sites_not_classified")!.scope.siteIds).toEqual(["C"]);
     const text = north5.observations.find((o) => o.id === "obs_dormant_critical")!.text;
     expect(text).toMatch(/hygiene and availability/);
-    expect(text).toMatch(/NorthStar Turku|NorthStar/);
+    expect(text).not.toMatch(/NorthStar/);
     expect(text).not.toMatch(/compliance/i);
   });
 });

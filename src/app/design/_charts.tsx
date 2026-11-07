@@ -4,7 +4,8 @@ import { AnimatedValue } from "@/components/animated-value";
 import { ChangeHighlight } from "@/components/change-highlight";
 import { ChartFrame } from "@/components/chart-frame";
 import { AreaChartInteractive, ThreadLine } from "@/components/charts-recharts";
-import { BarList, BulletList, CompareBar, Donut, PairedBars, PartBar, Ring, Sparkline, StackedBars, Waterfall } from "@/components/charts-simple";
+import { BarList, BulletList, CompareBar, Donut, PairedBars, PartBar, Ring, Sparkline, StackedBars, ComparisonBars } from "@/components/charts-simple";
+import { InfoPopover } from "@/components/info-popover";
 import { FigurePanel } from "@/components/figure-panel";
 import { FadeIn } from "@/components/fade-in";
 import { Heatmap } from "@/components/heatmap";
@@ -26,7 +27,10 @@ const matrix = (m: SiteMatrix["measure"], label: string, unit: string): SiteMatr
   label,
   unit,
   months,
-  rows: ["Sample plant", "Sample office", "Sample hub"].map((siteName, r) => ({ siteId: `S${r}`, siteName, cells: months.map((month, i) => ({ month, value: 40 + ((i * 7 + r * 13) % 50), level: ((i + r * 2) % 5) as 0 | 1 | 2 | 3 | 4 })) })),
+  rows: ["Sample plant", "Sample office", "Sample hub"].map((siteName, r) => {
+    const cells = months.map((month, i) => ({ month, value: 40 + ((i * 7 + r * 13) % 50), highlight: (i + r * 2) % 5 === 0 }));
+    return { siteId: `S${r}`, siteName, highlighted: cells.filter((c) => c.highlight).length, cells };
+  }),
 });
 const trend = { from: { from: "2025-07", to: "2025-09" }, to: { from: "2025-10", to: "2025-12" }, change: 8.4, direction: "up" as const };
 
@@ -128,7 +132,7 @@ export function ChartGallery() {
       </div>
 
       <div className="space-y-2">
-        <h3 className="text-sm font-medium">BulletList, PairedBars, Waterfall, Donut</h3>
+        <h3 className="text-sm font-medium">BulletList, PairedBars, ComparisonBars, Donut</h3>
         <div className="grid gap-3 lg:grid-cols-2">
           <ChartFrame fade={false} title="Utilization against the cut-off" caption="Tick is the cut-off; shaded part is below it." summary="Sample utilization." table={{ caption: "Sample", head: ["Site", "%"], rows: [["Plant A", 55.5], ["Plant B", 91.2]] }}>
             <BulletList cutoff={80} rows={[{ key: "a", label: "Sample plant A", value: 55.5 }, { key: "b", label: "Sample plant B", value: 91.2 }]} />
@@ -136,8 +140,8 @@ export function ChartGallery() {
           <ChartFrame fade={false} title="Comparison against service" summary="Sample paired bars." table={{ caption: "Sample", head: ["Metric", "Comparison", "Service"], rows: [["Water", 900, 300]] }}>
             <PairedBars rows={[{ key: "w", title: "Water", a: { label: "local laundry", value: 900 }, b: { label: "Service", value: 300 }, unit: "L", badge: "66.7% saved" }]} />
           </ChartFrame>
-          <ChartFrame fade={false} title="Why is the net saving what it is?" summary="Sample waterfall." table={{ caption: "Sample", head: ["Step", "Change", "Ends at"], rows: [["Comparison", 100, 100]] }}>
-            <Waterfall unit="kgCO2e" steps={[{ label: "Comparison", start: 0, end: 100, delta: 100, kind: "total" }, { label: "Process saved", start: 100, end: 60, delta: -40, kind: "decrease" }, { label: "Delivery", start: 60, end: 70, delta: 10, kind: "increase" }, { label: "Service", start: 0, end: 70, delta: 70, kind: "total" }]} />
+          <ChartFrame fade={false} title="Why is the net saving what it is?" summary="Sample comparison." explain="Sample explanation: what the chart means and why it matters." table={{ caption: "Sample", head: ["Bar", "kgCO2e"], rows: [["Comparison", 100], ["Service", 70]] }}>
+            <ComparisonBars unit="kgCO2e" comparison={{ label: "Sample comparison", value: 100 }} service={{ label: "Sample service", process: 50, delivery: 20, total: 70 }} netSaving={30} />
           </ChartFrame>
           <ChartFrame fade={false} title="Two slices of one whole" summary="Sample donut." table={{ caption: "Sample", head: ["Part", "kgCO2e"], rows: [["Process", 30], ["Delivery", 10]] }}>
             <Donut parts={[{ label: "Process", value: 30, unit: "kgCO2e" }, { label: "Delivery", value: 10, unit: "kgCO2e" }]} center={{ value: "25%", label: "delivery" }} />
@@ -146,12 +150,19 @@ export function ChartGallery() {
       </div>
 
       <div className="space-y-2">
-        <h3 className="text-sm font-medium">Heatmap</h3>
-        <ChartFrame fade={false} title="Which site-months stand out?" caption="Five steps of one colour; a real table underneath." summary="Sample heatmap.">
-          <Suspense fallback={null}>
-            <Heatmap matrices={[matrix("garment_utilization", "Garment utilization", "%"), matrix("repairs", "Repairs", "repairs")]} />
-          </Suspense>
-        </ChartFrame>
+        <h3 className="text-sm font-medium">Heatmap (neutral cells, highlighted problems), InfoPopover</h3>
+        <p className="flex items-center gap-2 text-sm">
+          InfoPopover: <InfoPopover text="Sample explanation. It says what the figure means and why it matters, in plain words." />
+        </p>
+        <Suspense fallback={null}>
+          <Heatmap
+            matrices={[matrix("garment_utilization", "Garment utilization", "%"), matrix("repairs", "Repairs", "repairs")]}
+            frames={{
+              garment_utilization: { title: "Where and when were garments under-used?", caption: "Sample caption naming the period.", summary: "Sample heatmap.", explain: "Sample explanation.", legend: "Highlighted: a month when fewer than the sample line of garments were in use." },
+              repairs: { title: "Where and when did repairs spike?", caption: "Sample caption naming the period.", summary: "Sample heatmap.", explain: "Sample explanation.", legend: "Highlighted: a month when repairs jumped above the sample level." },
+            }}
+          />
+        </Suspense>
       </div>
     </div>
   );

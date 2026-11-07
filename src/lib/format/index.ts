@@ -34,3 +34,9 @@ export function formatMonthRange(p: Period): string {
   if (p.from === p.to) return formatMonth(p.from, true);
   return p.from.slice(0, 4) === p.to.slice(0, 4) ? `${formatMonth(p.from)} to ${formatMonth(p.to, true)}` : `${formatMonth(p.from, true)} to ${formatMonth(p.to, true)}`;
 }
+
+/** The short span a trend names next to its figure: "Dec", "Oct–Dec", or both years when they differ. */
+export function formatMonthSpan(p: Period): string {
+  if (p.from === p.to) return formatMonth(p.from);
+  return p.from.slice(0, 4) === p.to.slice(0, 4) ? `${formatMonth(p.from)}–${formatMonth(p.to)}` : `${formatMonth(p.from, true)}–${formatMonth(p.to, true)}`;
+}

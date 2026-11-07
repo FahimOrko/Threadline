@@ -1,3 +1,4 @@
+import { needsInputHint } from "@/lib/explain";
 import { factShowMath } from "@/components/fact-stat-card";
 import { DeltaBadge } from "@/components/delta-badge";
 import { ProvenanceChip } from "@/components/provenance-chip";
@@ -36,7 +37,7 @@ export function ConsequenceCard({ heading, against, columns, changes, standing, 
             {c.after.value === null ? (
               <>
                 <p className="text-sm text-muted-foreground">{NEEDS_INPUT}</p>
-                <p className="text-xs text-muted-foreground">Set {c.after.assumptionIds.filter((id) => id.startsWith("T")).join(", ") || "the missing assumption"} in the assumptions config. No change can be shown.</p>
+                <p className="text-xs text-muted-foreground">{needsInputHint(c.after)} No change can be shown.</p>
                 <ShowMathPopover {...factShowMath(c.after)} />
               </>
             ) : (

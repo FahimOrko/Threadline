@@ -254,7 +254,33 @@ export function footprintFacts(data: FootprintData, scope: OperationalScope, bas
       ),
     );
 
-  return [...savings, ...service, ...delivery];
+  // What the comparison would emit (process + delivery): the saving's other half, so a sentence can name it with a token. No new formula.
+  const kc = scale[sensitivity];
+  const comparisonFact: Fact = withBaseline(
+    build(data, scope, {
+      source: offBase ? "ASSUMPTION" : "SYNTHETIC",
+      methods: ["ALLOCATED", "ESTIMATED"],
+      assumptionIds: offBase ? ["A001", t002.id] : ["A001"],
+      confidence: `${a001.confidence} (A001)`,
+      id: "comparison_footprint",
+      label: "CO2e the comparison would emit (process + delivery)",
+      value: kc === null ? 0 : co2eBase * kc,
+      unit: "kgCO2e",
+      formula: `comparison footprint = sum of washed kg x (baseline process factor + baseline delivery factor) x sensitivity, baseline: ${baseline.baseline_name}, sensitivity: ${sensitivity}`,
+      inputs: [
+        ...kgInputs,
+        { label: "Baseline process factor", value: baseline.process_kgco2e_per_kg, unit: "kgCO2e/kg" },
+        { label: "Baseline delivery factor", value: baseline.delivery_kgco2e_per_kg, unit: "kgCO2e/kg" },
+        { label: "Baseline", value: baseline.baseline_name },
+        { label: "Sensitivity", value: sensitivity },
+        ...teamAssumptionInputs("sensitivity spread", t002),
+      ],
+    }),
+  );
+  if (kc === null) comparisonFact.value = null;
+  comparisonFact.range = levels((m) => co2eBase * m);
+
+  return [...savings, comparisonFact, ...service, ...delivery];
 }
 
 /** The Facts of one dashboard group, in group order. */
@@ -262,7 +288,6 @@ export function footprintGroup(facts: Fact[], group: keyof typeof FOOTPRINT_GROU
   return FOOTPRINT_GROUPS[group].flatMap((id) => facts.filter((f) => f.id === id));
 }
 
-export type WaterfallStep = { label: string; start: number; end: number; /** end minus start, signed; the figure a step is labelled with. */ delta: number; kind: "total" | "decrease" | "increase" };
 type Part = { label: string; value: number; unit: string };
 export type FootprintComparison = {
   scope: Fact["scope"];
@@ -271,11 +296,11 @@ export type FootprintComparison = {
   sensitivity: Sensitivity;
   /** Per metric: what the comparison would have used, what the service used, and the unit. `comparison - service` is the saved Fact's value. */
   metrics: Record<"water" | "energy" | "co2e", { label: string; comparison: number; service: number; unit: string }>;
-  /** Net CO2e from the comparison down to the service total; the last step is the service total. */
-  waterfall: WaterfallStep[];
+  /** What the comparison would emit in delivery alone (0 for home washing), at the selected sensitivity. */
+  comparisonDelivery: number;
   /** Net CO2e saving: the comparison total minus the service total. */
   netSaving: number;
-  composition: { emissions: Part[]; waste: Part[] | null };
+  composition: { emissions: Part[]; /** Allocated textile waste by treatment: recycling, reuse, energy recovery, incineration. */ waste: Part[] | null };
 };
 
 /** The totals the footprint Facts use, laid out for charts: comparison against service per metric, the CO2e waterfall and the two compositions. Null without washed kg or when the sensitivity level has no spread (T002 unset). */
@@ -287,15 +312,6 @@ export function footprintComparison(data: FootprintData & Pick<AppData, "wasteCi
   const { baseline: b, laundry: l } = t;
   const comparisonCo2e = (b.process + b.delivery) * k;
   const serviceCo2e = l.process + l.delivery;
-  const processSaved = b.process * k - l.process;
-  const deliveryDelta = l.delivery - b.delivery * k; // positive: the service delivers more than the comparison does
-  const afterProcess = comparisonCo2e - processSaved;
-  const waterfall: WaterfallStep[] = [
-    { label: "Comparison", start: 0, end: comparisonCo2e, delta: comparisonCo2e, kind: "total" },
-    { label: "Process saved", start: comparisonCo2e, end: afterProcess, delta: -processSaved, kind: "decrease" },
-    { label: "Delivery", start: afterProcess, end: afterProcess + deliveryDelta, delta: deliveryDelta, kind: deliveryDelta > 0 ? "increase" : "decrease" },
-    { label: "Service", start: 0, end: serviceCo2e, delta: serviceCo2e, kind: "total" },
-  ];
   const waste = wasteSplit(data, scope);
   return {
     scope: factScope(data, { customerId: scope.customerId }),
@@ -307,7 +323,7 @@ export function footprintComparison(data: FootprintData & Pick<AppData, "wasteCi
       energy: { label: "Energy", comparison: b.energy * k, service: l.energy, unit: "kWh" },
       co2e: { label: "Net CO2e", comparison: comparisonCo2e, service: serviceCo2e, unit: "kgCO2e" },
     },
-    waterfall,
+    comparisonDelivery: b.delivery * k,
     netSaving: comparisonCo2e - serviceCo2e,
     composition: {
       emissions: [
@@ -315,8 +331,10 @@ export function footprintComparison(data: FootprintData & Pick<AppData, "wasteCi
         { label: "Delivery", value: l.delivery, unit: "kgCO2e" },
       ],
       waste: waste && [
-        { label: "Recycled or reused", value: waste.recovered, unit: "kg" },
-        { label: "Other treatment", value: waste.total - waste.recovered, unit: "kg" },
+        { label: "Recycling", value: waste.recycling, unit: "kg" },
+        { label: "Reuse", value: waste.reuse, unit: "kg" },
+        { label: "Energy recovery", value: waste.energyRecovery, unit: "kg" },
+        { label: "Incineration", value: waste.incineration, unit: "kg" },
       ],
     },
   };

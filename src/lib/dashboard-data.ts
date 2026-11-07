@@ -4,7 +4,9 @@ import type { SiteLink } from "@/components/site-links";
 import type { AreaMeasure } from "@/components/charts-recharts";
 import type { AppData } from "@/lib/data/schemas";
 import { PERIOD } from "@/lib/dashboard";
-import { footprintFacts, monthlySeries, observations, operationalFacts, overAllocationCutoffPercent, percentageFacts, valueFacts, type Fact, type MonthlySeries, type OperationalScope, type Sensitivity, type SeriesMeasure } from "@/lib/engine";
+import { footprintFacts, monthlySeries, observations, operationalFacts, overAllocationCutoffPercent, percentageFacts, repairSpikeRule, valueFacts, type Fact, type SiteMatrix, type MonthlySeries, type OperationalScope, type Sensitivity, type SeriesMeasure } from "@/lib/engine";
+import { HEATMAP_LEGEND, fillWords } from "@/lib/explain";
+import { formatNumber } from "@/lib/format";
 import { chipTone } from "@/lib/provenance";
 import { siteHref } from "@/lib/selection";
 
@@ -53,3 +55,13 @@ export function bySite<T>(data: AppData, scope: OperationalScope, make: (s: Oper
 }
 
 export { PERIOD };
+
+/** The legend for one measure, its words filled from the engine's cut-off and repair rule (`{cutoff}` prints with its % sign). Exported for the tests. */
+export function heatmapLegend(measure: SiteMatrix["measure"], period: string): string {
+  if (measure === "garment_utilization") {
+    const { percent } = overAllocationCutoffPercent();
+    return percent === null ? HEATMAP_LEGEND.garment_utilization.unset : fillWords(HEATMAP_LEGEND.garment_utilization.set, { cutoff: `${formatNumber(percent)}%`, period });
+  }
+  const { ratio, window, floor } = repairSpikeRule();
+  return ratio === null || window === null || floor === null ? "No month is highlighted yet: the repair spike rule is not set." : fillWords(HEATMAP_LEGEND.repairs.set, { ratio: formatNumber(ratio), window: formatNumber(window), floor: formatNumber(floor), period });
+}

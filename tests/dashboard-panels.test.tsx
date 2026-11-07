@@ -78,7 +78,7 @@ describe("FigurePanel", () => {
   it("a missing value reads Needs input, never 0", () => {
     render(<FigurePanel title="Costs" hero={{ fact: fact({ value: 5 }) }} stats={[{ fact: fact({ id: "z", value: null, assumptionIds: ["T001"] }), label: "Unused" }]} />);
     expect(screen.getByText("Needs input")).toBeTruthy();
-    expect(screen.getByText(/Set T001/)).toBeTruthy();
+    expect(screen.getByText("Needs a rental fee from Lindström.")).toBeTruthy();
     expect(screen.getAllByRole("button", { name: /show math/i })).toHaveLength(2);
   });
   it("places the sites a count names under its figure", () => {

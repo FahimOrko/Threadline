@@ -5,7 +5,7 @@ import { TEAM_ASSUMPTIONS, type TeamAssumptions } from "./assumptions-config";
 import { requireValue, type Fact, type Period } from "./fact";
 import { footprintFacts, type Baseline, type Sensitivity } from "./footprint";
 import { repairs, serviceRequests, type OperationalScope } from "./operational";
-import { monthsOf } from "./signals";
+import { monthsOf, repairBand } from "./signals";
 import { avoidedPurchaseCost, garmentUtilization } from "./value";
 
 type SeriesData = Pick<
@@ -93,11 +93,11 @@ export function monthlySeries(data: SeriesData, scope: OperationalScope, measure
 }
 
 export type MatrixMeasure = "garment_utilization" | "repairs";
-export type MatrixCell = { month: string; value: number; /** 0 to 4: five equal steps from the customer's lowest to highest cell. */ level: 0 | 1 | 2 | 3 | 4 };
-export type SiteMatrix = { measure: MatrixMeasure; label: string; unit: string; months: string[]; rows: { siteId: string; siteName: string; cells: MatrixCell[] }[] };
+export type MatrixCell = { month: string; value: number; /** A problem month: utilization below the over-allocation cut-off, or a spike month of the repair band. */ highlight: boolean };
+export type SiteMatrix = { measure: MatrixMeasure; label: string; unit: string; months: string[]; rows: { siteId: string; siteName: string; /** Cells with `highlight`. */ highlighted: number; cells: MatrixCell[] }[] };
 
-/** One row per site, one cell per month: the monthly series of the measure with that site in the scope, plus the heatmap level. */
-export function monthlySeriesBySite(data: SeriesData, scope: OperationalScope, measure: MatrixMeasure): SiteMatrix {
+/** One row per site, one cell per month: the monthly series of the measure with that site in the scope, plus the highlight flag. */
+export function monthlySeriesBySite(data: SeriesData & Pick<AppData, "pickupGaps">, scope: OperationalScope, measure: MatrixMeasure): SiteMatrix {
   const months = monthsOf(scope.period.from, scope.period.to);
   const raw = data.sites
     .filter((s) => s.customer_id === scope.customerId)
@@ -106,15 +106,18 @@ export function monthlySeriesBySite(data: SeriesData, scope: OperationalScope, m
       siteName: s.site_name,
       values: months.map((m) => requireValue(measure === "repairs" ? repairs(data, { ...monthScope(scope, m), siteId: s.site_id }) : garmentUtilization(data, { ...monthScope(scope, m), siteId: s.site_id }))),
     }));
-  const all = raw.flatMap((r) => r.values);
-  const [lo, hi] = [Math.min(...all), Math.max(...all)];
-  const level = (v: number): MatrixCell["level"] => (hi === lo ? 0 : (Math.min(4, Math.floor(((v - lo) / (hi - lo)) * 5)) as MatrixCell["level"]));
+  const cutoff = overAllocationCutoffPercent().percent;
+  const band = measure === "repairs" ? repairBand(data, scope) : [];
+  const flagged = (siteId: string, month: string, v: number) => (measure === "repairs" ? (band.find((b) => b.siteId === siteId)?.months.find((m) => m.month === month)?.spike ?? false) : cutoff !== null && v < cutoff);
   return {
     measure,
     label: measure === "repairs" ? "Repairs" : "Garment utilization",
     unit: measure === "repairs" ? "repairs" : "%",
     months,
-    rows: raw.map((r) => ({ siteId: r.siteId, siteName: r.siteName, cells: months.map((month, i) => ({ month, value: r.values[i], level: level(r.values[i]) })) })),
+    rows: raw.map((r) => {
+      const cells = months.map((month, i) => ({ month, value: r.values[i], highlight: flagged(r.siteId, month, r.values[i]) }));
+      return { siteId: r.siteId, siteName: r.siteName, highlighted: cells.filter((c) => c.highlight).length, cells };
+    }),
   };
 }
 
@@ -122,4 +125,9 @@ export function monthlySeriesBySite(data: SeriesData, scope: OperationalScope, m
 export function overAllocationCutoffPercent(team: TeamAssumptions = TEAM_ASSUMPTIONS): { id: string; percent: number | null } {
   const c = team.overAllocationCutoff;
   return { id: c.id, percent: c.value === null ? null : c.value * 100 };
+}
+
+/** The repair spike rule (T008 to T010) as plain numbers, for the heatmap legend. Null entries while an assumption is unset. */
+export function repairSpikeRule(team: TeamAssumptions = TEAM_ASSUMPTIONS): { ratio: number | null; window: number | null; floor: number | null } {
+  return { ratio: team.repairSpikeRatio.value, window: team.repairSpikeWindow.value, floor: team.repairSpikeMinIncrease.value };
 }

@@ -1,7 +1,6 @@
 // Flat, token-coloured charts built from plain markup (ADR 0024). Presentational only: every value arrives from the engine; the only maths here is
 // mapping a value onto a width or a height (scale), never a derived figure. Each chart is wrapped by ChartFrame, which holds its text alternative.
 import Link from "next/link";
-import type { WaterfallStep } from "@/lib/engine";
 import { formatCardValue, formatPercent } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -106,29 +105,54 @@ export function PairedBars({ rows }: { rows: PairRow[] }) {
   );
 }
 
-const STEP_TONE: Record<WaterfallStep["kind"], string> = { total: "bg-chart-comparison", decrease: "bg-chart-subject/60", increase: "border-2 border-dashed border-chart-comparison bg-transparent" };
-
-/** The CO2e waterfall: comparison, the steps down or up, then the service total. Steps arrive with their start, end and delta from the engine. */
-export function Waterfall({ steps, unit }: { steps: WaterfallStep[]; unit: string }) {
-  const max = Math.max(...steps.flatMap((s) => [s.start, s.end]));
+/**
+ * The net CO2e saving as a direct comparison: one bar for what the comparison would emit, one stacked bar for the service (process, delivery) and the
+ * gap between their ends outlined and labelled "Net saving". Values arrive from the engine (the net saving is the engine's, never `comparison - service` here);
+ * only the mapping onto a width happens here. Bars share one scale.
+ */
+export function ComparisonBars({ comparison, service, netSaving, unit }: { comparison: { label: string; value: number }; service: { label: string; process: number; delivery: number; /** The engine's service total. */ total: number }; netSaving: number; unit: string }) {
+  const serviceTotal = service.total;
+  const max = Math.max(comparison.value, serviceTotal);
+  const [from, to] = comparison.value >= serviceTotal ? [serviceTotal, comparison.value] : [comparison.value, serviceTotal];
   return (
-    <ol className="grid auto-cols-fr grid-flow-col gap-3">
-      {steps.map((s, i) => {
-        const last = i === steps.length - 1;
-        const [lo, hi] = [Math.min(s.start, s.end), Math.max(s.start, s.end)];
-        return (
-          <li key={s.label} className="flex min-w-0 flex-col items-center gap-1">
-            <span className="num text-xs">
-              {s.kind === "total" ? fmt(s.end, unit) : `${s.delta > 0 ? "+" : "−"}${fmt(Math.abs(s.delta), unit)}`}
-            </span>
-            <div className="relative h-36 w-full">
-              <div aria-hidden className={cn("absolute inset-x-1 rounded-sm", last ? "bg-chart-subject" : STEP_TONE[s.kind])} style={{ bottom: pct(lo, max), height: pct(hi - lo, max) }} />
+    <div data-slot="comparison-bars" className="space-y-3">
+      <div className="space-y-1">
+        <p className="text-xs text-muted-foreground first-letter:uppercase">{comparison.label}</p>
+        <div className="flex items-center gap-2">
+          <div className="h-6 flex-1 rounded-sm bg-muted">
+            <div className="h-full rounded-sm bg-chart-comparison" style={{ width: pct(comparison.value, max) }} />
+          </div>
+          <span className="num w-28 text-right text-xs">{fmt(comparison.value, unit)}</span>
+        </div>
+      </div>
+      <div className="space-y-1">
+        <p className="text-xs text-muted-foreground">{service.label}</p>
+        <div className="flex items-center gap-2">
+          <div className="relative h-6 flex-1 rounded-sm bg-muted">
+            <div className="flex h-full overflow-hidden rounded-sm" style={{ width: pct(serviceTotal, max) }}>
+              <div className="h-full bg-chart-subject" style={{ width: pct(service.process, serviceTotal) }} />
+              <div className="h-full bg-chart-subject/50" style={{ width: pct(service.delivery, serviceTotal) }} />
             </div>
-            <span className="text-center text-xs text-muted-foreground">{s.label}</span>
-          </li>
-        );
-      })}
-    </ol>
+            <div aria-hidden className="absolute inset-y-0 rounded-sm border-2 border-dashed border-foreground/60" style={{ left: pct(from, max), width: pct(to - from, max) }} />
+          </div>
+          <span className="num w-28 text-right text-xs">{fmt(serviceTotal, unit)}</span>
+        </div>
+        <p className="flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-muted-foreground">
+          <span className="inline-flex items-center gap-1.5">
+            <span aria-hidden className="size-2.5 rounded-sm bg-chart-subject" />
+            Process <span className="num text-foreground">{fmt(service.process, unit)}</span>
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <span aria-hidden className="size-2.5 rounded-sm bg-chart-subject/50" />
+            Delivery <span className="num text-foreground">{fmt(service.delivery, unit)}</span>
+          </span>
+        </p>
+      </div>
+      <p className="flex items-center gap-2 text-sm">
+        <span aria-hidden className="h-3 w-5 rounded-sm border-2 border-dashed border-foreground/60" />
+        Net saving <span className="num font-medium">{fmt(netSaving, unit)}</span>
+      </p>
+    </div>
   );
 }
 
@@ -181,19 +205,21 @@ export function Ring({ percent, label }: { percent: number; label: string }) {
   );
 }
 
+const PART_TONE = ["bg-chart-subject", "bg-chart-subject/55", "bg-chart-comparison", "bg-chart-comparison/45"] as const;
+
 /** Parts of one whole as a single bar, widths proportional to the engine's part values (flex-grow, so no sum is computed here), with a legend. */
 export function PartBar({ parts, label }: { parts: { label: string; value: number; unit: string }[]; label: string }) {
   return (
     <div role="img" aria-label={`${label}: ${parts.map((p) => `${p.label} ${fmt(p.value, p.unit)}`).join(", ")}`} className="space-y-1.5">
       <div aria-hidden className="flex h-3 gap-0.5 overflow-hidden rounded-sm">
         {parts.map((p, i) => (
-          <div key={p.label} className={i === 0 ? "bg-chart-subject" : "bg-chart-comparison"} style={{ flex: `${p.value} 1 0` }} />
+          <div key={p.label} className={PART_TONE[i % PART_TONE.length]} style={{ flex: `${p.value} 1 0` }} />
         ))}
       </div>
       <ul aria-hidden className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
         {parts.map((p, i) => (
           <li key={p.label} className="flex items-center gap-1.5">
-            <span className={cn("size-2 rounded-sm", i === 0 ? "bg-chart-subject" : "bg-chart-comparison")} />
+            <span className={cn("size-2 rounded-sm", PART_TONE[i % PART_TONE.length])} />
             {p.label} <span className="num text-foreground">{fmt(p.value, p.unit)}</span>
           </li>
         ))}

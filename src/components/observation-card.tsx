@@ -8,6 +8,7 @@ import type { Fact, Observation } from "@/lib/engine";
 import { formatCardValue } from "@/lib/format";
 
 const TYPE_LABEL: Record<Observation["type"], string> = { risk: "Risk", value: "Value highlight", gap: "Data gap", opportunity: "Opportunity" };
+const SEVERITY_LABEL: Record<Observation["severity"], string> = { low: "Low", medium: "Medium", high: "High" };
 
 /** An engine Observation with the Facts it rests on. Type and severity are always words; links go to the flagged sites. */
 export function ObservationCard({ observation, facts, sites }: { observation: Observation; facts: Fact[]; sites: SiteLink[] }) {
@@ -15,7 +16,12 @@ export function ObservationCard({ observation, facts, sites }: { observation: Ob
     <Panel id={observation.id} className="scroll-mt-20 space-y-3" data-slot="observation-card">
       <div className="flex flex-wrap items-center gap-1.5">
         <Badge variant={observation.type === "value" ? "accent" : "default"}>{TYPE_LABEL[observation.type]}</Badge>
-        <Badge>{observation.severity} severity</Badge>
+        {observation.type !== "value" && (
+          <Badge>
+            <span aria-hidden>{SEVERITY_LABEL[observation.severity]}</span>
+            <span className="sr-only">{SEVERITY_LABEL[observation.severity]} severity</span>
+          </Badge>
+        )}
       </div>
       <div className="space-y-1">
         <h3 className="text-sm font-medium">{observation.title}</h3>

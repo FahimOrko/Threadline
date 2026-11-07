@@ -43,7 +43,7 @@ export function dormantSignal(data: SignalData, scope: Scope, team: TeamAssumpti
   });
   const fact = build(data, scope, {
     id: "dormant_critical_sites",
-    label: "Sites with Critical dormant garments",
+    label: "Sites with garments unused too long",
     value: sites.length,
     unit: "sites",
     methods: ["CALCULATED"],
@@ -78,7 +78,7 @@ export function overAllocationSignal(data: SignalData, scope: Scope, team: TeamA
   sites.sort((a, b) => a.utilization - b.utilization);
   const fact = build(data, scope, {
     id: "over_allocated_sites",
-    label: "Over-allocated sites",
+    label: "Sites with more garments than needed",
     value: sites.length,
     unit: "sites",
     methods: ["CALCULATED"],

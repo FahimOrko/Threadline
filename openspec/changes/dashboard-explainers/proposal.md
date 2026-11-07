@@ -10,9 +10,10 @@ The dashboard shows figures and charts a customer cannot read without a guide: j
 4. **Signals wording**: plain titles, texts and actions; jargon moves to Show math; no site names in the sentence (they are the links below); no severity badge on value highlights; severity words capitalised.
 5. **Labels**: "Share of home washing" becomes "Less than home washing" (resolved from the comparison); "Set T001 in the assumptions config" becomes "Needs a rental fee from Lindström"; remaining jargon fixed (table below).
 6. **Recycling breakdown restored**: recycling panel shows waste by treatment (recycling, reuse, energy recovery, incineration) as a part-of-whole bar.
-7. **Flaky test**: `tests/story-print.test.tsx` timeout fixed (cause first, else a commented per-test timeout).
+7. **Flaky test**: `tests/story-print.test.tsx` timeout fixed at its cause (the cold import of the story document, now warmed once in `beforeAll`).
+8. **Review round 2 (accepted G1 to G5, plus):** unset values never read mid-sentence ("cost Needs input"): sentences carry a missing-case variant; the Garments intro grammar ("pieces garments") fixed and all intros scanned for unit-plus-noun duplication; remaining on-screen jargon ("Cut-off T007", "(T007)", "Critical dormant", "Baseline values are illustrative") replaced and "T007", "Critical", "dormant", "baseline", "cut-off" added to the banned test; hatching reserved for missing values (the Garments in use panel's hatched bar is gone); one placeholder panel replaces the per-site unused-cost chart while the rental fee is unset; "+N more" is a tested link to the Signals page with params; trend badges read "+10.3% Oct–Dec vs Jul–Sep" on the figure they belong to; the Service quality panel puts its ring beside the hero and its stats beside both; the story game's "Set T001 in the assumptions config" line is plain words too.
 
-### Gaps for you to decide (engine; no other new computation)
+### Gaps (all accepted in review round 2)
 
 | # | Gap | Why | Recommendation |
 |---|---|---|---|
@@ -20,7 +21,7 @@ The dashboard shows figures and charts a customer cannot read without a guide: j
 | G2 | The recycling breakdown by four treatments needs allocated kg per treatment; `wasteSplit` returns only total and recycled-or-reused. | Same formula as today (allocated kg × treatment kg ÷ laundry total, A003), split four ways. | Extend `wasteSplit` to return the four parts; the existing recycled-or-reused share stays equal to recycling + reuse (tested). |
 | G3 | "Home washing has no delivery emissions" must come from data, not a baseline-id check in a component. | Conventions: no logic about numbers in components. | Expose the comparison's delivery total (`comparisonDelivery`) on `FootprintComparison`; the page shows the note when it is 0. |
 | G4 | The legend needs the over-allocation cut-off and the repair rule's ratio and window, which are not Facts. | Not Facts, so not `{{fact}}` tokens. | Fill legend words from `overAllocationCutoffPercent()` and the repair assumptions, like `{customer}` and `{period}` in intros; formatted by `src/lib/format`. |
-| G5 | The utilization heatmap highlights every month below the cut-off, but "Over-allocated sites" counts December only. A site can be highlighted in March and not flagged. | Different questions: "when" versus "now". | Keep both; the heatmap title says "when", the legend says "in that month". |
+| G5 | The utilization heatmap highlights every month below the cut-off, but "Sites with more garments than needed" counts December only. | Different questions: "when" versus "now". | Accepted: titles, captions and legends say which period each figure covers (the year, December, the full year). |
 
 ## Capabilities
 
@@ -29,6 +30,7 @@ The dashboard shows figures and charts a customer cannot read without a guide: j
 
 ### Modified Capabilities
 - `dashboard-charts`: CO2e comparison chart replaces the waterfall; chart types; recycling breakdown; question titles.
+- `dashboard-overview`: trend indicator wording and placement; "+N more" link.
 - `dashboard-sites`: heatmap highlights, titles, legend, ordering and links.
 - `kpi-engine`: footprint comparison (no waterfall, comparison Fact, comparison delivery, four-way waste); site-by-month matrix highlights.
 - `observations`: plain wording, no site names or ids in text, no severity on value items.
@@ -126,4 +128,4 @@ Severity badge shows "Low", "Medium" or "High" (accessible name "High severity")
 
 Scan result: banned words (Fact, T-ids, A-ids, "baseline factor", "assumptions config", tier, "trailing average", "cut-off" outside the heatmap legend) are searched for across `src/lib/dashboard.ts`, the dashboard pages and the registry; fixes beyond this table are added during apply and listed in the change's final summary.
 
-Out of scope: the story game's own "Set T001 in the assumptions config" line (`/story/game`); say if you want it included.
+The story game's "Set T001 in the assumptions config" line is included (decision, round 2).

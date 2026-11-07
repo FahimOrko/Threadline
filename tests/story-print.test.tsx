@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { cleanup, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 
 let path = "/story/print";
 vi.mock("next/navigation", () => ({
@@ -17,6 +17,11 @@ import { ShowMathInlineProvider, ShowMathPopover } from "@/components/show-math"
 import { STORY_PRINT_PATH } from "@/lib/story/print";
 
 afterEach(cleanup);
+// The first import of the story document pulls in the engine, the data loader and every story module. Under the full suite (dozens of workers
+// transforming at once) that cold import alone can pass the 5 s test timeout, so it is paid once here, with room, and the tests find it cached.
+beforeAll(async () => {
+  await import("@/app/story/_story-document");
+}, 60_000);
 const shell = () => render(<AppShell customers={[{ customer_id: "C1", name: "A" }]} baselines={[{ baseline_id: "B", name: "b" }]}>story</AppShell>);
 const math = { formula: "a / b", inputs: [{ label: "Wearers", value: "10" }], assumptionIds: ["T001"], baseline: "local laundry", range: { low: "1", base: "2", high: "3" } };
 

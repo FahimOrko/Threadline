@@ -5,7 +5,8 @@ import { StatCardSkeleton } from "@/components/states";
 import { resolveCustomer } from "@/lib/customer";
 import { generatedSource } from "@/lib/data/generated";
 import { PERIOD, section, sectionFacts, sectionIntro, type SectionSlug } from "@/lib/dashboard";
-import { baselineShortName, footprintFacts, type Fact, type Sensitivity } from "@/lib/engine";
+import { explainer } from "@/lib/explain";
+import { baselineShortName, footprintFacts, observations as observationsFor, percentageFacts, type Sensitivity } from "@/lib/engine";
 import { SENSITIVITY_LABEL, resolveBaseline, resolveSensitivity } from "@/lib/selection";
 import type { AppData } from "@/lib/data/schemas";
 
@@ -18,8 +19,8 @@ export type SectionContext = {
   short: string;
   sensitivity: Sensitivity;
   scope: { customerId: string; period: typeof PERIOD };
-  /** The intro for this section, tokens resolved from `facts`. */
-  intro: (facts: readonly Fact[]) => string;
+  /** The "i" text for a registry key (ADR 0028), tokens resolved from the engine's Facts and the selected comparison; "" for a key without one. */
+  explain: (key: string) => string;
 };
 
 /**
@@ -60,22 +61,22 @@ async function Content({ slug, searchParams, children }: { slug: SectionSlug; se
   const { baseline, rejected: badBaseline } = resolveBaseline(params.baseline, data.baselines);
   const { sensitivity, rejected: badSensitivity } = resolveSensitivity(params.sensitivity);
   const short = baselineShortName(baseline);
+  const scope = { customerId: customer.customer_id, period: PERIOD };
+  // Intros and explanations may name a Fact of any page, so tokens resolve against all of them.
+  const tokenFacts = [...sectionFacts(data, scope).tokens, ...footprintFacts(data, scope, baseline, sensitivity), ...percentageFacts(data, scope), ...observationsFor(data, scope).facts];
   const ctx: SectionContext = {
     data,
     customer,
     baseline,
     short,
     sensitivity,
-    scope: { customerId: customer.customer_id, period: PERIOD },
-    intro: (facts) =>
-      sectionIntro(slug, facts, { customer: customer.customer_name, period: PERIOD.from.slice(0, 4), baseline: short, sensitivity: SENSITIVITY_LABEL[sensitivity] }),
+    scope,
+    explain: explainer(tokenFacts, { comparison: short, Comparison: `${short[0].toUpperCase()}${short.slice(1)}` }),
   };
-  // Intro tokens may name a Fact of any page, so they resolve against all of them.
-  const tokenFacts = [...sectionFacts(data, ctx.scope).tokens, ...footprintFacts(data, ctx.scope, baseline, sensitivity)];
   const notes = [
     rejected !== null && `"${rejected}" is not a known customer, so ${customer.customer_name} is shown instead.`,
-    badBaseline !== null && `"${badBaseline}" is not a known baseline, so ${short} is shown instead.`,
-    badSensitivity !== null && `"${badSensitivity}" is not a known sensitivity level, so base is shown instead.`,
+    badBaseline !== null && `"${badBaseline}" is not a known comparison, so ${short} is shown instead.`,
+    badSensitivity !== null && `"${badSensitivity}" is not a known estimate level, so the Standard estimate is shown instead.`,
   ].filter((n): n is string => n !== false);
   return (
     <div className="space-y-6">
@@ -86,7 +87,7 @@ async function Content({ slug, searchParams, children }: { slug: SectionSlug; se
       ))}
       <div className="space-y-0.5">
         <h2 className="text-base font-medium">{section(slug).subheading}</h2>
-        <p className="max-w-[65ch] text-sm text-muted-foreground">{ctx.intro(tokenFacts)}</p>
+        <p className="max-w-[65ch] text-sm text-muted-foreground">{sectionIntro(slug, tokenFacts, { customer: customer.customer_name, period: PERIOD.from.slice(0, 4), comparison: short, sensitivity: SENSITIVITY_LABEL[sensitivity] })}</p>
       </div>
       {await children(ctx)}
     </div>

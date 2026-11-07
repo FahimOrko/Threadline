@@ -45,3 +45,24 @@ Every chart title SHALL be the question the chart answers and SHALL carry an "i"
 #### Scenario: Heatmap titles
 - **WHEN** the heatmap shows utilization
 - **THEN** the title reads "Where and when were garments under-used?"; for repairs, "Where and when did repairs spike?"
+
+### Requirement: Hatching means a missing value
+Hatching SHALL mean "needs input" only. An illustrative or estimated value SHALL NOT be drawn with a hatched bar; it SHALL use no bar or a dashed one.
+
+#### Scenario: Garment value in use
+- **WHEN** the Garments in use panel shows an illustrative value
+- **THEN** it has no hatched bar
+
+### Requirement: Unused-cost chart placeholder
+While the rental fee is unset, the Costs page SHALL replace the per-site cost chart with one placeholder panel saying the per-site cost appears once Lindström provides the rental fee, with its "i" and Show math. When the fee is set, the per-site bars SHALL render.
+
+#### Scenario: Fee unset
+- **WHEN** the Costs page opens while the fee is unset
+- **THEN** one placeholder panel shows and no per-site hatched row does
+
+### Requirement: Full-width panel layout
+A full-width panel SHALL place its ring beside its hero figure and its related figures beside them, leaving no empty middle.
+
+#### Scenario: Service quality
+- **WHEN** the Service quality panel renders at 1230px
+- **THEN** the on-time ring sits next to its hero and the request figures sit beside them

@@ -20,7 +20,7 @@ vi.mock("motion/react", async (orig) => ({
 import { AnimatedValue } from "@/components/animated-value";
 import { ChangeHighlight } from "@/components/change-highlight";
 import { ChartFrame, seriesTable } from "@/components/chart-frame";
-import { BarList, BulletList, Donut, StackedBars, Waterfall } from "@/components/charts-simple";
+import { BarList, BulletList, Donut, StackedBars, ComparisonBars } from "@/components/charts-simple";
 import { Heatmap } from "@/components/heatmap";
 import { ChipLegend, ProvenanceChip } from "@/components/provenance-chip";
 import { SiteTable } from "@/components/site-table";
@@ -97,25 +97,23 @@ describe("ChangeHighlight", () => {
 
 describe("TrendBadge", () => {
   const trend = { from: { from: "2025-07", to: "2025-09" }, to: { from: "2025-10", to: "2025-12" }, change: 12.34, direction: "up" as const };
-  it("has a word, a glyph and a signed percent, and names the exact period in its accessible name", () => {
-    render(<TrendBadge trend={trend} />);
-    const badge = screen.getByLabelText(/^Up \+12\.3%/);
-    expect(badge.textContent).toBe("Up+12.3%");
-    expect(badge.getAttribute("aria-label")).toBe("Up +12.3%, Oct to Dec 2025 against Jul to Sep 2025");
-    expect(badge.querySelector("svg")).toBeTruthy();
+  const visible = (c: HTMLElement) => [...c.querySelectorAll("[aria-hidden]")].map((e) => e.textContent).join(" ");
+  it("shows the signed percent with its comparison and no direction word", () => {
+    const { container } = render(<TrendBadge trend={trend} />);
+    expect(visible(container)).toBe("+12.3% Oct–Dec vs Jul–Sep");
+    expect(visible(container)).not.toMatch(/Up|Down|Flat/);
   });
-  it("shows the same period in the tooltip on hover", async () => {
+  it("names the direction and exact periods for screen readers", () => {
     render(<TrendBadge trend={trend} />);
-    await userEvent.hover(screen.getByLabelText(/^Up/));
-    expect(await screen.findByText("Oct to Dec 2025 against Jul to Sep 2025")).toBeTruthy();
+    expect(screen.getByText("Up +12.3%, Oct to Dec 2025 against Jul to Sep 2025")).toBeTruthy();
   });
   it("states a one-month comparison, December against September", () => {
-    render(<TrendBadge trend={{ from: { from: "2025-09", to: "2025-09" }, to: { from: "2025-12", to: "2025-12" }, change: -3.21, direction: "down" }} />);
-    expect(screen.getByLabelText(/^Down/).getAttribute("aria-label")).toBe("Down −3.2%, Dec 2025 against Sep 2025");
+    const { container } = render(<TrendBadge trend={{ from: { from: "2025-09", to: "2025-09" }, to: { from: "2025-12", to: "2025-12" }, change: -3.21, direction: "down" }} />);
+    expect(visible(container)).toBe("−3.2% Dec vs Sep");
   });
   it("is neutral: flat has no sign, and no good or bad word", () => {
-    render(<TrendBadge trend={{ ...trend, change: 0.02, direction: "flat" }} />);
-    expect(screen.getByLabelText(/^Flat/).textContent).toBe("Flat0.0%");
+    const { container } = render(<TrendBadge trend={{ ...trend, change: 0.02, direction: "flat" }} />);
+    expect(visible(container)).toBe("0.0% Oct–Dec vs Jul–Sep");
   });
 });
 
@@ -155,15 +153,14 @@ describe("ChartFrame and charts: the text alternative equals the values drawn", 
     expect([...container.querySelectorAll("li")].map((l) => l.textContent)).toEqual(["Low55.5%", "High91.2%"]);
     expect(container.querySelector("[style*='left: 80%']")).toBeTruthy();
   });
-  it("Waterfall labels steps with the engine's delta and total", () => {
-    const steps = [
-      { label: "Comparison", start: 0, end: 100, delta: 100, kind: "total" as const },
-      { label: "Process saved", start: 100, end: 60, delta: -40, kind: "decrease" as const },
-      { label: "Delivery", start: 60, end: 70, delta: 10, kind: "increase" as const },
-      { label: "Service", start: 0, end: 70, delta: 70, kind: "total" as const },
-    ];
-    render(<Waterfall steps={steps} unit="kgCO2e" />);
-    expect(screen.getAllByRole("listitem").map((l) => l.textContent)).toEqual(["100 kgCO2eComparison", "−40 kgCO2eProcess saved", "+10 kgCO2eDelivery", "70 kgCO2eService"]);
+  it("ComparisonBars labels the comparison, the service parts and the engine's net saving", () => {
+    const { container } = render(<ComparisonBars comparison={{ label: "Local laundry", value: 100 }} service={{ label: "Lindström service", process: 50, delivery: 20, total: 70 }} netSaving={30} unit="kgCO2e" />);
+    const text = container.textContent!;
+    expect(text).toContain("100 kgCO2e");
+    expect(text).toContain("70 kgCO2e");
+    expect(text).toContain("Process 50 kgCO2e");
+    expect(text).toContain("Delivery 20 kgCO2e");
+    expect(text).toContain("Net saving 30 kgCO2e");
   });
   it("Donut lists each part with its value", () => {
     render(<Donut parts={[{ label: "Process", value: 30, unit: "kgCO2e" }, { label: "Delivery", value: 10, unit: "kgCO2e" }]} center={{ value: "25.0%", label: "delivery" }} />);
@@ -182,18 +179,24 @@ describe("Heatmap", () => {
     label,
     unit,
     months: ["2025-01", "2025-02"],
-    rows: [{ siteId: "S1", siteName: "Helsinki", cells: [{ month: "2025-01", value: 80.5, level: 4 }, { month: "2025-02", value: 40, level: 0 }] }],
+    rows: [{ siteId: "S1", siteName: "Helsinki", highlighted: 1, cells: [{ month: "2025-01", value: 80.5, highlight: false }, { month: "2025-02", value: 40, highlight: true }] }],
   });
   const matrices = [matrix("garment_utilization", "Garment utilization", "%"), matrix("repairs", "Repairs", "repairs")];
-  it("is a table whose cells hold their values, with the level on each cell", () => {
-    render(<Heatmap matrices={matrices} link={{ customer: "C", baseline: "B_LOCAL", sensitivity: "base" }} />);
+  const frame = (title: string, legend: string) => ({ title, caption: "Caption.", summary: "Summary.", explain: "Explanation.", legend });
+  const frames = { garment_utilization: frame("Where and when were garments under-used?", "Highlighted: under the line."), repairs: frame("Where and when did repairs spike?", "Highlighted: a spike.") };
+  it("is a table whose cells hold their values; only an engine-highlighted cell is marked, and it says so in text", () => {
+    render(<Heatmap matrices={matrices} frames={frames} link={{ customer: "C", baseline: "B_LOCAL", sensitivity: "base" }} />);
     const row = screen.getByRole("row", { name: /Helsinki/ });
-    expect(within(row).getAllByRole("cell").map((c) => [c.textContent, c.getAttribute("data-level")])).toEqual([["80.5", "4"], ["40.0", "0"]]);
+    expect(within(row).getAllByRole("cell").map((c) => [c.textContent, c.getAttribute("data-highlight")])).toEqual([["80.5", "false"], ["40.0, highlighted", "true"]]);
     expect(screen.getByRole("link", { name: "Helsinki" }).getAttribute("href")).toBe("/dashboard/sites/S1?customer=C&baseline=B_LOCAL&sensitivity=base");
   });
-  it("the toggle swaps the measure and nothing else", async () => {
-    render(<Heatmap matrices={matrices} />);
+  it("shows the question title, the legend and an \"i\" for the chosen measure", async () => {
+    render(<Heatmap matrices={matrices} frames={frames} />);
+    expect(screen.getByRole("heading", { name: "Where and when were garments under-used?" })).toBeTruthy();
+    expect(screen.getByText("Highlighted: under the line.")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "What does this mean?" })).toBeTruthy();
     await userEvent.click(screen.getByRole("radio", { name: "Repairs" }));
+    expect(screen.getByRole("heading", { name: "Where and when did repairs spike?" })).toBeTruthy();
     expect(screen.getByRole("table", { name: /Repairs by site and month/ })).toBeTruthy();
     expect(screen.getByRole("radio", { name: "Repairs" }).getAttribute("aria-checked")).toBe("true");
   });

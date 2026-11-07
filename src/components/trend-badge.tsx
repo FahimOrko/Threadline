@@ -1,29 +1,20 @@
-import { ArrowDown, ArrowUp, Minus } from "@phosphor-icons/react/ssr";
-import { Tooltip } from "@/components/tooltip";
 import type { SeriesTrend } from "@/lib/engine";
-import { formatMonthRange, formatPercent } from "@/lib/format";
+import { formatMonthRange, formatMonthSpan, formatPercent } from "@/lib/format";
 
-const ICON = { up: ArrowUp, down: ArrowDown, flat: Minus } as const;
 const WORD = { up: "Up", down: "Down", flat: "Flat" } as const;
 
 /**
- * Direction and size of a change, from the engine's `trend`. A word, a glyph and a signed percent in one neutral style: it says which way a figure
- * moved, never whether that is good (more dormant sites is bad, more avoided cost is good). The tooltip names the exact periods compared.
+ * The change of a figure with its comparison, from the engine's `trend`: a signed percent and the two spans ("+10.3% Oct–Dec vs Jul–Sep"). The sign says
+ * which way it moved, never whether that is good, so the style is neutral. It sits on the figure it belongs to; screen readers get the direction in words.
  */
 export function TrendBadge({ trend }: { trend: SeriesTrend }) {
-  const Icon = ICON[trend.direction];
   const sign = trend.direction === "up" ? "+" : trend.direction === "down" ? "−" : "";
   const percent = `${sign}${formatPercent(Math.abs(trend.change))}%`;
-  const period = `${formatMonthRange(trend.to)} against ${formatMonthRange(trend.from)}`;
   return (
-    <Tooltip label={period}>
-      <span tabIndex={0} aria-label={`${WORD[trend.direction]} ${percent}, ${period}`} className="inline-flex cursor-default items-center gap-1 rounded-md border px-1.5 py-0.5 text-xs outline-none focus-visible:ring-2 focus-visible:ring-ring">
-        <Icon aria-hidden size={12} />
-        <span aria-hidden>{WORD[trend.direction]}</span>
-        <span aria-hidden className="num">
-          {percent}
-        </span>
-      </span>
-    </Tooltip>
+    <span data-slot="trend" className="inline-flex flex-wrap items-baseline gap-x-1.5 text-xs text-muted-foreground">
+      <span className="sr-only">{`${WORD[trend.direction]} ${percent}, ${formatMonthRange(trend.to)} against ${formatMonthRange(trend.from)}`}</span>
+      <span aria-hidden className="num font-medium text-foreground">{percent}</span>
+      <span aria-hidden>{`${formatMonthSpan(trend.to)} vs ${formatMonthSpan(trend.from)}`}</span>
+    </span>
   );
 }

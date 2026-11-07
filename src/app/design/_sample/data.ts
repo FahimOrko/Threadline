@@ -61,7 +61,7 @@ export const sampleFact: Fact = {
 // A Fact whose team assumption is unset (value null): FactStatCard shows "Needs input". Not engine output.
 export const sampleNeedsInputFact: Fact = {
   id: "sample_needs_input",
-  label: "Cost of unused allocation (Dec, per week)",
+  label: "Cost of unused garments (Dec, per week)",
   value: null,
   unit: "EUR per week",
   methods: ["ESTIMATED"],

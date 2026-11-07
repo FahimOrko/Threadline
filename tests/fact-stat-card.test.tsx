@@ -61,11 +61,12 @@ describe("FactStatCard without a value", () => {
   const { data } = buildData(Object.fromEntries(stems.map((x) => [x, readFileSync(`data/raw/${x}.csv`, "utf8")])));
   const unset = costOfUnusedAllocation(data, { customerId: "CUST001", period: { from: "2025-01", to: "2025-12" } });
 
-  it("shows Needs input and a hint naming T001, never 0, NaN or an empty value", () => {
+  it("shows Needs input and a plain hint with no id, never 0, NaN or an empty value", () => {
     const { container } = render(<FactStatCard fact={unset} />);
     const t = container.textContent ?? "";
     expect(t).toContain("Needs input");
-    expect(t).toContain("T001");
+    expect(t).toContain("Needs a rental fee from Lindström.");
+    expect(t).not.toContain("T001");
     expect(t).not.toMatch(/NaN|\b0\b/);
     expect(container.querySelector(".num")).toBeNull();
   });
