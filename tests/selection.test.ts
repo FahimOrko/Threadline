@@ -40,3 +40,14 @@ describe("togglePriority", () => {
   it("removes a picked chip", () => expect(togglePriority(["water", "cost"], "water")).toEqual(["cost"]));
   it("replaces the oldest with a third pick", () => expect(togglePriority(["water", "cost"], "service")).toEqual(["cost", "service"]));
 });
+
+import { resolveView } from "@/lib/selection";
+describe("resolveView", () => {
+  it("defaults to the KAM view", () => expect(resolveView(undefined)).toBe("kam"));
+  it("accepts the customer view", () => expect(resolveView("customer")).toBe("customer"));
+  it("treats an unknown or empty value as KAM", () => {
+    expect(resolveView("admin")).toBe("kam");
+    expect(resolveView("")).toBe("kam");
+  });
+  it("uses the first of a repeated param", () => expect(resolveView(["customer", "kam"])).toBe("customer"));
+});

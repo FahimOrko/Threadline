@@ -60,6 +60,10 @@ Update this list with every new reusable component.
 | ShowMathInlineProvider, PrintButton, `.print-scope` | `src/components/show-math.tsx`, `src/components/print-button.tsx`, `src/app/globals.css` | Print route pieces (ADR 0020). `ShowMathInlineProvider inline` makes every `ShowMathPopover` below it render its body expanded in the page flow (thread line kept, no trigger); the popover stays the screen pattern. `PrintButton` calls `window.print()`, hidden when printing. `.print-scope` re-declares the light tokens (keep in step with `:root`) plus A4 page breaks: a break before each Story chapter after the cover, no split inside panels, rows, list items or observations |
 | PriorityPicker | `src/components/priority-picker.tsx` | Six priority chips as links (no client state, ADR 0019). Picked chips are filled with an sr-only "(selected)"; a third pick replaces the oldest; each link keeps customer, baseline and sensitivity via `storyHref` |
 | StatCardSkeleton, EmptyState, ErrorState | `src/components/states.tsx` | Loading matches StatCard layout, empty says what to do, error is inline |
+| CharacterStage | `src/components/character-stage.tsx` | Story game stage (ADR 0021): a labelled setting (meeting room, plant floor, sustainability office) with two original faceless flat figures, the Lindström KAM left and the customer's ops lead right. Art uses theme tokens only, no image assets. The speaker is raised, the other dimmed; `opsPose="reacting"` tilts the ops lead. `art="initials"` swaps the figures for portrait cards with the same labels. The setting label sits above the stage, not on the art. Effects (scene art) are allowed here, as in Story and Impact World |
+| DialogueBox | `src/components/dialogue-box.tsx` | Client component. Speaker name tag as a Badge in words, one line, `min-h-36`. With `href` the whole box is a link to the next beat (click, Enter, Space) with a "Next" hint; without it, `children` hold choices. Key it per beat: a 150 ms fade plays, off under `prefers-reduced-motion` |
+| ChoiceButton | `src/components/choice-button.tsx` | One game answer as a link built on `buttonVariants`: label on one line, optional hint line, `primary` for a single call to action, `newTab` for the PDF route. Press state `scale-[0.98]` |
+| DeltaBadge | `src/components/delta-badge.tsx` | A Fact change between two states: word (Up, Down, No change), Phosphor glyph and signed mono value from `factDelta`; one neutral style, never colour alone, a "%" change reads "pp". Rounded only here. The game's consequence card (`src/app/story/game/_consequence-card.tsx`) places it between Before and After values that each keep a Show math popover and the Fact's ProvenanceChip |
 
 ## Contrast
 
@@ -78,7 +82,7 @@ Update this list with every new reusable component.
 
 ## Gallery
 
-`/design` shows every component above in all its states, in sections Tokens, Provenance, Data display, Controls, States and Effects. Effects is reserved for Story and Impact World and stays empty until those slices.
+`/design` shows every component above in all its states, in sections Tokens, Provenance, Data display, Controls, States and Effects. Effects holds the story game pieces (scene art, fade); the rest of Effects stays reserved for Story and Impact World.
 
 Sample values on `/design` come from `src/app/design/_sample/`, are labelled "sample data, not engine output", and are never imported outside `src/app/design/`.
 

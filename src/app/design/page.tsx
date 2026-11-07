@@ -3,6 +3,10 @@ import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Badge } from "@/components/badge";
+import { CharacterStage } from "@/components/character-stage";
+import { ChoiceButton } from "@/components/choice-button";
+import { DeltaBadge } from "@/components/delta-badge";
+import { DialogueBox } from "@/components/dialogue-box";
 import { FactStatCard } from "@/components/fact-stat-card";
 import { Notice } from "@/components/notice";
 import { ObservationCard } from "@/components/observation-card";
@@ -335,10 +339,56 @@ export default function DesignPage() {
 
       <section id="effects" className="space-y-4">
         <SectionHeader title="Effects" />
-        <EmptyState
-          title="Reserved for Story and Impact World"
-          hint="Motion, glow and scene art appear only in those two views. Data-view components carry no effects."
-        />
+        <p className="max-w-[65ch] text-sm text-muted-foreground">
+          Scene art and the fade appear only in the Story views. Data-view components carry no effects. The pieces of the story game follow; their text is sample text, not engine output.
+        </p>
+        <div className="space-y-2">
+          <h3 className="text-sm font-medium">CharacterStage</h3>
+          <p className="max-w-[65ch] text-sm text-muted-foreground">
+            A labelled setting with the Lindström KAM left and the customer&apos;s ops lead right, in flat shapes built from theme tokens. The speaker is raised and the other dimmed. Shown: meeting room with the KAM speaking, plant floor with the ops lead reacting, sustainability office, and the initials fallback.
+          </p>
+          <div className="grid gap-4 lg:grid-cols-2">
+            <CharacterStage setting="meeting-room" speaker="kam" opsLabel="Sample Co ops lead" />
+            <CharacterStage setting="plant-floor" speaker="ops" opsPose="reacting" opsLabel="Sample Co ops lead" />
+            <CharacterStage setting="sustainability-office" speaker={null} opsLabel="Sample Co ops lead" />
+            <CharacterStage setting="meeting-room" speaker="kam" opsLabel="Sample Co ops lead" art="initials" />
+          </div>
+        </div>
+        <div className="space-y-2">
+          <h3 className="text-sm font-medium">DialogueBox</h3>
+          <p className="max-w-[65ch] text-sm text-muted-foreground">
+            A speaker name tag in words and one line. With a link the whole box advances (click, Enter or Space) and shows Next; without one it holds choices. A 150 ms fade plays when its key changes and is off under reduced motion.
+          </p>
+          <div className="grid gap-3 lg:grid-cols-2">
+            <DialogueBox speaker="kam" tag="Lindström KAM" text="A sample line from the guide. It carries no figures." href="/design" />
+            <DialogueBox speaker="ops" tag="Sample Co ops lead" text="A sample question, with the answers as choice buttons.">
+              <div className="grid grid-cols-3 gap-2">
+                <ChoiceButton href="/design" label="First" />
+                <ChoiceButton href="/design" label="Second" />
+                <ChoiceButton href="/design" label="Third" />
+              </div>
+            </DialogueBox>
+          </div>
+        </div>
+        <div className="space-y-2">
+          <h3 className="text-sm font-medium">ChoiceButton</h3>
+          <p className="max-w-[65ch] text-sm text-muted-foreground">One answer as a plain link: label on one line, optional hint, or a single primary action.</p>
+          <div className="flex flex-wrap gap-2">
+            <ChoiceButton href="/design" label="Option" />
+            <ChoiceButton href="/design" label="Option with a hint" hint="One short line that explains the option" />
+            <ChoiceButton primary href="/design" label="Start the review" />
+          </div>
+        </div>
+        <div className="space-y-2">
+          <h3 className="text-sm font-medium">DeltaBadge</h3>
+          <p className="max-w-[65ch] text-sm text-muted-foreground">A change in a Fact between two states: a word, a glyph and a signed mono value, one neutral style. A percentage changes in percentage points. Sample values.</p>
+          <div className="flex flex-wrap gap-2">
+            <DeltaBadge delta={{ value: 1234.5, unit: "kg", direction: "up" }} />
+            <DeltaBadge delta={{ value: -7.68, unit: "kg", direction: "down" }} />
+            <DeltaBadge delta={{ value: 3.2, unit: "%", direction: "up" }} />
+            <DeltaBadge delta={{ value: 0, unit: "kg", direction: "none" }} />
+          </div>
+        </div>
       </section>
     </div>
   );

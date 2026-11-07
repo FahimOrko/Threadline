@@ -33,3 +33,5 @@ export type { DormantSite, OverAllocatedSite, RepairSpikeSite, SignalResult, Spi
 export { dataReadinessFacts } from "./readiness";
 export { observations } from "./observations";
 export type { Observation, ObservationSet, ObservationType } from "./observations";
+export { factDelta } from "./delta";
+export type { FactDelta } from "./delta";

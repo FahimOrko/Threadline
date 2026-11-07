@@ -67,8 +67,8 @@ After a choice the game SHALL show, beside the dialogue box in the reaction and 
 A Fact whose value is null because a team assumption is unset SHALL read "Needs input" in dialogue and card and SHALL have no delta, before value or after value shown as a number.
 
 #### Scenario: Cost of unused allocation
-- **WHEN** T001 is unset and any choice is made
-- **THEN** the cost of unused allocation reads "Needs input" and shows no delta
+- **WHEN** T001 is unset and the card lists the cost of unused allocation (the customer scene does)
+- **THEN** it reads "Needs input" and shows no delta
 
 ### Requirement: Sensitivity framing
 The sensitivity scene's dialogue and its consequence SHALL frame the options as the team's declared spread of T002 over illustrative baseline factors and SHALL NOT call it a measured range or a forecast.

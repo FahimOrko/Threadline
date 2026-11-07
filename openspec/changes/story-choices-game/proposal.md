@@ -43,9 +43,11 @@ A customer view (`?view=customer`) is planned in a later change and does not exi
 ## Capabilities
 
 ### New Capabilities
+
 - `story-choices-game`: scene sequence, dialogue beats, lever mapping, consequence display from Facts, URL-held state, ending scene and links.
 
 ### Modified Capabilities
+
 <!-- None. story-player requirements are unchanged; the game only links to it. -->
 
 ## Impact

@@ -58,3 +58,10 @@ export function togglePriority(picks: readonly Priority[], p: Priority): Priorit
   if (picks.includes(p)) return picks.filter((x) => x !== p);
   return [...picks, p].slice(-MAX_PRIORITIES);
 }
+
+export type View = "kam" | "customer";
+
+/** Resolves `?view=`. Only the customer view locks the game's customer scene; everything else, including a missing or unknown value, is the KAM view (today's behaviour). No notice: `view` is not a game choice. */
+export function resolveView(param: Param): View {
+  return first(param) === "customer" ? "customer" : "kam";
+}
