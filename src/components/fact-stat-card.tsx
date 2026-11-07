@@ -2,7 +2,7 @@ import { ProvenanceChip } from "@/components/provenance-chip";
 import { ShowMathPopover } from "@/components/show-math";
 import { StatCard } from "@/components/stat-card";
 import type { Fact } from "@/lib/engine";
-import { formatPeriod, formatQuantity, formatValue } from "@/lib/format";
+import { formatCardValue, formatPeriod, formatQuantity, formatValue } from "@/lib/format";
 
 const NOT_MODELLED = "not yet modelled";
 const NOT_AVAILABLE = "not available";
@@ -15,7 +15,7 @@ export function FactStatCard({ fact }: { fact: Fact }) {
   return (
     <StatCard
       label={fact.label}
-      value={fact.value === null ? undefined : formatValue(fact.value, fact.unit)}
+      value={fact.value === null ? undefined : formatCardValue(fact.value, fact.unit)}
       unit={fact.unit}
       needsInput={fact.value === null ? `Set ${missing || "the missing assumption"} in the assumptions config. See Show math.` : undefined}
       provenance={<ProvenanceChip methods={fact.methods} source={fact.source} />}

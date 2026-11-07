@@ -36,7 +36,7 @@ None.
 
 ## Impact
 
-- Code: `src/lib/data/` (schemas, pipeline, generated source), `scripts/build-data.ts`, `src/lib/engine/` (new footprint module, rename in `percentage.ts`, `index.ts`), `src/app/dashboard/page.tsx`.
+- Code: `src/lib/data/` (schemas, pipeline, generated source), `scripts/build-data.ts`, `src/lib/format/` (card number display rule, all sections), `src/lib/engine/` (new footprint module, rename in `percentage.ts`, `index.ts`), `src/app/dashboard/page.tsx`.
 - Docs: `docs/runbooks/rebuild-data.md` (two sheets, rename, new checks), `docs/conventions.md` only for a baseline-is-a-parameter line.
 - Tests: schemas, pipeline (aggregate, both reference checks, header mismatch), each KPI against an independent recomputation, and the "vs local" cross-check. No new component, so `/design` and `docs/design.md` are unchanged.
 - Dependencies: none.
@@ -56,7 +56,8 @@ None.
 - **Delivery is above the baseline's even for local laundry.** Laundry delivery is 0.026 to 0.065 kgCO2e/kg, above `B_LOCAL` 0.035 in 41 of 48 months (NorthStar 0.047). So delivery alone reads worse than the baseline, not only worse than home washing (0 delivery). Hence the net comparison beside it. No baseline has zero delivery except `B_HOME`, and no laundry-month has zero delivery or zero washed kg.
 - **Units are consistent.** Baseline factors (L/kg, kWh/kg, kgCO2e/kg) match the laundry per-kg columns, and laundry process and delivery are totals in kgCO2e, so per-kg values are derived. No unit conversion is needed.
 - **Mismatch with the precomputed columns.** Per-row, the engine formula reproduces allocated water and energy within 0.01% and 0.3% and the "vs local" savings within 0.4% (energy), 0.2% (CO2e) and 0.04% (water); totals for NorthStar agree to the unit. Row differences come from the pack's rounding of small values.
-- **Intensity is per tonne washed** (decided): about 147 kgCO2e/t for NorthStar, printed with the existing number format rules, so no new format rule.
+- **Intensity is per tonne washed** (decided): about 147 kgCO2e/t for NorthStar.
+- **Card number display** (decided): values of absolute size 100 or more show whole, values below 100 one decimal, "%" keeps one decimal. One shared helper, so earlier sections follow it too (per 100 wearers 5.4). Show math keeps its formatting.
 - **Net CO2e saved appears twice** (decided): in the saved group and beside delivery, rendered from the same Fact.
 - **Per wearer divides the full-year footprint by December wearers**, labelled "(Dec)" like per 100 wearers.
 - **Baseline short names** ("local laundry", "home washing", "in-house laundry") live in a small engine map by baseline id, falling back to the sheet's name, because the sheet only has "Outsourced local laundry".

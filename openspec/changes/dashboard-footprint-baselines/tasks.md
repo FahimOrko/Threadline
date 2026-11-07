@@ -15,7 +15,7 @@ Read first: `docs/conventions.md`, `docs/adr/README.md` (ADRs 0004, 0005, 0012, 
 
 ## 3. Dashboard
 
-- [x] 3.1 Add the "Footprint" section with its three groups to `src/app/dashboard/page.tsx` using `FactStatCard` and the engine group lists (net CO2e card in both the saved and delivery groups from one Fact, route-km data gap line), and update `docs/runbooks/rebuild-data.md` and the baseline line in `docs/conventions.md`. Verify: `npm run build` compiles; with `npm run dev` the section follows `?customer=` and shows the NorthStar values from the spec.
+- [x] 3.1 Add `formatCardValue` (100 or more whole, below 100 one decimal, "%" one decimal) to `src/lib/format` with a format test, use it for the card headline in `FactStatCard`, update the formatting note in `docs/design.md`, and add the "Footprint" section with its three groups to `src/app/dashboard/page.tsx` using `FactStatCard` and the engine group lists (net CO2e card in both the saved and delivery groups from one Fact, route-km data gap line), and update `docs/runbooks/rebuild-data.md` and the baseline line in `docs/conventions.md`. Verify: `npm run build` compiles; with `npm run dev` the section follows `?customer=` and shows the NorthStar values from the spec.
 
 ## 4. Verification
 

@@ -11,7 +11,14 @@ export function formatPercent(n: number): string {
   return new Intl.NumberFormat("en-US", { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(n).replaceAll(",", " ");
 }
 
-/** A value for display; the unit "%" and "per 100 garments" select the one-decimal rule. */
+/** Card headline: 100 or more prints whole, below 100 one decimal ("1 406 483", "146.96" -> "147", "7.68" -> "7.7"). "%" keeps its fixed one decimal. */
+export function formatCardValue(n: number, unit?: string): string {
+  if (unit === "%") return formatPercent(n);
+  const digits = Math.abs(n) >= 100 ? 0 : 1;
+  return new Intl.NumberFormat("en-US", { maximumFractionDigits: digits }).format(n).replaceAll(",", " ");
+}
+
+/** A value for display in Show math (inputs and range); the unit "%" and "per 100 garments" select the one-decimal rule. */
 export const formatValue = (n: number, unit?: string) =>
   unit === "%" || unit === "per 100 garments" ? formatPercent(n) : formatNumber(n);
 
