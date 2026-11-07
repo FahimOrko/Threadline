@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { resolveBaseline, resolvePriorities, resolveSensitivity, storyHref, togglePriority } from "@/lib/selection";
+import { carryParams, customerViewRedirect, resolveBaseline, resolvePriorities, resolveSensitivity, storyHref, togglePriority } from "@/lib/selection";
 
 const baselines = [{ baseline_id: "B_HOME" }, { baseline_id: "B_LOCAL" }, { baseline_id: "B_INHOUSE" }];
 
@@ -50,4 +50,42 @@ describe("resolveView", () => {
     expect(resolveView("")).toBe("kam");
   });
   it("uses the first of a repeated param", () => expect(resolveView(["customer", "kam"])).toBe("customer"));
+});
+
+describe("carryParams", () => {
+  const all = new URLSearchParams("customer=CUST002&baseline=B_HOME&sensitivity=low&priorities=water,cost&view=customer");
+  it("drops everything but view when leaving the dashboard", () => {
+    expect(carryParams("/dashboard/costs", "/story/game", all)).toBe("?view=customer");
+    expect(carryParams("/dashboard", "/impact", all)).toBe("?view=customer");
+  });
+  it("adds nothing for KAM when leaving the dashboard", () => {
+    expect(carryParams("/dashboard", "/story/game", new URLSearchParams("customer=CUST002&baseline=B_HOME"))).toBe("");
+  });
+  it("keeps all params inside the dashboard", () => {
+    expect(carryParams("/dashboard", "/dashboard/costs", new URLSearchParams("customer=CUST002&baseline=B_HOME&sensitivity=low"))).toBe("?customer=CUST002&baseline=B_HOME&sensitivity=low");
+  });
+  it("keeps all params between other views, as before", () => {
+    expect(carryParams("/story", "/dashboard", new URLSearchParams("customer=CUST002&priorities=cost,hygiene"))).toBe("?customer=CUST002&priorities=cost%2Chygiene");
+  });
+  it("treats an unknown view as KAM", () => {
+    expect(carryParams("/story", "/impact", new URLSearchParams("view=admin"))).toBe("");
+  });
+});
+
+describe("customerViewRedirect", () => {
+  const r = (u: string) => customerViewRedirect(new URL(u, "http://x"));
+  it("sends customer view to the game keeping only view and customer", () => {
+    expect(r("/dashboard/costs?view=customer&customer=CUST001&baseline=B_HOME&sensitivity=high")).toBe("/story/game?view=customer&customer=CUST001");
+  });
+  it("redirects the dashboard and a site page", () => {
+    expect(r("/dashboard?view=customer")).toBe("/story/game?view=customer");
+    expect(r("/dashboard/sites/S1?view=customer&customer=CUST001")).toBe("/story/game?view=customer&customer=CUST001");
+  });
+  it("never redirects KAM view", () => {
+    expect(r("/dashboard/costs?customer=CUST001")).toBeNull();
+    expect(r("/dashboard?view=kam")).toBeNull();
+    expect(r("/dashboard?view=nope")).toBeNull();
+  });
+  it("ignores other routes", () => expect(r("/story?view=customer")).toBeNull());
+  it("does not match lookalike paths", () => expect(r("/dashboardx?view=customer")).toBeNull());
 });

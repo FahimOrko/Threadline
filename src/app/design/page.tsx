@@ -13,6 +13,7 @@ import { ObservationCard } from "@/components/observation-card";
 import { Panel } from "@/components/panel";
 import { PriorityPicker } from "@/components/priority-picker";
 import { ProvenanceChip } from "@/components/provenance-chip";
+import { DashboardSidebar } from "@/components/dashboard-sidebar";
 import { SiteTable, SiteTableSkeleton } from "@/components/site-table";
 import { SectionHeader } from "@/components/section-header";
 import { PrintButton } from "@/components/print-button";
@@ -267,6 +268,16 @@ export default function DesignPage() {
             <SiteTable table={{ ...sampleSiteTable, rows: [] }} />
             <SiteTableSkeleton />
           </div>
+        </div>
+        <div className="space-y-2">
+          <h3 className="text-sm font-medium">DashboardSidebar</h3>
+          <p className="max-w-[65ch] text-sm text-muted-foreground">
+            The KAM&apos;s dashboard navigation: the customer, baseline and sensitivity pickers on top, then one link per section. Sample customers and baselines; the active link follows this page&apos;s path, so none is marked here.
+          </p>
+          <DashboardSidebar
+            customers={[{ customer_id: "CUST001", name: "Sample customer" }]}
+            baselines={[{ baseline_id: "B_LOCAL", name: "local laundry" }]}
+          />
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Badge>Default</Badge>

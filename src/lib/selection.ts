@@ -32,8 +32,10 @@ export function resolveSensitivity(param: Param): { sensitivity: Sensitivity; re
 }
 
 /** Site page link that keeps the customer, baseline and sensitivity the dashboard is showing (ADR 0014, 0017). */
-export function siteHref(siteId: string, params: { customer: string; baseline: string; sensitivity: string }): string {
-  const q = new URLSearchParams(params);
+export function siteHref(siteId: string, params: { customer: string; baseline: string; sensitivity: string; view?: View }): string {
+  const { view, ...rest } = params;
+  const q = new URLSearchParams(rest);
+  if (view === "customer") q.set("view", view);
   return `/dashboard/sites/${encodeURIComponent(siteId)}?${q.toString()}`;
 }
 
@@ -73,4 +75,34 @@ export type View = "kam" | "customer";
 /** Resolves `?view=`. Only the customer view locks the game's customer scene; everything else, including a missing or unknown value, is the KAM view (today's behaviour). No notice: `view` is not a game choice. */
 export function resolveView(param: Param): View {
   return first(param) === "customer" ? "customer" : "kam";
+}
+
+const DASHBOARD = "/dashboard";
+const inDashboard = (path: string) => path === DASHBOARD || path.startsWith(`${DASHBOARD}/`);
+
+/**
+ * The query (with its "?", or "") a view link carries (ADR 0023). Leaving the dashboard keeps `view` only, so Story and Impact World start fresh;
+ * every other link keeps customer, baseline, sensitivity and priorities as before. KAM is the absence of `view`, so it adds nothing.
+ */
+export function carryParams(from: string, to: string, params: URLSearchParams): string {
+  const keep = inDashboard(from) && !inDashboard(to) ? [] : ["customer", "baseline", "sensitivity", "priorities"];
+  const q = new URLSearchParams();
+  for (const k of keep) {
+    const v = params.get(k);
+    if (v !== null && (k === "priorities" ? v !== "" : true)) q.set(k, v);
+  }
+  if (resolveView(params.get("view") ?? undefined) === "customer") q.set("view", "customer");
+  return q.size ? `?${q.toString()}` : "";
+}
+
+// Literal, not imported from story/game, which imports this file.
+const GAME = "/story/game";
+
+/** Where a customer-view request for a dashboard URL goes: the game, keeping only `view` and `customer`. Null means the request is allowed (KAM view or not the dashboard). */
+export function customerViewRedirect(url: URL): string | null {
+  if (!inDashboard(url.pathname) || resolveView(url.searchParams.get("view") ?? undefined) !== "customer") return null;
+  const q = new URLSearchParams({ view: "customer" });
+  const customer = url.searchParams.get("customer");
+  if (customer !== null) q.set("customer", customer);
+  return `${GAME}?${q.toString()}`;
 }

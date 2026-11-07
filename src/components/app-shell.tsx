@@ -1,20 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useId, useState } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
+import { Suspense, useState } from "react";
 import { CaretDoubleLeft, CaretDoubleRight } from "@phosphor-icons/react";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Selectors, useSelection, type ShellBaseline, type ShellCustomer } from "@/components/param-selects";
 import { Separator } from "@/components/ui/separator";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { resolveCustomer } from "@/lib/customer";
-import { SENSITIVITY_LEVELS } from "@/lib/engine";
 import { GAME_PATH, STORY_PATH } from "@/lib/story/game";
 import { STORY_PRINT_PATH } from "@/lib/story/print";
-import { SENSITIVITY_LABEL, resolveBaseline, resolveSensitivity } from "@/lib/selection";
-import { useRoleStore, type Role } from "@/store/role-store";
+import { carryParams, resolveView, type View } from "@/lib/selection";
 
 // `match` is the route prefix that marks the view active; Story opens the game but also owns the report and print routes.
 const views = [
@@ -23,88 +19,27 @@ const views = [
   { href: GAME_PATH, match: STORY_PATH, label: "Story" },
 ];
 
-type ShellCustomer = { customer_id: string; name: string };
-type ShellBaseline = { baseline_id: string; name: string };
-
-const SENSITIVITY_ITEMS = SENSITIVITY_LEVELS.map((l) => ({ value: l, label: SENSITIVITY_LABEL[l] }));
-
-// The layout cannot read searchParams, so the header reads the URL here. It uses the same resolvers as the page.
-function useSelection(customers: ShellCustomer[], baselines: ShellBaseline[]) {
-  const params = useSearchParams();
-  const raw = { customer: params.get("customer"), baseline: params.get("baseline"), sensitivity: params.get("sensitivity") };
-  return {
-    params,
-    customer: resolveCustomer(raw.customer ?? undefined, customers).customer,
-    baseline: resolveBaseline(raw.baseline ?? undefined, baselines).baseline,
-    sensitivity: resolveSensitivity(raw.sensitivity ?? undefined).sensitivity,
-    raw,
-  };
-}
-
-// A selector only changes its own param; the others stay in the address (ADR 0017).
-function ParamSelect({ label, name, value, items }: { label: string; name: string; value: string; items: { value: string; label: string }[] }) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const params = useSearchParams();
-  const labelId = useId();
-  return (
-    <div className="flex items-center gap-2">
-      <span id={labelId} className="text-sm text-muted-foreground">
-        {label}
-      </span>
-      <Select
-        value={value}
-        items={items}
-        onValueChange={(v) => {
-          const next = new URLSearchParams(params.toString());
-          next.set(name, String(v));
-          router.push(`${pathname}?${next.toString()}`);
-        }}
-      >
-        <SelectTrigger size="sm" aria-labelledby={labelId}>
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent alignItemWithTrigger={false}>
-          {items.map((i) => (
-            <SelectItem key={i.value} value={i.value}>
-              {i.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </div>
-  );
-}
-
-function Selectors({ customers, baselines }: { customers: ShellCustomer[]; baselines: ShellBaseline[] }) {
-  const { customer, baseline, sensitivity } = useSelection(customers, baselines);
-  return (
-    <>
-      <ParamSelect label="Customer" name="customer" value={customer.customer_id} items={customers.map((c) => ({ value: c.customer_id, label: c.name }))} />
-      <ParamSelect label="Baseline" name="baseline" value={baseline.baseline_id} items={baselines.map((b) => ({ value: b.baseline_id, label: b.name }))} />
-      <ParamSelect label="Sensitivity" name="sensitivity" value={sensitivity} items={SENSITIVITY_ITEMS} />
-    </>
-  );
-}
-
 // `pathname` is undefined in the Suspense fallback: usePathname() suspends on a dynamic route, so the fallback shows no active view.
-function ViewLinkList({ query, pathname }: { query: string; pathname?: string }) {
-  return views.map(({ href, match, label }) => {
-    const active = pathname !== undefined && (pathname === match || pathname.startsWith(`${match}/`));
-    return (
-      <Link
-        key={href}
-        href={`${href}${query}`}
-        aria-current={active ? "page" : undefined}
-        className={buttonVariants({ variant: active ? "default" : "ghost", size: "sm" })}
-      >
-        {label}
-      </Link>
-    );
-  });
+// The dashboard is the KAM's workspace, so its link is absent in customer view.
+function ViewLinkList({ query, pathname, view = "kam" }: { query: (to: string) => string; pathname?: string; view?: View }) {
+  return views
+    .filter(({ match }) => view === "kam" || match !== "/dashboard")
+    .map(({ href, match, label }) => {
+      const active = pathname !== undefined && (pathname === match || pathname.startsWith(`${match}/`));
+      return (
+        <Link
+          key={href}
+          href={`${href}${query(href)}`}
+          aria-current={active ? "page" : undefined}
+          className={buttonVariants({ variant: active ? "default" : "ghost", size: "sm" })}
+        >
+          {label}
+        </Link>
+      );
+    });
 }
 
-// Keeps the chosen customer, baseline, sensitivity and story priorities across views; without a param the links stay clean.
+// Which params travel is decided by carryParams (ADR 0023): leaving the dashboard keeps `view` only. Customer, baseline and sensitivity are normalized like the page does.
 function ViewLinks({ customers, baselines }: { customers: ShellCustomer[]; baselines: ShellBaseline[] }) {
   const { customer, baseline, sensitivity, raw, params } = useSelection(customers, baselines);
   const pathname = usePathname();
@@ -115,29 +50,54 @@ function ViewLinks({ customers, baselines }: { customers: ShellCustomer[]; basel
   // Story picks (ADR 0019) travel unvalidated; the Story page validates them.
   const priorities = params.get("priorities");
   if (priorities) q.set("priorities", priorities);
-  return <ViewLinkList pathname={pathname} query={q.size ? `?${q.toString()}` : ""} />;
+  const view = resolveView(params.get("view") ?? undefined);
+  if (view === "customer") q.set("view", view);
+  return <ViewLinkList pathname={pathname} view={view} query={(to) => carryParams(pathname, to, q)} />;
+}
+
+// `?view=` is the one source of truth (ADR 0023): KAM is no param, so the toggle is two links that set or clear it and a reload keeps the choice.
+function ViewToggle() {
+  const pathname = usePathname();
+  const params = useSearchParams();
+  const view = resolveView(params.get("view") ?? undefined);
+  const href = (v: View) => {
+    const q = new URLSearchParams(params.toString());
+    if (v === "customer") q.set("view", "customer");
+    else q.delete("view");
+    return `${pathname}${q.size ? `?${q.toString()}` : ""}`;
+  };
+  return (
+    <div role="group" aria-label="View mode" className="flex">
+      {(["kam", "customer"] as const).map((v) => (
+        <Link
+          key={v}
+          href={href(v)}
+          aria-current={view === v ? "true" : undefined}
+          className={buttonVariants({ variant: view === v ? "default" : "outline", size: "sm" })}
+        >
+          {v === "kam" ? "KAM" : "Customer"}
+        </Link>
+      ))}
+    </div>
+  );
 }
 
 type ShellProps = { children: React.ReactNode; customers: ShellCustomer[]; baselines: ShellBaseline[] };
 
 // `pathname` is undefined in the Suspense fallback, which shows the pickers and the default sidebar.
 function Frame({ children, customers, baselines, pathname }: ShellProps & { pathname?: string }) {
-  const role = useRoleStore((s) => s.role);
-  const setRole = useRoleStore((s) => s.setRole);
   // The game is the only place its choices are made, so its sidebar starts collapsed; once the user toggles, their choice wins on every route.
   const isGame = pathname === GAME_PATH;
   const [userOpen, setUserOpen] = useState<boolean | null>(null);
   const sidebarOpen = userOpen ?? !isGame;
-
-  useEffect(() => {
-    useRoleStore.persist.rehydrate();
-  }, []);
+  // On the dashboard the pickers live in its own sidebar (ADR 0023).
+  const onDashboard = pathname !== undefined && (pathname === "/dashboard" || pathname.startsWith("/dashboard/"));
 
   return (
     <div className="flex min-h-screen flex-col">
       <header className="flex flex-wrap items-center gap-3 border-b px-4 py-2">
         <span className="font-semibold">Threadline</span>
-        {!isGame && (
+        {!isGame && !onDashboard && (
           <Suspense
             fallback={
               <Button variant="outline" size="sm" disabled>
@@ -149,16 +109,15 @@ function Frame({ children, customers, baselines, pathname }: ShellProps & { path
           </Suspense>
         )}
         <div className="ml-auto flex items-center gap-2">
-          <ToggleGroup
-            aria-label="Role"
-            variant="outline"
-            spacing={0}
-            value={[role]}
-            onValueChange={(v) => v[0] && setRole(v[0] as Role)}
+          <Suspense
+            fallback={
+              <Button variant="outline" size="sm" disabled>
+                KAM
+              </Button>
+            }
           >
-            <ToggleGroupItem value="kam">KAM</ToggleGroupItem>
-            <ToggleGroupItem value="customer">Customer</ToggleGroupItem>
-          </ToggleGroup>
+            <ViewToggle />
+          </Suspense>
           <ThemeToggle />
           <Button
             variant="ghost"
@@ -173,7 +132,7 @@ function Frame({ children, customers, baselines, pathname }: ShellProps & { path
         </div>
       </header>
       <nav aria-label="Views" className="flex gap-1 border-b px-4 py-2">
-        <Suspense fallback={<ViewLinkList query="" />}>
+        <Suspense fallback={<ViewLinkList query={() => ""} />}>
           <ViewLinks customers={customers} baselines={baselines} />
         </Suspense>
       </nav>

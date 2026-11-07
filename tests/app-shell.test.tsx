@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const push = vi.fn();
 let search = "";
-let path = "/dashboard";
+let path = "/impact";
 vi.mock("next/navigation", () => ({
   usePathname: () => path,
   useRouter: () => ({ push }),
@@ -28,7 +28,7 @@ const shell = () => render(<AppShell customers={customers} baselines={baselines}
 beforeEach(() => {
   push.mockClear();
   search = "";
-  path = "/dashboard";
+  path = "/impact";
 });
 afterEach(cleanup);
 
@@ -47,13 +47,14 @@ describe("AppShell customer picker", () => {
     await userEvent.click(screen.getByRole("combobox", { name: "Customer" }));
     expect(screen.getAllByRole("option").map((o) => o.textContent)).toEqual(["NorthStar Foods Group", "Other Co"]);
     await userEvent.click(screen.getByRole("option", { name: "Other Co" }));
-    expect(push).toHaveBeenCalledWith("/dashboard?customer=CUST002");
+    expect(push).toHaveBeenCalledWith("/impact?customer=CUST002");
   });
 });
 
 describe("AppShell view links", () => {
   it("keep the selected customer", () => {
     search = "customer=CUST002";
+    path = "/story";
     shell();
     expect(screen.getByRole("link", { name: "Story" }).getAttribute("href")).toBe("/story/game?customer=CUST002");
   });
@@ -91,14 +92,14 @@ describe("AppShell baseline and sensitivity selectors", () => {
     shell();
     await userEvent.click(screen.getByRole("combobox", { name: "Baseline" }));
     await userEvent.click(await screen.findByRole("option", { name: "home washing" }));
-    expect(push).toHaveBeenCalledWith("/dashboard?customer=CUST002&sensitivity=high&baseline=B_HOME");
+    expect(push).toHaveBeenCalledWith("/impact?customer=CUST002&sensitivity=high&baseline=B_HOME");
   });
   it("changing the customer keeps baseline and sensitivity", async () => {
     search = "baseline=B_HOME&sensitivity=low";
     shell();
     await userEvent.click(screen.getByRole("combobox", { name: "Customer" }));
     await userEvent.click(await screen.findByRole("option", { name: "Other Co" }));
-    expect(push).toHaveBeenCalledWith("/dashboard?baseline=B_HOME&sensitivity=low&customer=CUST002");
+    expect(push).toHaveBeenCalledWith("/impact?baseline=B_HOME&sensitivity=low&customer=CUST002");
   });
   it("view links keep all three params", () => {
     search = "customer=CUST002&baseline=B_HOME&sensitivity=low";
@@ -173,5 +174,57 @@ describe("AppShell print route", () => {
     path = "/story/print";
     shell();
     expect(screen.queryByRole("link", { name: "Story" })).toBeNull();
+  });
+});
+
+describe("AppShell view mode (?view=)", () => {
+  const names = () => screen.getAllByRole("link").map((l) => l.textContent);
+  it("shows Dashboard, Impact World and Story for KAM", () => {
+    shell();
+    expect(screen.getAllByRole("navigation", { name: "Views" })[0].textContent).toContain("Dashboard");
+  });
+  it("hides the Dashboard link in customer view", () => {
+    search = "view=customer";
+    shell();
+    expect(screen.queryByRole("link", { name: "Dashboard" })).toBeNull();
+    expect(names()).toEqual(expect.arrayContaining(["Story", "Impact World"]));
+  });
+  it("the toggle sets and clears ?view= and keeps other params", () => {
+    search = "customer=CUST002";
+    shell();
+    expect(screen.getByRole("link", { name: "Customer" }).getAttribute("href")).toBe("/impact?customer=CUST002&view=customer");
+    expect(screen.getByRole("link", { name: "KAM" }).getAttribute("href")).toBe("/impact?customer=CUST002");
+  });
+  it("marks the mode from the URL, so a reload keeps it", () => {
+    search = "view=customer";
+    shell();
+    expect(screen.getByRole("link", { name: "Customer" }).getAttribute("aria-current")).toBe("true");
+    expect(screen.getByRole("link", { name: "KAM" }).getAttribute("aria-current")).toBeNull();
+  });
+  it("an unknown view is KAM", () => {
+    search = "view=admin";
+    shell();
+    expect(screen.getByRole("link", { name: "KAM" }).getAttribute("aria-current")).toBe("true");
+  });
+});
+
+describe("AppShell on the dashboard", () => {
+  it("leaving for Story or Impact World drops customer, baseline and sensitivity and keeps view", () => {
+    path = "/dashboard";
+    search = "customer=CUST002&baseline=B_HOME&sensitivity=high&priorities=water&view=customer";
+    shell();
+    expect(screen.getByRole("link", { name: "Story" }).getAttribute("href")).toBe("/story/game?view=customer");
+    expect(screen.getByRole("link", { name: "Impact World" }).getAttribute("href")).toBe("/impact?view=customer");
+  });
+  it("leaving as KAM adds nothing", () => {
+    path = "/dashboard/costs";
+    search = "customer=CUST002&baseline=B_HOME";
+    shell();
+    expect(screen.getByRole("link", { name: "Story" }).getAttribute("href")).toBe("/story/game");
+  });
+  it("shows no pickers in the header (they are in the dashboard sidebar)", () => {
+    path = "/dashboard/sites/S1";
+    shell();
+    for (const name of ["Customer", "Baseline", "Sensitivity"]) expect(screen.queryByRole("combobox", { name })).toBeNull();
   });
 });

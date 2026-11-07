@@ -1,152 +1,17 @@
-import { Suspense } from "react";
 import { FactStatCard } from "@/components/fact-stat-card";
-import { ObservationCard } from "@/components/observation-card";
-import { Panel } from "@/components/panel";
-import { SectionHeader } from "@/components/section-header";
-import { EmptyState, StatCardSkeleton } from "@/components/states";
-import { SiteTable, SiteTableSkeleton } from "@/components/site-table";
-import { resolveCustomer } from "@/lib/customer";
-import { generatedSource } from "@/lib/data/generated";
-import { baselineShortName, footprintFacts, footprintGroup, observations as observationsFor, operationalFacts, operationalSiteRows, percentageFacts, valueFacts } from "@/lib/engine";
-import { formatPeriod } from "@/lib/format";
-import { SENSITIVITY_LABEL, resolveBaseline, resolveSensitivity, siteHref } from "@/lib/selection";
+import { sectionFacts } from "@/lib/dashboard";
+import { SectionPage } from "./_section-page";
 
-// Full year 2025, fixed in this version. Every engine call takes it as an argument, so a period picker only changes this.
-const PERIOD = { from: "2025-01", to: "2025-12" };
-
-// searchParams is runtime data, so it is read inside Suspense and the heading and skeleton prerender.
 export default function Page({ searchParams }: PageProps<"/dashboard">) {
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-semibold">Dashboard</h1>
-      <Suspense
-        fallback={
-          <div className="space-y-6">
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              {[0, 1, 2, 3].map((i) => (
-                <StatCardSkeleton key={i} />
-              ))}
-            </div>
-            <SiteTableSkeleton />
-          </div>
-        }
-      >
-        <DashboardContent searchParams={searchParams} />
-      </Suspense>
-    </div>
-  );
-}
-
-async function DashboardContent({ searchParams }: { searchParams: PageProps<"/dashboard">["searchParams"] }) {
-  const [data, params] = await Promise.all([generatedSource.load(), searchParams]);
-  const { customer, rejected } = resolveCustomer(params.customer, data.customers);
-  const scope = { customerId: customer.customer_id, period: PERIOD };
-  const facts = operationalFacts(data, scope);
-  const { baseline, rejected: badBaseline } = resolveBaseline(params.baseline, data.baselines);
-  const { sensitivity, rejected: badSensitivity } = resolveSensitivity(params.sensitivity);
-  const short = baselineShortName(baseline);
-  const { observations, facts: observationFacts } = observationsFor(data, scope);
-  const linkParams = { customer: customer.customer_id, baseline: baseline.baseline_id, sensitivity };
-  const siteName = (id: string) => data.sites.find((s) => s.site_id === id)?.site_name ?? id;
-  const footprint = footprintFacts(data, scope, baseline, sensitivity);
-  const footprintGroups = [
-    { title: `Saved vs ${short}`, group: "saved" },
-    { title: "Service footprint", group: "service" },
-    { title: "Delivery footprint", group: "delivery" },
-  ] as const;
-  return (
-    <div className="space-y-6">
-      {rejected !== null && (
-        <Panel role="status">
-          <p className="text-sm">
-            &quot;{rejected}&quot; is not a known customer, so {customer.customer_name} is shown instead.
-          </p>
-        </Panel>
-      )}
-      {badBaseline !== null && (
-        <Panel role="status">
-          <p className="text-sm">
-            &quot;{badBaseline}&quot; is not a known baseline, so {short} is shown instead.
-          </p>
-        </Panel>
-      )}
-      {badSensitivity !== null && (
-        <Panel role="status">
-          <p className="text-sm">
-            &quot;{badSensitivity}&quot; is not a known sensitivity level, so base is shown instead.
-          </p>
-        </Panel>
-      )}
-      <section className="space-y-4">
-        <SectionHeader title={customer.customer_name} description={formatPeriod(PERIOD)} />
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {facts.map((f) => (
+    <SectionPage slug="overview" searchParams={searchParams}>
+      {({ data, scope }) => (
+        <div className="grid gap-3 grid-cols-[repeat(auto-fill,minmax(13rem,1fr))]">
+          {sectionFacts(data, scope).overview.map((f) => (
             <FactStatCard key={f.id} fact={f} />
           ))}
         </div>
-      </section>
-      <section className="space-y-4">
-        <SectionHeader
-          title="Money and utilization"
-          description="Avoided cost is the full year; value kept in use, unused allocation and utilization are December 2025."
-        />
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {valueFacts(data, scope).map((f) => (
-            <FactStatCard key={f.id} fact={f} />
-          ))}
-        </div>
-      </section>
-      <section className="space-y-4">
-        <SectionHeader
-          title="Percentages"
-          description="On-time rate is over sampled cycles; repairs per 100 garments are full-year repair events over December pieces; waste share is allocated by washed-kg share."
-        />
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {percentageFacts(data, scope).map((f) => (
-            <FactStatCard key={f.id} fact={f} />
-          ))}
-        </div>
-      </section>
-      <section className="space-y-4">
-        <SectionHeader
-          title="Footprint"
-          description={`Full year 2025 against the ${short} baseline, ${SENSITIVITY_LABEL[sensitivity]} (A001, T002). Baseline values are illustrative; only the saved cards move with sensitivity. Route kilometres are not in the data pack, so delivery is not estimated from distance.`}
-        />
-        {footprintGroups.map(({ title, group }) => (
-          <div key={group} className="space-y-2">
-            <h3 className="text-sm font-medium text-muted-foreground">{title}</h3>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              {footprintGroup(footprint, group).map((f) => (
-                <FactStatCard key={f.id} fact={f} />
-              ))}
-            </div>
-          </div>
-        ))}
-      </section>
-      <section className="space-y-4">
-        <SectionHeader
-          title="Observations"
-          description="Rule-based readings of the data, full year 2025. Thresholds are team assumptions (T003 to T010); open Show math to see them."
-        />
-        {observations.length === 0 ? (
-          <EmptyState title="No observations" hint="No rule fired for this customer." />
-        ) : (
-          <div className="grid gap-3 lg:grid-cols-2">
-            {observations.map((o) => (
-              <ObservationCard
-                key={o.id}
-                observation={o}
-                facts={o.factIds.map((id) => observationFacts.find((f) => f.id === id)!)}
-                sites={o.scope.siteIds.map((id) => ({ siteId: id, siteName: siteName(id), href: siteHref(id, linkParams) }))}
-              />
-            ))}
-          </div>
-        )}
-      </section>
-      <section className="space-y-4">
-        <SectionHeader title="Sites" description="Wearers and garments are December 2025; repairs and requests are the full year." />
-        <SiteTable table={operationalSiteRows(data, scope)} />
-      </section>
-    </div>
+      )}
+    </SectionPage>
   );
 }

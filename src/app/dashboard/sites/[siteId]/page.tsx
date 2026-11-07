@@ -8,11 +8,9 @@ import { SectionHeader } from "@/components/section-header";
 import { StatCardSkeleton } from "@/components/states";
 import { resolveCustomer } from "@/lib/customer";
 import { generatedSource } from "@/lib/data/generated";
+import { PERIOD } from "@/lib/dashboard";
 import { siteComparison, siteFacts } from "@/lib/engine";
 import { formatPeriod } from "@/lib/format";
-
-// Same fixed period as the dashboard; every engine call takes it as an argument.
-const PERIOD = { from: "2025-01", to: "2025-12" };
 
 // params and searchParams are runtime data, so they are read inside Suspense and the skeleton prerenders.
 export default function Page({ params, searchParams }: PageProps<"/dashboard/sites/[siteId]">) {
@@ -57,11 +55,11 @@ async function SiteContent({
     <div className="space-y-6">
       <div className="space-y-2">
         <Link
-          href={`/dashboard?customer=${encodeURIComponent(customer.customer_id)}`}
+          href={`/dashboard/sites?customer=${encodeURIComponent(customer.customer_id)}`}
           className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft aria-hidden className="size-4" />
-          Back to dashboard
+          Back to sites
         </Link>
         <h1 className="text-2xl font-semibold">{site.site_name}</h1>
         <p className="text-sm text-muted-foreground">
