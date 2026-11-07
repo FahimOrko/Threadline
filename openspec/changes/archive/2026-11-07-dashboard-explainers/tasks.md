@@ -40,4 +40,4 @@
 
 - [x] 7.1 Reproduce the `tests/story-print.test.tsx` timeout under the full suite; fix the cause or raise that test's timeout with a why-comment
 - [x] 7.2 `npm test`, `npm run lint`, `npm run check:contrast`, `npm run check:design-imports`, `npm run build`
-- [ ] 7.3 Check every dashboard section and `/design` at 1230px and 1280px in dark and light; do not commit
+- [x] 7.3 Check every dashboard section and `/design` at 1230px and 1280px in dark and light; do not commit

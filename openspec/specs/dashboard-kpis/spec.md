@@ -95,11 +95,11 @@ The dashboard SHALL show, below the operational cards, one card each for Avoided
 - **THEN** the four cards show that customer's values
 
 ### Requirement: Needs input instead of a number
-A dashboard card whose Fact has no value SHALL show "Needs input" in place of the value, with a hint naming the missing assumption, and SHALL NOT show 0 or NaN.
+A dashboard card whose Fact has no value SHALL show "Needs input" in place of the value, with a hint in plain words naming what is missing and who can supply it (for the rental fee: "Needs a rental fee from Lindström"), and SHALL NOT show 0 or NaN or an assumption id on screen. The assumption id SHALL stay in Show math.
 
 #### Scenario: T001 unset
-- **WHEN** the dashboard shows Cost of unused allocation while T001 is unset
-- **THEN** the card reads "Needs input", names T001, keeps its amber chip and offers Show math
+- **WHEN** the dashboard shows Cost of unused allocation while the rental fee is unset
+- **THEN** the card reads "Needs input" with "Needs a rental fee from Lindström", keeps its amber chip and offers Show math, which lists T001
 
 ### Requirement: Percentage cards
 The dashboard SHALL show, under a "Percentages" heading, the on-time cycle rate, one "Repairs per 100 garments (Dec)" card per product the customer has, and the recycling and reuse share of textile waste for the selected customer, each with value, provenance chip and Show math, identical for the KAM and Customer roles and following `?customer=`.

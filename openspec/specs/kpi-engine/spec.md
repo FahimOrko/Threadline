@@ -319,11 +319,15 @@ Each monthly series SHALL also carry the total for the last 3, 6 and 12 months (
 - **THEN** the series has no trend, never an infinite or empty percent
 
 ### Requirement: Site by month matrix
-The engine SHALL provide, for utilization and for repairs, one row per site with one cell per month, each cell carrying its value and a level from 0 to 4 assigned by the engine in five equal steps from the lowest to the highest cell of the customer's matrix.
+The engine SHALL provide, for utilization and for repairs, one row per site with one cell per month, each cell carrying its value and a `highlight` flag (the five-step level is removed: cells are neutral or highlighted), and each row carrying its count of highlighted months. For utilization a cell SHALL be highlighted when its value is below the over-allocation cut-off (none while the cut-off is unset); for repairs when the repair band flags that month as a spike.
 
 #### Scenario: Matrix equals series
 - **WHEN** a site's cells are compared with the monthly series for that site
 - **THEN** the values are equal
+
+#### Scenario: Highlights agree with the rules
+- **WHEN** the highlighted repair months are compared with the repair spike signal
+- **THEN** they are the same months, and utilization highlights are exactly the cells below the cut-off
 
 ### Requirement: Repair band
 The engine SHALL provide, for each site the repair spike rule examines, the monthly repairs with the mean, the threshold and a spike flag, using the same team assumptions as the spike rule.
@@ -333,12 +337,16 @@ The engine SHALL provide, for each site the repair spike rule examines, the mont
 - **THEN** they are the same months
 
 ### Requirement: Footprint comparison
-The engine SHALL provide, for a baseline and a sensitivity level, the comparison and service total per metric (water, energy, CO₂e), the CO₂e waterfall steps with a start, an end and a signed change each, and the composition parts for process versus delivery and for recycled or reused versus other textile waste, all built from the totals the footprint Facts use.
+The engine SHALL provide, for a baseline and a sensitivity level, the comparison and service total per metric (water, energy, CO₂e), the comparison's delivery emissions, the net CO₂e saving, the composition parts for process versus delivery, and the allocated textile waste by treatment (recycling, reuse, energy recovery, incineration), all built from the totals the footprint Facts use. It SHALL provide a Fact `comparison_footprint` (what the comparison would emit, CO₂e) with provenance and Show math.
 
 #### Scenario: Savings agree
 - **WHEN** comparison minus service is computed for each metric and sensitivity level
 - **THEN** it equals the matching saved Fact
 
 #### Scenario: Waterfall closes
-- **WHEN** the last waterfall step is read
-- **THEN** its end equals the service total, and the net saving equals the CO₂e saved Fact
+- **WHEN** the comparison Fact is compared with the service total and the net saving
+- **THEN** comparison equals service total plus net saving, and the net saving equals the CO₂e saved Fact
+
+#### Scenario: Waste parts
+- **WHEN** the four waste parts are added
+- **THEN** they equal the allocated waste total within the pack's own rounding (each treatment is given to 0.1 kg; under 0.05 %), and recycling plus reuse equals the recycled-or-reused amount behind the recycling share Fact

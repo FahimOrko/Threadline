@@ -17,30 +17,30 @@ After its intro, the Overview SHALL show grouped panels instead of one card per 
 - **THEN** the panels stay readable with no sideways scroll and no chip wraps
 
 ### Requirement: Sites named under counts
-A figure that counts sites SHALL name them as links to their site pages, keeping the customer, baseline and sensitivity. The Overview SHALL show up to three names under the figure and "+N more" linking to the Signals page at that signal; the Signals page SHALL list all. The names SHALL come from the engine's observations for the same signal as the count.
+A figure that counts sites SHALL name them as links to their site pages, keeping the customer, baseline and sensitivity. The Overview SHALL show up to three names under the figure and "+N more" as a link to the Signals page at that signal, keeping the same params; the Signals page SHALL list all. The names SHALL come from the engine's observations for the same signal as the count.
 
 #### Scenario: Names match the count
-- **WHEN** the Overview shows "2 sites" with Critical dormant garments for CUST001
+- **WHEN** the Overview shows "2 sites" with garments unused too long for CUST001
 - **THEN** two site names are shown, each linking to `/dashboard/sites/{id}` with the current params
 
 #### Scenario: More than three
 - **WHEN** a signal flags five sites
-- **THEN** three names and "+2 more" are shown, the last linking to the Signals page at that signal
+- **THEN** three names and "+2 more" are shown, the last linking to the Signals page at that signal with the params kept
 
 ### Requirement: Trend indicator
-A card with an engine monthly series SHALL show a trend badge from the series' `trend`: a word (Up, Down or Flat), a Phosphor glyph and the signed percent. It SHALL NOT use colour alone and SHALL NOT say whether the change is good or bad. Its tooltip, and Show math, SHALL state the exact comparison period, for example "Oct to Dec 2025 against Jul to Sep 2025" or "Dec 2025 against Sep 2025". A card without a monthly series (on-time cycle rate, critical dormant sites) SHALL show no trend badge and no invented trend.
+A figure with an engine monthly series SHALL show its change from the series' `trend` as the signed percent with its comparison spans next to the figure it belongs to (for example "+10.3% Oct–Dec vs Jul–Sep", or "−3.2% Dec vs Sep" for a snapshot), never on a panel header. It SHALL NOT repeat the direction as a word ("Up +10.3%"), SHALL NOT say whether the change is good or bad and SHALL stay neutral in colour. Screen readers SHALL get the direction and the exact periods. A figure without a monthly series (on-time cycle rate, sites with garments unused too long) SHALL show no trend and no invented trend.
 
 #### Scenario: Trend
-- **WHEN** the water saved card renders and the engine's trend is up
-- **THEN** the badge reads "Up" with an up glyph and the engine's percent
+- **WHEN** the water saved figure renders and the engine's trend is up
+- **THEN** it shows the engine's signed percent and "Oct–Dec vs Jul–Sep" beside the value, with no word "Up"
 
 #### Scenario: Tooltip names the period
-- **WHEN** the KAM hovers or focuses a trend badge
-- **THEN** the tooltip states the two periods compared
+- **WHEN** the KAM reads or focuses a trend
+- **THEN** the two periods compared are stated in full (visibly in short form, to screen readers in full)
 
 #### Scenario: No monthly data
-- **WHEN** the on-time rate card renders
-- **THEN** it has no trend badge and no sparkline
+- **WHEN** the on-time rate figure renders
+- **THEN** it has no trend and no sparkline
 
 ### Requirement: Sparkline and comparison
 A card SHALL show a sparkline of the engine's monthly series for water saved, CO₂e saved, avoided purchase cost and garment utilization. The water and CO₂e cards SHALL show a thin comparison bar of Lindström against the selected comparison laundry from the engine's footprint comparison; the utilization card SHALL show the over-allocation cut-off as a tick. A card without a sparkline SHALL show a short fixed context line in the sparkline's slot, so no slot is left empty.
