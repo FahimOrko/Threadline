@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { EmptyState } from "@/components/states";
 import { Panel } from "@/components/panel";
 import { ProvenanceChip } from "@/components/provenance-chip";
@@ -64,7 +65,12 @@ export function SiteTable({ table, openColumn }: { table: SiteRows; openColumn?:
           {table.rows.map((r) => (
             <tr key={r.siteId} className="h-7 border-b last:border-b-0">
               <th scope="row" className="px-3 text-left font-normal">
-                {r.siteName}
+                <Link
+                  href={`/dashboard/sites/${encodeURIComponent(r.siteId)}?customer=${encodeURIComponent(table.scope.customerId)}`}
+                  className="underline-offset-2 hover:underline focus-visible:underline"
+                >
+                  {r.siteName}
+                </Link>
               </th>
               {COLUMNS.map((k) => (
                 <td key={k} className="num px-2 text-right">

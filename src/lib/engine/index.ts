@@ -1,4 +1,6 @@
-export { requireValue } from "./fact";
+export { factScope, inScope, requireValue } from "./fact";
+export { repairsPer100Garments, siteComparison, siteFacts } from "./site";
+export type { SiteComparison, SiteScope } from "./site";
 export type { Fact, Period } from "./fact";
 export { replacementsPostponed } from "./replacements-postponed";
 export {

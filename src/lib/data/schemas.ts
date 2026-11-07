@@ -143,6 +143,14 @@ export const laundryResourceSchema = z.strictObject({
   data_status: text,
 });
 
+export const laundrySchema = z.strictObject({
+  laundry_id: text,
+  laundry_name: text,
+  country: text,
+  country_code: text,
+  note: text,
+});
+
 export const baselineSchema = z.strictObject({
   baseline_id: text,
   baseline_name: text,
@@ -166,6 +174,7 @@ export type ServiceCycle = z.infer<typeof serviceCycleSchema>;
 export type WasteCircularity = z.infer<typeof wasteCircularitySchema>;
 export type CustomerImpact = z.infer<typeof customerImpactSchema>;
 export type LaundryResource = z.infer<typeof laundryResourceSchema>;
+export type Laundry = z.infer<typeof laundrySchema>;
 export type Baseline = z.infer<typeof baselineSchema>;
 /** Build-time aggregate of service_cycles: raw cycles never reach the browser. */
 export type CycleCount = { customer_id: string; site_id: string; cycles: number; on_time: number };
@@ -185,6 +194,7 @@ export type AppData = {
   wasteCircularity: WasteCircularity[];
   impactAllocation: ImpactAllocation[];
   laundryResources: LaundryResource[];
+  laundries: Laundry[];
   baselines: Baseline[];
 };
 
@@ -201,4 +211,5 @@ export const SHEETS = {
   Customer_Impacts: { key: "customerImpacts", schema: customerImpactSchema },
   Laundry_Resources: { key: "laundryResources", schema: laundryResourceSchema },
   Baselines: { key: "baselines", schema: baselineSchema },
+  Laundries: { key: "laundries", schema: laundrySchema },
 } as const;

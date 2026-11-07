@@ -18,6 +18,8 @@ const wasteRow = "2025-01,L001,80,10,5,5,100,0.02,S";
 const impactRow = (month: string, laundry = "L001") => `${month},CUST001,S001,${laundry},P1,10,0.1,1,1,1,1,10,1,1,1,S`;
 const saRow = "2025-01,CUST001,S001,L001,P1,5,7,4,10,9,150.5,12.5,1,S";
 
+const laundriesColumns = ["laundry_id", "laundry_name", "country", "country_code", "note"];
+
 const dictionary = [
   "sheet,field,definition,join_role,default_status",
   ...["customer_id", "site_id", "site_name", "country", "city", "site_type", "primary_laundry_id", "data_status"].map(
@@ -41,6 +43,7 @@ const dictionary = [
   ...impactColumns.map((f) => `Customer_Impacts,${f},x,,`),
   ...laundryColumns.map((f) => `Laundry_Resources,${f},x,,`),
   ...baselineColumns.map((f) => `Baselines,${f},x,,`),
+  ...laundriesColumns.map((f) => `Laundries,${f},x,,`),
 ].join("\n");
 
 const repairsHeader =
@@ -60,6 +63,7 @@ const files = (repairs: string): Record<string, string> => ({
   customer_impacts: `${impactColumns.join(",")}\n${impactRow("2025-01")}`,
   laundry_resources: `${laundryColumns.join(",")}\n${laundryRow("2025-01")}`,
   baselines: `${baselineColumns.join(",")}\n${baselineRow}`,
+  laundries: `${laundriesColumns.join(",")}\nL001,Aurora,Finland,FI,n`,
 });
 
 describe("checkHeader", () => {
@@ -137,7 +141,7 @@ describe("service_activity sheet", () => {
   });
   it("reads all 1,248 rows of the pack without invalid rows", async () => {
     const { readFileSync } = await import("node:fs");
-    const stems = ["data_dictionary", "repairs", "sites", "customers", "assumptions", "service_activity", "products", "service_cycles", "waste_circularity", "customer_impacts", "laundry_resources", "baselines"];
+    const stems = ["data_dictionary", "repairs", "sites", "customers", "assumptions", "service_activity", "products", "service_cycles", "waste_circularity", "customer_impacts", "laundry_resources", "baselines", "laundries"];
     const { report } = buildData(Object.fromEntries(stems.map((x) => [x, readFileSync(`data/raw/${x}.csv`, "utf8")])));
     expect(report.files.serviceActivity).toMatchObject({ read: 1248, valid: 1248, invalid: [] });
   });
@@ -156,7 +160,7 @@ describe("products sheet", () => {
   });
   it("reads the 6 products of the pack without invalid rows", async () => {
     const { readFileSync } = await import("node:fs");
-    const stems = ["data_dictionary", "repairs", "sites", "customers", "assumptions", "service_activity", "products", "service_cycles", "waste_circularity", "customer_impacts", "laundry_resources", "baselines"];
+    const stems = ["data_dictionary", "repairs", "sites", "customers", "assumptions", "service_activity", "products", "service_cycles", "waste_circularity", "customer_impacts", "laundry_resources", "baselines", "laundries"];
     const { report } = buildData(Object.fromEntries(stems.map((x) => [x, readFileSync(`data/raw/${x}.csv`, "utf8")])));
     expect(report.files.products).toMatchObject({ read: 6, valid: 6, invalid: [] });
     expect(report.files.repairs.crossChecks.at(-1)).toMatchObject({ passed: true });
@@ -221,6 +225,7 @@ describe("service_cycles sheet", () => {
     expect(() => buildData({ ...f, waste_circularity: `${wasteColumns.slice(1).join(",")}\n` })).toThrow(/waste_circularity\.csv: missing \[month\]/);
     expect(() => buildData({ ...f, customer_impacts: `${impactColumns.slice(1).join(",")}\n` })).toThrow(/customer_impacts\.csv: missing \[month\]/);
     expect(() => buildData({ ...f, laundry_resources: `${laundryColumns.slice(1).join(",")}\n` })).toThrow(/laundry_resources\.csv: missing \[month\]/);
+    expect(() => buildData({ ...f, laundries: `${laundriesColumns.slice(1).join(",")}\n` })).toThrow(/laundries\.csv: missing \[laundry_id\]/);
     expect(() => buildData({ ...f, baselines: `${baselineColumns.slice(1).join(",")}\n` })).toThrow(/baselines\.csv: missing \[baseline_id\]/);
   });
 });
@@ -237,7 +242,7 @@ describe("waste reference", () => {
   });
   it("passes on the pack and aggregates waste per customer, laundry and month", async () => {
     const { readFileSync } = await import("node:fs");
-    const stems = ["data_dictionary", "repairs", "sites", "customers", "assumptions", "service_activity", "products", "service_cycles", "waste_circularity", "customer_impacts", "laundry_resources", "baselines"];
+    const stems = ["data_dictionary", "repairs", "sites", "customers", "assumptions", "service_activity", "products", "service_cycles", "waste_circularity", "customer_impacts", "laundry_resources", "baselines", "laundries"];
     const { data, report } = buildData(Object.fromEntries(stems.map((x) => [x, readFileSync(`data/raw/${x}.csv`, "utf8")])));
     expect(report.files.customerImpacts.crossChecks[0]).toMatchObject({ passed: true });
     expect(data.impactAllocation).toHaveLength(60);
@@ -251,6 +256,25 @@ describe("waste reference", () => {
     expect(data.impactAllocation.filter((a) => a.customer_id === "CUST001").reduce((s, a) => s + a.customer_washed_kg, 0)).toBeCloseTo(csvKg, 3);
     expect(data.cycleCounts.reduce((s, c) => s + c.cycles, 0)).toBe(16415);
     expect(report.files.serviceCycles.crossChecks[0].disagreements).toHaveLength(1107);
+  });
+});
+
+describe("laundry reference", () => {
+  const f = files(`${repairsHeader}\n${good}`);
+  it("fails naming the unknown laundry and the sites sheet", () => {
+    const bad = { ...f, sites: f.sites.replace("L001,S", "L999,S") };
+    expect(() => buildData(bad)).toThrow(UnknownReferenceError);
+    expect(() => buildData(bad)).toThrow("sites: unknown primary_laundry_id [L999]");
+  });
+  it("passes when the laundry exists", () => {
+    expect(buildData(f).report.files.sites.crossChecks[0]).toMatchObject({ passed: true });
+  });
+  it("loads the four laundries of the pack", async () => {
+    const { readFileSync } = await import("node:fs");
+    const stems = ["data_dictionary", "repairs", "sites", "customers", "assumptions", "service_activity", "products", "service_cycles", "waste_circularity", "customer_impacts", "laundry_resources", "baselines", "laundries"];
+    const { data, report } = buildData(Object.fromEntries(stems.map((x) => [x, readFileSync(`data/raw/${x}.csv`, "utf8")])));
+    expect(data.laundries).toHaveLength(4);
+    expect(report.files.laundries).toMatchObject({ read: 4, valid: 4, invalid: [] });
   });
 });
 

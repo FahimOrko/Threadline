@@ -58,10 +58,10 @@ function CustomerPicker({ customers }: { customers: ShellCustomer[] }) {
   );
 }
 
-function ViewLinkList({ query }: { query: string }) {
-  const pathname = usePathname();
+// `pathname` is undefined in the Suspense fallback: usePathname() suspends on a dynamic route, so the fallback shows no active view.
+function ViewLinkList({ query, pathname }: { query: string; pathname?: string }) {
   return views.map(({ href, label }) => {
-    const active = pathname === href;
+    const active = pathname !== undefined && (pathname === href || pathname.startsWith(`${href}/`));
     return (
       <Link
         key={href}
@@ -78,7 +78,8 @@ function ViewLinkList({ query }: { query: string }) {
 // Keeps the chosen customer across views; without the param the links stay clean.
 function ViewLinks({ customers }: { customers: ShellCustomer[] }) {
   const { customer, hasParam } = useSelectedCustomer(customers);
-  return <ViewLinkList query={hasParam ? `?customer=${encodeURIComponent(customer.customer_id)}` : ""} />;
+  const pathname = usePathname();
+  return <ViewLinkList pathname={pathname} query={hasParam ? `?customer=${encodeURIComponent(customer.customer_id)}` : ""} />;
 }
 
 export function AppShell({ children, customers }: { children: React.ReactNode; customers: ShellCustomer[] }) {

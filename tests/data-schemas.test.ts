@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { baselineSchema, laundryResourceSchema, repairSchema, serviceActivitySchema } from "@/lib/data/schemas";
+import { baselineSchema, laundrySchema, laundryResourceSchema, repairSchema, serviceActivitySchema } from "@/lib/data/schemas";
 
 const row = {
   month: "2025-01", customer_id: "CUST001", site_id: "S001", product_id: "P1002", laundry_id: "L001",
@@ -57,6 +57,13 @@ describe("laundryResourceSchema", () => {
   it("accepts a valid row", () => expect(laundryResourceSchema.parse(laundryRow).washed_kg).toBe(120569));
   it("rejects a blank number", () => expect(laundryResourceSchema.safeParse({ ...laundryRow, washed_kg: "" }).success).toBe(false));
   it("rejects an unknown column", () => expect(laundryResourceSchema.safeParse({ ...laundryRow, extra: "x" }).success).toBe(false));
+});
+
+const laundriesRow = { laundry_id: "L001", laundry_name: "Aurora Helsinki WWS", country: "Finland", country_code: "FI", note: "n" };
+describe("laundrySchema", () => {
+  it("accepts a valid row", () => expect(laundrySchema.parse(laundriesRow).laundry_name).toBe("Aurora Helsinki WWS"));
+  it("rejects a blank name", () => expect(laundrySchema.safeParse({ ...laundriesRow, laundry_name: "" }).success).toBe(false));
+  it("rejects an unknown column", () => expect(laundrySchema.safeParse({ ...laundriesRow, extra: "x" }).success).toBe(false));
 });
 
 const baselineRow = {

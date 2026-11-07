@@ -1,7 +1,7 @@
 // Money and utilization KPIs (Slice 3, change 2a). Pure: data in, Facts out; display strings come from src/lib/format.
 import type { AppData, Product } from "@/lib/data/schemas";
 import { TEAM_ASSUMPTIONS, type TeamAssumption, type TeamAssumptions } from "./assumptions-config";
-import { requireValue, type Fact } from "./fact";
+import { factScope, inScope, requireValue, type Fact } from "./fact";
 import { garmentsInCirculation, latestRows, type OperationalScope } from "./operational";
 
 type ValueData = Pick<AppData, "sites" | "customers" | "assumptions" | "repairs" | "serviceActivity" | "products">;
@@ -30,13 +30,12 @@ export function teamAssumptionInputs(name: string, a: TeamAssumption): Inputs {
 
 export function build(
   data: ValueData,
-  { customerId, period }: OperationalScope,
+  { customerId, period, siteId }: OperationalScope,
   f: Pick<Fact, "id" | "label" | "value" | "unit" | "methods" | "source" | "assumptionIds" | "confidence" | "formula" | "inputs">,
 ): Fact {
-  const customer = data.customers.find((c) => c.customer_id === customerId);
   return {
     ...f,
-    scope: { customerId, customerName: customer?.customer_name ?? customerId },
+    scope: factScope(data, { customerId, siteId }),
     period,
     baseline: null,
     range: { low: null, base: f.value, high: null },
@@ -61,9 +60,7 @@ function costByProduct(data: ValueData, pieces: { product_id: string; n: number 
 export function avoidedPurchaseCost(data: ValueData, scope: OperationalScope): Fact {
   const a002 = data.assumptions.find((a) => a.assumption_id === "A002");
   if (!a002) throw new Error("Assumption A002 is missing from the assumptions data");
-  const rows = data.repairs.filter(
-    (r) => r.customer_id === scope.customerId && r.month >= scope.period.from && r.month <= scope.period.to,
-  );
+  const rows = data.repairs.filter((r) => inScope(r, scope) && r.month >= scope.period.from && r.month <= scope.period.to);
   const { total, inputs } = costByProduct(data, rows.map((r) => ({ product_id: r.product_id, n: r.repair_count })), "repairs");
   return build(data, scope, {
     id: "avoided_purchase_cost",

@@ -4,7 +4,7 @@ import { buildData } from "@/lib/data/pipeline";
 import { replacementsPostponed, requireValue } from "@/lib/engine";
 
 // Runs the pipeline in-process on data/raw, so no prior `npm run data:build` is needed.
-const stems = ["data_dictionary", "repairs", "sites", "customers", "assumptions", "service_activity", "products", "service_cycles", "waste_circularity", "customer_impacts", "laundry_resources", "baselines"];
+const stems = ["data_dictionary", "repairs", "sites", "customers", "assumptions", "service_activity", "products", "service_cycles", "waste_circularity", "customer_impacts", "laundry_resources", "baselines", "laundries"];
 const { data } = buildData(Object.fromEntries(stems.map((s) => [s, readFileSync(`data/raw/${s}.csv`, "utf8")])));
 const year = { from: "2025-01", to: "2025-12" };
 

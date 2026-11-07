@@ -29,6 +29,7 @@ Read before coding, together with `docs/adr/README.md`. Add a new convention her
 - The AI never writes digits; it uses fact tokens.
 - A table whose columns differ in method carries a compact ProvenanceChip and Show math per column header, with the full method and source in Show math.
 - Values only the team or Lindström can supply go in `src/lib/engine/assumptions-config.ts` with a T-prefixed id, are unset as `null` (never a placeholder) and render as assumed (ADR 0016).
+- A site page narrows the same Facts with `siteId` in the scope (`inScope`, `factScope` in `src/lib/engine/fact.ts`). A Fact the data cannot split by site is left out and the page says so; a customer-level number never stands in for it.
 - A baseline is always a parameter of an engine function, never read inside it. The dashboard passes the row with `DEFAULT_BASELINE_ID` until the selector (Slice 4).
 - A reference a computation depends on (e.g. `product_id` for money KPIs) fails the build, naming the ids and the sheet. A row that is merely unmapped is counted in the data-quality report and excluded.
 

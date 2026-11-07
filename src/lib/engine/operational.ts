@@ -1,19 +1,20 @@
 // Operational KPIs (Slice 3, change 1). Pure: data in, Facts out; display strings come from src/lib/format.
 import type { AppData } from "@/lib/data/schemas";
 import type { Method } from "@/lib/provenance";
-import { requireValue, type Fact, type Period } from "./fact";
+import { factScope, inScope, requireValue, type Fact, type Period } from "./fact";
 import { replacementsPostponed } from "./replacements-postponed";
 
 type OperationalData = Pick<AppData, "sites" | "customers" | "assumptions" | "repairs" | "serviceActivity">;
-export type OperationalScope = { customerId: string; period: Period };
+/** `siteId` narrows every Fact to one site (change site-drill-down); without it the scope is the whole customer. */
+export type OperationalScope = { customerId: string; period: Period; siteId?: string };
 
 const NO_RATING = "Not rated (no assumption applies)";
 const inPeriod = (month: string, p: Period) => month >= p.from && month <= p.to;
 const sum = (xs: number[]) => xs.reduce((a, b) => a + b, 0);
 
 /** Service-activity rows of the customer in the latest month of the period. */
-export const latestRows = (data: OperationalData, { customerId, period }: OperationalScope) =>
-  data.serviceActivity.filter((r) => r.customer_id === customerId && r.month === period.to);
+export const latestRows = (data: OperationalData, scope: OperationalScope) =>
+  data.serviceActivity.filter((r) => inScope(r, scope) && r.month === scope.period.to);
 
 /** Active-wearers rule: maximum across product rows per site (rows repeat the same people), then sum sites. */
 function wearersBySite(rows: OperationalData["serviceActivity"]): Map<string, number> {
@@ -24,16 +25,15 @@ function wearersBySite(rows: OperationalData["serviceActivity"]): Map<string, nu
 
 function fact(
   data: OperationalData,
-  { customerId, period }: OperationalScope,
+  { customerId, period, siteId }: OperationalScope,
   f: Pick<Fact, "id" | "label" | "value" | "unit" | "methods" | "formula" | "inputs">,
 ): Fact {
-  const customer = data.customers.find((c) => c.customer_id === customerId);
   return {
     ...f,
     source: "SYNTHETIC",
     assumptionIds: [],
     confidence: NO_RATING,
-    scope: { customerId, customerName: customer?.customer_name ?? customerId },
+    scope: factScope(data, { customerId, siteId }),
     period,
     baseline: null,
     range: { low: null, base: f.value, high: null },
@@ -97,7 +97,7 @@ export function garmentsInCirculation(data: OperationalData, scope: OperationalS
 }
 
 export function repairs(data: OperationalData, scope: OperationalScope): Fact {
-  const rows = data.repairs.filter((r) => r.customer_id === scope.customerId && inPeriod(r.month, scope.period));
+  const rows = data.repairs.filter((r) => inScope(r, scope) && inPeriod(r.month, scope.period));
   const value = sum(rows.map((r) => r.repair_count));
   return fact(data, scope, {
     id: "repairs",
@@ -110,8 +110,8 @@ export function repairs(data: OperationalData, scope: OperationalScope): Fact {
   });
 }
 
-const requestRows = (data: OperationalData, { customerId, period }: OperationalScope) =>
-  data.serviceActivity.filter((r) => r.customer_id === customerId && inPeriod(r.month, period));
+const requestRows = (data: OperationalData, scope: OperationalScope) =>
+  data.serviceActivity.filter((r) => inScope(r, scope) && inPeriod(r.month, scope.period));
 
 export function serviceRequests(data: OperationalData, scope: OperationalScope): Fact {
   const rows = requestRows(data, scope);

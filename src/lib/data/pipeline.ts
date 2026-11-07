@@ -219,6 +219,16 @@ export function buildData(files: Record<string, string>): { data: AppData; repor
     disagreements: baselineFound ? [] : [{ baseline_id: DEFAULT_BASELINE_ID }],
   });
   if (!baselineFound) problems2.push({ sheet: "baselines", what: "default baseline id missing", ids: [DEFAULT_BASELINE_ID] });
+  // The site page shows the laundry name, so every site's laundry must exist in laundries.
+  const knownLaundries = new Set(data.laundries.map((l) => l.laundry_id));
+  const missingLaundries = [...new Set(data.sites.map((s) => s.primary_laundry_id).filter((id) => !knownLaundries.has(id)))].sort();
+  report.files.sites.crossChecks.push({
+    id: "sites.primary_laundry_id in laundries",
+    checked: data.sites.length,
+    passed: missingLaundries.length === 0,
+    disagreements: missingLaundries.map((laundry_id) => ({ laundry_id })),
+  });
+  if (missingLaundries.length) problems2.push({ sheet: "sites", what: "unknown primary_laundry_id", ids: missingLaundries });
   if (problems2.length) throw new UnknownReferenceError(problems2);
   return { data, report };
 }

@@ -31,6 +31,10 @@ describe("SiteTable", () => {
     expect(within(row).getAllByRole("cell").map((c) => c.textContent)).toEqual(["1 200", "3 400", "15", "2"]);
     expect(screen.getAllByRole("row")).toHaveLength(3);
   });
+  it("links each site name to its page and keeps the customer", () => {
+    render(<SiteTable table={table} />);
+    expect(screen.getByRole("link", { name: "Helsinki" }).getAttribute("href")).toBe("/dashboard/sites/S1?customer=C");
+  });
   it("has a compact chip and a Show math control per numeric header", () => {
     render(<SiteTable table={table} />);
     expect(screen.getAllByRole("button", { name: "Show math" })).toHaveLength(4);

@@ -8,7 +8,7 @@ const rawDir = process.argv[2] ?? "data/raw";
 const outDir = process.argv[3] ?? "data/generated";
 
 // readme.csv and data_dictionary.csv are not data sheets; only the dictionary is read, as the header reference.
-const stems = ["data_dictionary", "repairs", "sites", "customers", "assumptions", "service_activity", "products", "service_cycles", "waste_circularity", "customer_impacts", "laundry_resources", "baselines"];
+const stems = ["data_dictionary", "repairs", "sites", "customers", "assumptions", "service_activity", "products", "service_cycles", "waste_circularity", "customer_impacts", "laundry_resources", "baselines", "laundries"];
 const files: Record<string, string> = {};
 for (const stem of stems) {
   const path = join(rawDir, `${stem}.csv`);

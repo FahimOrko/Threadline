@@ -1,6 +1,6 @@
 // Percentage KPIs (Slice 3, change 2b). Pure: data in, Facts out; display strings come from src/lib/format.
 import type { AppData } from "@/lib/data/schemas";
-import { type Fact } from "./fact";
+import { inScope, type Fact } from "./fact";
 import { latestRows, type OperationalScope } from "./operational";
 import { build } from "./value";
 
@@ -14,7 +14,7 @@ const sum = (xs: number[]) => xs.reduce((a, b) => a + b, 0);
 
 /** ON_TIME cycles / all cycles of the customer's sites. Null without cycles (no Fact rather than 0 or NaN). */
 export function onTimeCycleRate(data: PercentageData, scope: OperationalScope): Fact | null {
-  const rows = data.cycleCounts.filter((c) => c.customer_id === scope.customerId);
+  const rows = data.cycleCounts.filter((c) => inScope(c, scope));
   const cycles = sum(rows.map((r) => r.cycles));
   if (cycles === 0) return null;
   const onTime = sum(rows.map((r) => r.on_time));
@@ -50,7 +50,7 @@ export function repairRateByProduct(data: PercentageData, scope: OperationalScop
     if (allocated === 0) continue;
     const reps = sum(
       data.repairs
-        .filter((r) => r.customer_id === scope.customerId && r.product_id === p.product_id && r.month >= scope.period.from && r.month <= scope.period.to)
+        .filter((r) => inScope(r, scope) && r.product_id === p.product_id && r.month >= scope.period.from && r.month <= scope.period.to)
         .map((r) => r.repair_count),
     );
     facts.push(

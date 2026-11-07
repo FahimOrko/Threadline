@@ -24,6 +24,7 @@ export function FactStatCard({ fact }: { fact: Fact }) {
         formula={fact.formula}
         inputs={[
           { label: "Customer", value: fact.scope.customerName },
+          ...(fact.scope.siteName ? [{ label: "Site", value: fact.scope.siteName }] : []),
           { label: "Period", value: formatPeriod(fact.period) },
           ...fact.inputs
             .filter((i) => !i.note)
