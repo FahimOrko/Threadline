@@ -156,3 +156,14 @@ The print route SHALL open with a cover block stating the customer name, the cho
 #### Scenario: Generation date
 - **WHEN** the document is generated
 - **THEN** the cover shows the date it was generated, labelled as the generation date and not as a data date
+
+### Requirement: Play the review link
+The Story cover (not the print route) SHALL offer a "Play the review" link to `/story/game` that preserves every query param, including unknown ones.
+
+#### Scenario: Params preserved
+- **WHEN** `/story` is opened with `?customer=CUST002&baseline=B_HOME&view=customer&x=1`
+- **THEN** "Play the review" opens `/story/game` with the same four params unchanged
+
+#### Scenario: Not printed
+- **WHEN** the print route is rendered
+- **THEN** no "Play the review" link is shown

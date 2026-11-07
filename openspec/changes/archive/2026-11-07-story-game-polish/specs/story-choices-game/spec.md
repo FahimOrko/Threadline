@@ -93,6 +93,29 @@ The character stage SHALL scale its scene to the width available, keeping its as
 - **WHEN** the viewport is 1536px wide and the AI sidebar is closed
 - **THEN** the stage is no taller than a fixed maximum and both characters are fully inside it
 
+### Requirement: Suggested choices
+Each choice scene SHALL mark exactly one option with a "Suggested for a first run" badge and one plain-language line saying why. The suggestion SHALL aim for the clearest, most representative run and SHALL NOT be chosen by size of number. It SHALL be computed by one pure function from conditions held as data: the customer with the most fired Slice 5 observations (ties to the lowest customer id), the data pack's default baseline, the Standard estimate, and the priority chapter with the most fired observations attached (ties to default chapter order; the first pickable chapter in default order when none fire). The priority why line SHALL frame it as where the customer's year had the most going on, not as a problem. The suggestion SHALL NOT pre-select an option or advance the game; the reader SHALL always click. In the customer view the locked customer scene SHALL show no badge.
+
+#### Scenario: One per scene
+- **WHEN** any choice scene is shown for any customer
+- **THEN** exactly one option carries the badge and the why line, and none is pre-selected
+
+#### Scenario: Customer suggestion follows the data
+- **WHEN** the number of fired observations for a customer changes
+- **THEN** the suggested customer changes accordingly, and equal counts resolve to the lowest customer id
+
+#### Scenario: Priority suggestion follows observations
+- **WHEN** the observations attached to a chapter change in number, or none fire
+- **THEN** the suggested chapter changes accordingly, and with none fired the first pickable chapter in default order is suggested
+
+#### Scenario: Customer view
+- **WHEN** the resolved view is the customer view
+- **THEN** scene 1 shows no suggestion badge
+
+#### Scenario: No auto-advance
+- **WHEN** a scene with a suggestion is shown
+- **THEN** the address and the dialogue do not move until the reader clicks an option
+
 ## MODIFIED Requirements
 
 ### Requirement: Sensitivity framing
