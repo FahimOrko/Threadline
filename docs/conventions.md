@@ -28,6 +28,7 @@ Read before coding, together with `docs/adr/README.md`. Add a new convention her
 - The engine is pure and isomorphic: data in as an argument, no `fs` or server-only imports, raw numbers and a unit out. Display strings come from `src/lib/format`.
 - The AI never writes digits; it uses fact tokens.
 - A table whose columns differ in method carries a compact ProvenanceChip and Show math per column header, with the full method and source in Show math.
+- Values only the team or Lindström can supply go in `src/lib/engine/assumptions-config.ts` with a T-prefixed id, are unset as `null` (never a placeholder) and render as assumed (ADR 0016).
 
 ## Testing
 - Vitest, tests in `tests/` named `*.test.ts`. Engine changes need tests. Run with `npm test`.

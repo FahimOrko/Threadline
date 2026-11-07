@@ -21,3 +21,4 @@ Template: Title, Status (accepted / superseded), Date, Context, Decision, Conseq
 | [0013](0013-generated-data-built-not-committed.md) | Generated data is built, not committed | accepted | `predev` and `prebuild` run `data:build`; `data/generated/` is ignored |
 | [0014](0014-selected-customer-lives-in-the-url.md) | The selected customer lives in the URL | accepted | `?customer=` read by the server page; header mirrors it; unknown falls back to NorthStar |
 | [0015](0015-active-wearers-latest-month-max-per-site.md) | Active wearers: latest-month maximum per site | accepted | Avoids the double count in the pack's 28 367; December snapshot |
+| [0016](0016-team-assumptions-live-in-one-config.md) | Team assumptions live in one config | accepted | Typed config with T-prefixed IDs; always assumed; unset is null, shown as "Needs input" |
