@@ -1,6 +1,7 @@
 // Text and rows for the two closing chapters. Static wording carries no digits except assumption ids; figures come from Facts or the assumptions config.
 import { DORMANT_SITE_TYPE_TIERS, TEAM_ASSUMPTIONS, type Sensitivity } from "@/lib/engine";
 import { formatValue } from "@/lib/format";
+import { SENSITIVITY_LABEL } from "@/lib/selection";
 import { NEEDS_INPUT } from "./index";
 
 export const DATA_SOURCES = [
@@ -15,7 +16,7 @@ export const BASELINE_CAVEAT =
 export const ROUNDING_NOTE = "Values are calculated at full precision and rounded only when displayed. Show math lists the unrounded inputs.";
 
 export function sensitivityNote(level: Sensitivity): string {
-  return `The ${level} sensitivity level is shown. Low and high scale every baseline factor by the declared spread T002. This is a modelling choice, not a measured range: the data pack has no low or high factors. Laundry factors are not scaled, and only the water, energy and CO2e saved figures carry a range.`;
+  return `The ${SENSITIVITY_LABEL[level]} is shown. The Cautious and Generous estimates scale every baseline factor by the declared spread T002. This is a modelling choice, not a measured range: the data pack has no low or high factors. Laundry factors are not scaled, and only the water, energy and CO2e saved figures carry a range.`;
 }
 
 export const DATA_GAPS = [

@@ -14,10 +14,13 @@ import { resolveCustomer } from "@/lib/customer";
 import { generatedQuality, generatedSource } from "@/lib/data/generated";
 import { baselineShortName, dataReadinessFacts, type Fact } from "@/lib/engine";
 import { formatPeriod } from "@/lib/format";
-import { resolveBaseline, resolvePriorities, resolveSensitivity, siteHref } from "@/lib/selection";
+import { SENSITIVITY_LABEL, resolveBaseline, resolvePriorities, resolveSensitivity, siteHref } from "@/lib/selection";
 import { buildStory, factText, resolveLine } from "@/lib/story";
 import { BASELINE_CAVEAT, DATA_GAPS, DATA_SOURCES, OPEN_QUESTIONS, ROUNDING_NOTE, assumptionRows, sensitivityNote } from "@/lib/story/closing";
+import Link from "next/link";
+import { connection } from "next/server";
 import { storyFacts } from "@/lib/story/facts";
+import { GAME_PATH, gameHref } from "@/lib/story/game";
 
 // Full year 2025, fixed like the dashboard. Every engine call takes it as an argument.
 export const PERIOD = { from: "2025-01", to: "2025-12" };
@@ -32,6 +35,7 @@ export type StoryMode = "screen" | "print";
 /** The one story rendering. `screen` is the Story page; `print` adds the cover block, hides the picker and expands Show math inline. Reads runtime data, so callers wrap it in Suspense. */
 export async function StoryDocument({ searchParams, mode }: { searchParams: PageProps<"/story">["searchParams"]; mode: StoryMode }) {
   const [data, params] = await Promise.all([generatedSource.load(), searchParams]);
+  await connection(); // the generation date below is read per request; Next rejects `new Date()` before a dynamic access
   const { customer, rejected } = resolveCustomer(params.customer, data.customers);
   const { baseline, rejected: badBaseline } = resolveBaseline(params.baseline, data.baselines);
   const { sensitivity, rejected: badSensitivity } = resolveSensitivity(params.sensitivity);
@@ -44,7 +48,7 @@ export async function StoryDocument({ searchParams, mode }: { searchParams: Page
     if (!f) throw new Error(`Story card ${id} has no matching Fact`);
     return f;
   };
-  const words = { baseline: short, sensitivity };
+  const words = { baseline: short, sensitivity: SENSITIVITY_LABEL[sensitivity] };
   const siteName = (id: string) => data.sites.find((s) => s.site_id === id)?.site_name ?? id;
   const readiness = dataReadinessFacts(generatedQuality, PERIOD);
   const sourceRows = readiness.filter((f) => f.id.startsWith("invalid_rows_"));
@@ -80,15 +84,15 @@ export async function StoryDocument({ searchParams, mode }: { searchParams: Page
         )}
       </div>
 
-      <StoryChapter id="cover" title={customer.customer_name} lines={[`Value review for ${formatPeriod(PERIOD)}, compared against ${short} at ${sensitivity} sensitivity.`]}>
+      <StoryChapter id="cover" title={customer.customer_name} lines={[`Value review for ${formatPeriod(PERIOD)}, compared against ${short}, using the ${SENSITIVITY_LABEL[sensitivity]}.`]}>
         {print ? (
           <dl className="grid max-w-md grid-cols-[1fr_2fr] gap-x-3 gap-y-1 text-sm" data-slot="print-cover">
             <dt className="text-muted-foreground">Priorities</dt>
             <dd>{priorities.length ? priorities.map((p) => PRIORITY_LABEL[p]).join(", ") : "None chosen"}</dd>
             <dt className="text-muted-foreground">Baseline</dt>
             <dd>{short}</dd>
-            <dt className="text-muted-foreground">Sensitivity</dt>
-            <dd>{sensitivity}</dd>
+            <dt className="text-muted-foreground">Estimate</dt>
+            <dd>{SENSITIVITY_LABEL[sensitivity]}</dd>
             <dt className="text-muted-foreground">Period</dt>
             <dd>{formatPeriod(PERIOD)}</dd>
             <dt className="text-muted-foreground">Generated</dt>
@@ -96,6 +100,11 @@ export async function StoryDocument({ searchParams, mode }: { searchParams: Page
           </dl>
         ) : (
           <>
+            <div className="print:hidden">
+              <Link href={gameHref(GAME_PATH, params, {})} className={buttonVariants({ variant: "outline", size: "sm" })}>
+                Play the review
+              </Link>
+            </div>
             <div className="print:hidden">
               <PriorityPicker picks={priorities} params={linkParams} />
             </div>

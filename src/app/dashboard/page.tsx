@@ -9,7 +9,7 @@ import { resolveCustomer } from "@/lib/customer";
 import { generatedSource } from "@/lib/data/generated";
 import { baselineShortName, footprintFacts, footprintGroup, observations as observationsFor, operationalFacts, operationalSiteRows, percentageFacts, valueFacts } from "@/lib/engine";
 import { formatPeriod } from "@/lib/format";
-import { resolveBaseline, resolveSensitivity, siteHref } from "@/lib/selection";
+import { SENSITIVITY_LABEL, resolveBaseline, resolveSensitivity, siteHref } from "@/lib/selection";
 
 // Full year 2025, fixed in this version. Every engine call takes it as an argument, so a period picker only changes this.
 const PERIOD = { from: "2025-01", to: "2025-12" };
@@ -110,7 +110,7 @@ async function DashboardContent({ searchParams }: { searchParams: PageProps<"/da
       <section className="space-y-4">
         <SectionHeader
           title="Footprint"
-          description={`Full year 2025 against the ${short} baseline at ${sensitivity} sensitivity (A001, T002). Baseline values are illustrative; only the saved cards move with sensitivity. Route kilometres are not in the data pack, so delivery is not estimated from distance.`}
+          description={`Full year 2025 against the ${short} baseline, ${SENSITIVITY_LABEL[sensitivity]} (A001, T002). Baseline values are illustrative; only the saved cards move with sensitivity. Route kilometres are not in the data pack, so delivery is not estimated from distance.`}
         />
         {footprintGroups.map(({ title, group }) => (
           <div key={group} className="space-y-2">

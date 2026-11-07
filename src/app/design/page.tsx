@@ -376,6 +376,7 @@ export default function DesignPage() {
           <div className="flex flex-wrap gap-2">
             <ChoiceButton href="/design" label="Option" />
             <ChoiceButton href="/design" label="Option with a hint" hint="One short line that explains the option" />
+            <ChoiceButton href="/design" label="Suggested option" suggested={{ badge: "Suggested for a first run", why: "One plain line on why this is the clearest first choice." }} />
             <ChoiceButton primary href="/design" label="Start the review" />
           </div>
         </div>

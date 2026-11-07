@@ -1,0 +1,38 @@
+# Design
+
+## Context
+
+The game ships (ADR 0021): `game.ts` holds scenes, beats, templates and URL helpers; `_consequence-card.tsx` renders before/after; the header lives in `src/components/app-shell.tsx` (`views`, `ParamSelect`, `Frame` with `useState(true)` for the sidebar). Footprint Facts already carry `baseline` (the full baseline name) and a label "X saved vs {short}". Observations (`obs_repair_spike`, `obs_over_allocation`, `obs_dormant_critical`, `obs_replacements_postponed`, `obs_rental_fee_missing`) and signal Facts are already built by `storyFacts`. Constraints: no numbers outside the engine, provenance everywhere, tokens-only styling, one label map.
+
+## Goals / Non-Goals
+
+**Goals:** the eight items in the proposal, with the script reviewable as data.
+**Non-Goals:** engine changes, dashboard refactor, Impact World, AI, mobile.
+
+## Decisions
+
+1. **Card headers and labels (item 1).** Card derives the baseline name per column from the lever values (`resolveBaseline` on `beforeParams`/`params`, `baselineShortName`). Row label is the Fact label with its ` vs <short>` suffix stripped, for Facts where `fact.baseline` is set; others unchanged. Done in the card only. Alternative (change the engine label) rejected: dashboard labels stay.
+2. **Nav (items 2, 4).** `views` Story href becomes `/story/game`; active = `pathname.startsWith("/story")`. Pickers are not rendered when `pathname === "/story/game"` (path constant `GAME_PATH`). "Read the full report" reuses `exitHref`.
+3. **Label map (item 3).** One `SENSITIVITY_LABEL` record plus a one-line description record in `src/lib/selection.ts` (next to `resolveSensitivity`), imported by the app shell, `game.ts` (`optionsFor`, recap, path strip, templates via `{sensitivity}`), story text and print cover. Descriptions that state the spread use a T002 Fact token.
+4. **Start over (item 5).** A link built by `gameHref(GAME_PATH, params, {scene, beat, customer, baseline, sensitivity, priorities: null})`, so `view` and unknown params survive. In customer view `customer` is kept. Shown when scene > 1 or beat > 0, and on the end scene.
+5. **Layout (item 6).** Game page uses a two-column grid: left `minmax(0,1fr)` (stage + dialogue), right a fixed width card column (`w-96`) with its own `overflow-y-auto` and `max-h` tied to the viewport. Remove the card's own `max-h-[26rem]` and the stage's reserved band. The sidebar moves from overlay to a flex sibling in `Frame` so it takes width from the main area; main stays `min-w-0`. Sidebar default: state initialised from route (`/story/game` collapsed), reset on entering a route only until the user toggles (`userToggled` ref). The `shadcn` MCP and the design-taste skill are consulted when building the layout; any new reusable piece (a scroll column wrapper, if extracted) is added to `/design` and `docs/design.md`.
+6. **Script as data (items 7, 8).** Scenes gain `explain: Line[]` and `meaning: Slot`. A `Slot` is `{ when: Condition; line: Line }[]` plus `fallback: Line`. `Condition` is a plain union: `{ obs: id }`, `{ factNull: id }`, `{ data: "largestSite" | "zeroDeliveryBaseline" }`, `{ level: "low" | "base" | "high" }`. One pure `pickLine(slot, ctx)` in `game.ts` evaluates the first match else the fallback; `ctx` = observations, Facts, resolved levers, and two derived words (`largestSite`, `spikeSites`, `overSites`, `dormantSites` names taken from observation `siteIds` through site names). Components only call `renderLine(pickLine(...))`. New beat kinds `explain` and `meaning` are added to `beatsFor`; `clampBeat` unchanged (explain precedes ask; meaning needs a choice like react/answer).
+7. **Suggestions (item 9).** `Suggestion = { scene; rule: Condition; why: string }[]` as data beside the slots; one pure `suggest(scene, ctx)` returns the suggested option value or null. The customer rule needs observation counts per customer: `ctx` carries `observations(data, scope)` results for each customer (built in the server page from existing engine calls, no new numbers). The priority rule is R2: fired observations per chapter, counted through the chapter's existing `risk` observation display (the observations each chapter already shows), ties and the none-fired case resolved by default chapter order. `optionsFor` returns `suggested: boolean` and the badge reuses the existing Badge component (words, not colour alone). Customer view scene 1 returns null. No `defaultValue`, no pre-selection, no auto-advance.
+8. **Language rules.** The test scans `ALL_TEMPLATES` (extended to every conditional line and fallback) for digits outside tokens and for the words baseline, sensitivity, Fact (case-insensitive, word match). Existing templates are reworded; `{baseline}` / `{sensitivity}` tokens render the full comparison phrase and the level label.
+9. **ADR.** New ADR 0022: dialogue conditions are plain data over Facts and observations, evaluated by one pure function, labels for sensitivity are display-only. Appended, supersedes nothing.
+
+## Review fixes (second pass)
+
+10. **Stage scaling.** The stage box keeps the aspect ratio of a 1040 by 400 window of the scene (both figures inside with margin), has a maximum height, and fits the art with `preserveAspectRatio="meet"` instead of `slice`, so it scales and never crops. The box is `bg-muted` so the letterbox looks like part of the room.
+11. **Header actions.** "Start over" and, on the first beat, "Read the full report" sit beside the page title in a small async server component inside its own Suspense (the title prerenders). The pure `startOverState` decides the target and the disabled state: disabled only when pressing it would change nothing (first beat, no lever set; the locked customer does not count).
+12. **Panel alignment.** The game is one grid: the setting label in row 1, the stage in row 2, the dialogue box in row 3 (left column), and the panel in the right column spanning rows 2 and 3, so its top is the stage's and its bottom is the dialogue box's. `CharacterStage` gets `caption={false}` so the page renders the label itself in row 1. The panel is the bordered, `bg-card` element; its content is `absolute inset-0 overflow-y-auto` on `lg`, so it never sets the row heights and the cards scroll inside. The path strip is a section of the panel (a rule below it), and the consequence card no longer draws its own border. Below `lg` the grid is one column in source order.
+13a. **Report link.** `reportLinkState` is disabled unless the resolved scene is the ending; the header shows the hint text next to the disabled button and drops it on the ending. Same disabled pattern as Start over (a `disabled` button in the same slot).
+13. **Play the review.** A link on the screen-mode Story cover built with `gameHref(GAME_PATH, params, {})`, which keeps every param.
+14. **Dev issues.** `/story/print` read `new Date()` before a dynamic access, which Next reports as an error in dev: the document now awaits `connection()` first. `<body>` gets `suppressHydrationWarning` because browser extensions add attributes to it before hydration, which the overlay counts as an issue.
+
+## Risks / Trade-offs
+
+- New explain/meaning beats shift `?beat=` of earlier shared links (accepted, see proposal).
+- Moving the sidebar into the flow changes every route's layout; covered by the default-open tests on non-game routes.
+- At 1280px with the sidebar open the stage may be narrow. Verify in a browser at apply, report it, and use the smallest fallback listed in the proposal.
+- Suggestions that count observations run one engine pass per customer on the server; the pack is small, so this is accepted. Largest-site and zero-delivery conditions use data, not Facts; kept as named, tested data conditions.

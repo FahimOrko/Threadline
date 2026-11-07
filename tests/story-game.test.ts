@@ -2,7 +2,8 @@ import { describe, expect, it } from "vitest";
 import { generatedSource } from "@/lib/data/generated";
 import { storyFacts } from "@/lib/story/facts";
 import { buildStory } from "@/lib/story";
-import { PRIORITIES } from "@/lib/selection";
+import { PRIORITIES, SENSITIVITY_DESCRIPTION, SENSITIVITY_LABEL } from "@/lib/selection";
+import { observations as observationsFor } from "@/lib/engine";
 import {
   ALL_TEMPLATES,
   CUSTOMER_VIEW_INTRO,
@@ -18,6 +19,21 @@ import {
   leadingChapter,
   optionsFor,
   renderLine,
+  pickLine,
+  holds,
+  scriptContext,
+  slotTexts,
+  startOverHref,
+  startOverState,
+  reportLinkState,
+  REPORT_HINT,
+  isFirstBeat,
+  suggest,
+  chapterObservationCounts,
+  neutralLabel,
+  SUGGESTION_WHY,
+  type Slot,
+  type ScriptCtx,
   resolveBeat,
   resolveScene,
   resolveState,
@@ -50,12 +66,15 @@ describe("dialogue templates", () => {
     expect(ids.length).toBeGreaterThan(5);
     for (const id of new Set(ids)) expect(facts.some((f) => f.id === id), id).toBe(true);
   });
-  it("frame sensitivity as the declared T002 spread, not a measured range", () => {
+  it("frame the estimate as the team's declared range, not a measurement, with the plain labels", () => {
     const s = SCENES.find((x) => x.id === "sensitivity")!;
-    const text = [...s.intro.map((l) => l.text), s.answer].join(" ");
-    expect(text).toMatch(/T002/);
+    const text = [...s.intro.map((l) => l.text), ...s.explain.flatMap(slotTexts), s.answer, ...s.meaning.flatMap(slotTexts)].join(" ");
     expect(text).toMatch(/declared/);
-    expect(text).toMatch(/not a measured range/);
+    expect(text).toMatch(/not a measurement/);
+    for (const l of ["Cautious", "Standard", "Generous"]) expect(text).toContain(l);
+  });
+  it("never say baseline, sensitivity or Fact in a line, with tokens left out", () => {
+    for (const t of [...ALL_TEMPLATES, ...leadLines]) expect(t.replace(/\{\{fact:[a-z0-9_]+\}\}|\{[a-zA-Z]+\}/g, ""), t).not.toMatch(/\b(baseline|sensitivity|fact)s?\b/i);
   });
   it("resolve every scene line for every customer without throwing", async () => {
     const data = await generatedSource.load();
@@ -82,6 +101,10 @@ describe("scene and beat resolvers", () => {
   });
   it.each(["0", "5", "x", "", "1.5"])("reject scene %j and name it", (v) => expect(resolveScene(v)).toEqual({ scene: 1, rejected: v }));
   it.each(["-1", "9", "x"])("reject beat %j and name it", (v) => expect(resolveBeat(v, 5)).toEqual({ beat: 0, rejected: v }));
+  it("clamps a meaning beat without a choice back to the question", () => {
+    const beats = beatsFor(SCENES[2], "kam");
+    expect(clampBeat(beats, beats.length - 1, false)).toBe(beats.findIndex((b) => b.kind === "ask"));
+  });
   it("clamps a reaction without a choice back to the question", () => {
     const beats = beatsFor(SCENES[1], "kam");
     const ask = beats.findIndex((b) => b.kind === "ask");
@@ -130,11 +153,15 @@ describe("links keep every existing param", () => {
 describe("customer view scene 1", () => {
   it("is intro lines and one confirmation, with no reaction, answer or customer choice", () => {
     const beats = beatsFor(SCENES[0], "customer");
-    expect(beats.map((b) => b.kind)).toEqual([...CUSTOMER_VIEW_INTRO.map(() => "line"), "ask"]);
+    expect(beats.map((b) => b.kind)).toEqual([...CUSTOMER_VIEW_INTRO.map(() => "line"), ...SCENES[0].explain.map(() => "explain"), "ask"]);
   });
   it("is unchanged in the KAM view and in later scenes", () => {
-    expect(beatsFor(SCENES[0], "kam").map((b) => b.kind).slice(-3)).toEqual(["ask", "react", "answer"]);
-    expect(beatsFor(SCENES[1], "customer").map((b) => b.kind).slice(-3)).toEqual(["ask", "react", "answer"]);
+    for (const [i, view] of [[0, "kam"], [1, "customer"]] as const) {
+      const kinds = beatsFor(SCENES[i], view).map((b) => b.kind);
+      expect(kinds.slice(kinds.indexOf("ask"), kinds.indexOf("ask") + 3)).toEqual(["ask", "react", "answer"]);
+      expect(kinds.slice(kinds.indexOf("answer") + 1)).toEqual(SCENES[i].meaning.map(() => "meaning"));
+    }
+    expect(beatsFor(SCENES[1], "kam")[2].kind).toBe("explain");
   });
   it("lists every customer in the KAM view", async () => {
     const data = await generatedSource.load();
@@ -184,4 +211,225 @@ describe("consequences", () => {
 
 describe("impact world slot", () => {
   it("is empty until the Impact World change sets it", () => expect(IMPACT_WORLD_HREF).toBeNull());
+});
+
+describe("the one sensitivity label map", () => {
+  it("names the three levels in plain words, with a description each", () => {
+    expect(SENSITIVITY_LABEL).toEqual({ low: "Cautious estimate", base: "Standard estimate", high: "Generous estimate" });
+    for (const l of ["low", "base", "high"] as const) expect(SENSITIVITY_DESCRIPTION[l].length).toBeGreaterThan(10);
+  });
+  it("is what the game buttons show, with URL values untouched", async () => {
+    const data = await generatedSource.load();
+    const opts = optionsFor(SCENES[2], data, labels);
+    expect(opts.map((o) => [o.value, o.label, o.hint])).toEqual((["low", "base", "high"] as const).map((l) => [l, SENSITIVITY_LABEL[l], SENSITIVITY_DESCRIPTION[l]]));
+  });
+  it("is what the story text and the print cover show", async () => {
+    const { facts, st } = await factsFor({ sensitivity: "high" });
+    const lead = leadingChapter("water").lines[0];
+    expect(renderLine(lead, facts, { baseline: st.short, sensitivity: SENSITIVITY_LABEL[st.sensitivity], company: "" })).toContain("Generous estimate");
+  });
+});
+
+describe("consequence card labels", () => {
+  it("name no baseline in any row label, even for baseline-dependent Facts", async () => {
+    const { facts } = await factsFor({ baseline: "B_HOME" });
+    const dependent = facts.filter((f) => f.baseline);
+    expect(dependent.length).toBeGreaterThan(0);
+    for (const f of dependent) expect(neutralLabel(f), f.id).not.toMatch(/ vs |local laundry|home washing|in-house/i);
+    expect(neutralLabel(facts.find((f) => f.id === "water_saved")!)).toBe("Water saved");
+  });
+  it("leave other Facts alone", async () => {
+    const { facts } = await factsFor({});
+    const f = facts.find((x) => !x.baseline)!;
+    expect(neutralLabel(f)).toBe(f.label);
+  });
+  it("resolve the Before and After baselines from the lever values", async () => {
+    const data = await generatedSource.load();
+    const before = resolveState(data, beforeParams(SCENES[1], { baseline: "B_HOME" }));
+    const after = resolveState(data, { baseline: "B_HOME" });
+    expect([before.short, after.short]).toEqual(["local laundry", "home washing"]);
+  });
+});
+
+describe("header report link", () => {
+  it("is disabled on every beat until the ending, with a visible hint text", () => {
+    for (const p of [{}, { scene: "1", beat: "3" }, { scene: "2", beat: "5" }, { scene: "4", beat: "6" }, { scene: "9" }]) expect(reportLinkState(p).disabled, JSON.stringify(p)).toBe(true);
+    expect(REPORT_HINT).toBe("Finish the review to open your report");
+  });
+  it("is active on the ending and keeps every param except scene and beat", () => {
+    const st = reportLinkState({ scene: "end", beat: "2", customer: "CUST002", baseline: "B_HOME", sensitivity: "high", priorities: "cost,hygiene", view: "customer", x: "1" });
+    expect(st.disabled).toBe(false);
+    const u = new URL(st.href, "http://x");
+    expect(u.pathname).toBe("/story");
+    expect(Object.fromEntries(u.searchParams)).toEqual({ customer: "CUST002", baseline: "B_HOME", sensitivity: "high", priorities: "cost,hygiene", view: "customer", x: "1" });
+  });
+});
+
+describe("start over state", () => {
+  it("is disabled, not hidden, on the very first beat with nothing chosen", () => {
+    expect(isFirstBeat({}, "kam")).toBe(true);
+    expect(startOverState({}, "kam").disabled).toBe(true);
+    expect(startOverState({ view: "customer", x: "1" }, "kam").disabled).toBe(true);
+  });
+  it("is enabled on every later beat and on the ending", () => {
+    expect(startOverState({ scene: "1", beat: "1" }, "kam").disabled).toBe(false);
+    expect(startOverState({ scene: "2", beat: "0" }, "kam").disabled).toBe(false);
+    expect(startOverState({ scene: "end", beat: "0" }, "kam").disabled).toBe(false);
+  });
+  it("is enabled on the first beat once a lever is set, and clears it", () => {
+    const st = startOverState({ baseline: "B_HOME" }, "kam");
+    expect(st.disabled).toBe(false);
+    expect(st.href).toBe("/story/game");
+  });
+  it("does not count the locked customer as a choice in the customer view", () => {
+    expect(startOverState({ view: "customer", customer: "CUST002" }, "customer").disabled).toBe(true);
+    expect(startOverState({ view: "customer", customer: "CUST002", baseline: "B_HOME" }, "customer").disabled).toBe(false);
+  });
+});
+
+describe("start over", () => {
+  const q = (h: string) => new URLSearchParams(h.split("?")[1]);
+  const params = { view: "customer", x: "1", customer: "CUST002", baseline: "B_HOME", sensitivity: "high", priorities: "cost", scene: "3", beat: "2" };
+  it("clears scene, beat and the four levers and keeps view and unknown params", () => {
+    const h = q(startOverHref(params, "kam"));
+    expect([...h.keys()].sort()).toEqual(["view", "x"]);
+    expect(startOverHref(params, "kam").startsWith("/story/game?")).toBe(true);
+  });
+  it("keeps the locked customer in the customer view", () => {
+    const h = q(startOverHref(params, "customer"));
+    expect(h.get("customer")).toBe("CUST002");
+    expect(h.get("view")).toBe("customer");
+    expect(["baseline", "sensitivity", "priorities", "scene", "beat"].some((k) => h.has(k))).toBe(false);
+  });
+});
+
+const ctx = (over: Partial<ScriptCtx> = {}): ScriptCtx => ({ observations: [], facts: [], level: "base", largestSite: null, zeroDelivery: false, spreadUnset: false, ...over });
+const slots = (): { id: string; slot: Slot }[] => SCENES.flatMap((s) => [...s.explain, ...s.meaning]).filter((x) => x.rules).map((slot, i) => ({ id: String(i), slot }));
+
+describe("conditional dialogue", () => {
+  it("picks the rule's line when its condition holds and the fallback when nothing does", () => {
+    const cases: [Slot, Partial<ScriptCtx>][] = slots().flatMap(({ slot }) =>
+      slot.rules!.map((r): [Slot, Partial<ScriptCtx>] => {
+        const w = r.when;
+        return [{ ...slot, rules: [r] }, "obs" in w ? { observations: [{ id: w.obs }] } : "level" in w ? { level: w.level } : "data" in w ? { largestSite: "X", zeroDelivery: true, spreadUnset: true } : { facts: [{ id: w.factNull, value: null } as never] }];
+      }),
+    );
+    expect(cases.length).toBeGreaterThan(8);
+    for (const [slot, over] of cases) {
+      const hit = pickLine(slot, ctx(over));
+      expect(hit.text).toBe(slot.rules![0].text);
+      if (!("level" in slot.rules![0].when)) expect(pickLine(slot, ctx()).text).toBe(slot.fallback);
+    }
+  });
+  it("evaluates each condition kind", () => {
+    expect(holds({ obs: "a" }, ctx({ observations: [{ id: "a" }] }))).toBe(true);
+    expect(holds({ obs: "a" }, ctx())).toBe(false);
+    expect(holds({ factNull: "f" }, ctx({ facts: [{ id: "f", value: null } as never] }))).toBe(true);
+    expect(holds({ factNull: "f" }, ctx({ facts: [{ id: "f", value: 1 } as never] }))).toBe(false);
+    expect(holds({ data: "largestSite" }, ctx({ largestSite: "A" }))).toBe(true);
+    expect(holds({ data: "zeroDelivery" }, ctx())).toBe(false);
+    expect(holds({ level: "high" }, ctx({ level: "high" }))).toBe(true);
+  });
+  it("gives every sensitivity level exactly one meaning line", () => {
+    const slot = SCENES[2].meaning[0];
+    const texts = (["low", "base", "high"] as const).map((level) => pickLine(slot, ctx({ level })).text);
+    expect(new Set(texts).size).toBe(3);
+    expect(texts[0]).toContain("Cautious");
+    expect(texts[2]).toContain("Generous");
+  });
+  it("gives every customer in the data pack a complete script with no empty beat", async () => {
+    const data = await generatedSource.load();
+    for (const c of data.customers) {
+      const { facts, st } = await factsFor({ customer: c.customer_id });
+      const obs = storyFacts(data, { customerId: c.customer_id, period }, st.baseline, st.sensitivity).observations;
+      const { ctx: sc, words: sw } = scriptContext(data, c.customer_id, st.baseline, st.sensitivity, facts, obs, period);
+      for (const view of ["kam", "customer"] as const)
+        for (const scene of [...SCENES, "end" as const]) {
+          for (const b of beatsFor(scene, view)) {
+            const text = b.kind === "line" ? b.line.text : b.kind === "explain" || b.kind === "meaning" ? pickLine(b.slot, sc).text : "x";
+            const out = renderLine(text, facts, { baseline: st.short, sensitivity: "S", company: c.customer_name, comparison: "C", chapter: "Ch", lead: "L", ...sw });
+            expect(out.trim().length, `${c.customer_id} ${text}`).toBeGreaterThan(0);
+            expect(out).not.toMatch(/\{/);
+          }
+        }
+    }
+  });
+  it("raises the repair spike only for a customer that has one", async () => {
+    const data = await generatedSource.load();
+    const seen = new Set<boolean>();
+    for (const c of data.customers) {
+      const { facts, st } = await factsFor({ customer: c.customer_id });
+      const obs = storyFacts(data, { customerId: c.customer_id, period }, st.baseline, st.sensitivity).observations;
+      const { ctx: sc, words } = scriptContext(data, c.customer_id, st.baseline, st.sensitivity, facts, obs, period);
+      const line = renderLine(pickLine(SCENES[0].explain[1], sc).text, facts, { baseline: "b", sensitivity: "s", company: "", ...words });
+      const has = obs.some((o) => o.id === "obs_repair_spike");
+      seen.add(has);
+      expect(line.includes("rose well above"), c.customer_id).toBe(has);
+    }
+  });
+  it("names the largest site by garments in circulation, as a word", async () => {
+    const data = await generatedSource.load();
+    const { facts, st } = await factsFor({});
+    const { ctx: sc } = scriptContext(data, "CUST001", st.baseline, st.sensitivity, facts, [], period);
+    expect(sc.largestSite).toEqual(expect.any(String));
+    expect(sc.zeroDelivery).toBe(false);
+    expect(sc.spreadUnset).toBe(false);
+  });
+  it("flags zero delivery for home washing", async () => {
+    const data = await generatedSource.load();
+    const { facts, st } = await factsFor({ baseline: "B_HOME" });
+    expect(scriptContext(data, "CUST001", st.baseline, st.sensitivity, facts, [], period).ctx.zeroDelivery).toBe(true);
+  });
+});
+
+describe("suggested choices", () => {
+  const base = { customerIds: ["CUST003", "CUST001", "CUST002"], customerObservationCounts: { CUST001: 2, CUST002: 4, CUST003: 4 }, chapterCounts: {} as Record<string, number> };
+  it("picks the customer with the most observations and breaks ties by the lowest id", () => {
+    expect(suggest(SCENES[0], "kam", base)).toBe("CUST002");
+  });
+  it("changes when observation counts change", () => {
+    expect(suggest(SCENES[0], "kam", { ...base, customerObservationCounts: { ...base.customerObservationCounts, CUST001: 9 } })).toBe("CUST001");
+  });
+  it("is deterministic regardless of the order of the customers", () => {
+    expect(suggest(SCENES[0], "kam", { ...base, customerIds: [...base.customerIds].reverse() })).toBe(suggest(SCENES[0], "kam", base));
+  });
+  it("suggests the default comparison laundry and the Standard estimate", () => {
+    expect(suggest(SCENES[1], "kam", base)).toBe("B_LOCAL");
+    expect(suggest(SCENES[2], "kam", base)).toBe("base");
+  });
+  it("suggests the chapter with the most fired observations, and follows the counts", () => {
+    expect(suggest(SCENES[3], "kam", { ...base, chapterCounts: { risk: 3, circularity: 1 } })).toBe("hygiene");
+    expect(suggest(SCENES[3], "kam", { ...base, chapterCounts: { risk: 1, circularity: 2 } })).toBe("circularity");
+  });
+  it("breaks a tie by default chapter order, and falls back to the first pickable chapter when none fire", () => {
+    // "Your year in numbers" serves no priority, so the first pickable chapter in default order is circularity.
+    expect(suggest(SCENES[3], "kam", { ...base, chapterCounts: {} })).toBe("circularity");
+    expect(suggest(SCENES[3], "kam", { ...base, chapterCounts: { risk: 1, circularity: 1 } })).toBe("circularity");
+  });
+  it("counts observations per chapter", () => {
+    expect(chapterObservationCounts([{ id: "obs_repair_spike" }, { id: "obs_over_allocation" }, { id: "obs_replacements_postponed" }, { id: "nope" }])).toEqual({ risk: 2, circularity: 1 });
+  });
+  it("marks exactly one option per scene, for every customer, using real observation counts", async () => {
+    const data = await generatedSource.load();
+    const counts = Object.fromEntries(data.customers.map((c) => [c.customer_id, observationsFor(data, { customerId: c.customer_id, period }).observations.length]));
+    for (const c of data.customers) {
+      const { st } = await factsFor({ customer: c.customer_id });
+      const obs = storyFacts(data, { customerId: c.customer_id, period }, st.baseline, st.sensitivity).observations;
+      const sctx = { customerIds: data.customers.map((x) => x.customer_id), customerObservationCounts: counts, chapterCounts: chapterObservationCounts(obs) };
+      for (const s of SCENES) {
+        const pick = suggest(s, "kam", sctx);
+        const options = optionsFor(s, data, labels);
+        expect(options.filter((o) => o.value === pick).length, `${c.customer_id} ${s.id}`).toBe(1);
+        expect(SUGGESTION_WHY[s.id].length).toBeGreaterThan(10);
+      }
+    }
+  });
+  it("gives no suggestion on the locked customer scene in the customer view, but does in later scenes", () => {
+    expect(suggest(SCENES[0], "customer", base)).toBeNull();
+    expect(suggest(SCENES[1], "customer", base)).toBe("B_LOCAL");
+  });
+  it("pre-selects nothing: options carry no selected flag", async () => {
+    const data = await generatedSource.load();
+    for (const s of SCENES) for (const o of optionsFor(s, data, labels)) expect(Object.keys(o)).not.toContain("suggested");
+  });
 });

@@ -5,6 +5,9 @@ type Pose = "neutral" | "reacting";
 
 const W = 1280;
 const H = 400;
+// The visible window of the 1280-wide scene: both figures (x 340 and 940, 136 wide) sit inside it with margin. The box keeps this aspect ratio and the art is fitted with `meet`, so it scales and is never cropped.
+const X0 = 120;
+const VW = 1040;
 
 // Original flat art in theme tokens only (no skin tones, no faces). Settings are simple layered shapes: `back` sits behind the figures, `front` in front of their lower bodies.
 function Backdrop({ setting, layer }: { setting: Setting; layer: "back" | "front" }) {
@@ -54,12 +57,12 @@ function Backdrop({ setting, layer }: { setting: Setting; layer: "back" | "front
     );
   }
   // front layer: the table, bench or desk the figures stand behind
-  const top = setting === "plant-floor" ? 372 : 330;
+  const top = H - 14; // a thin bench strip: no empty band under the figures
   return (
     <g>
       <rect y={top} width={W} height={H - top} className="fill-card" />
       <rect y={top} width={W} height="8" className="fill-border" />
-      {setting === "plant-floor" && <rect y={top + 14} width={W} height="6" className="fill-primary/30" />}
+      {setting === "plant-floor" && <rect y={top + 8} width={W} height="3" className="fill-primary/30" />}
       {setting === "meeting-room" && <rect x="520" y={top - 6} width="240" height="6" rx="3" className="fill-primary/40" />}
     </g>
   );
@@ -113,13 +116,13 @@ const initials = (s: string) =>
  * The stage of a game scene: a labelled setting with the Lindström KAM on the left and the customer's ops lead on the right, in original flat art built from theme tokens.
  * The speaker is raised and the other figure dimmed; `pose` shows a reaction. `art="initials"` swaps the figures for two portrait cards with the same labels.
  */
-export function CharacterStage({ setting, speaker, kamPose = "neutral", opsPose = "neutral", opsLabel, art = "figures" }: { setting: Setting; speaker: Speaker | null; kamPose?: Pose; opsPose?: Pose; opsLabel: string; art?: "figures" | "initials" }) {
+export function CharacterStage({ setting, speaker, kamPose = "neutral", opsPose = "neutral", opsLabel, art = "figures", caption = true }: { setting: Setting; speaker: Speaker | null; kamPose?: Pose; opsPose?: Pose; opsLabel: string; art?: "figures" | "initials"; caption?: boolean }) {
   const label = SETTING_LABEL[setting];
   return (
     <figure data-slot="character-stage" data-setting={setting} className="space-y-1.5">
-      <figcaption className="text-sm text-muted-foreground">{label}</figcaption>
-      <div className="relative h-[22rem] overflow-hidden rounded-lg border">
-        <svg role="img" aria-label={`${label}. Lindström KAM on the left, ${opsLabel} on the right.`} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMax slice" className="absolute inset-0 size-full">
+      {caption && <figcaption className="text-sm text-muted-foreground">{label}</figcaption>}
+      <div className="relative aspect-[1040/400] max-h-[22rem] w-full overflow-hidden rounded-lg border bg-muted">
+        <svg role="img" aria-label={`${label}. Lindström KAM on the left, ${opsLabel} on the right.`} viewBox={`${X0} 0 ${VW} ${H}`} preserveAspectRatio="xMidYMax meet" className="absolute inset-0 size-full">
           <Backdrop setting={setting} layer="back" />
           {art === "figures" ? (
             <>

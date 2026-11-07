@@ -29,7 +29,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col"><ThemeProvider>
+      <body suppressHydrationWarning className="min-h-full flex flex-col"><ThemeProvider>
           <AppShell customers={customers.map((c) => ({ customer_id: c.customer_id, name: c.customer_name }))}
             baselines={baselines.map((b) => ({ baseline_id: b.baseline_id, name: baselineShortName(b) }))}
           >

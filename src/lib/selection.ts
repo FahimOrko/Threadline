@@ -14,6 +14,15 @@ export function resolveBaseline<B extends { baseline_id: string }>(param: Param,
   return match ? { baseline: match, rejected: null } : { baseline: fallback, rejected: value };
 }
 
+/** The one display label per sensitivity level, reused by every surface (header, game, story text, print cover). URL values stay low/base/high. */
+export const SENSITIVITY_LABEL: Record<Sensitivity, string> = { low: "Cautious estimate", base: "Standard estimate", high: "Generous estimate" };
+/** One plain sentence per level. The declared T002 spread lives in Show math and methodology, not here. */
+export const SENSITIVITY_DESCRIPTION: Record<Sensitivity, string> = {
+  low: "The old laundry is assumed more efficient than the data pack says, so savings come out smaller.",
+  base: "Factors as given in the data pack.",
+  high: "The old laundry is assumed less efficient than the data pack says, so savings come out larger.",
+};
+
 /** Resolves `?sensitivity=`. Unknown values fall back to base; `rejected` names the bad value. */
 export function resolveSensitivity(param: Param): { sensitivity: Sensitivity; rejected: string | null } {
   const value = first(param);

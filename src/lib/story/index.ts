@@ -44,7 +44,7 @@ const CHAPTERS: ChapterDef[] = [
     title: "Water and carbon",
     serves: ["water", "emissions"],
     lines: [
-      "Against {baseline} at {sensitivity} sensitivity, the service saved {{fact:water_saved}} of water, {{fact:energy_saved}} of energy and {{fact:co2e_saved}}, a {{fact:co2e_saved_pct}} cut.",
+      "Against {baseline}, using the {sensitivity}, the service saved {{fact:water_saved}} of water, {{fact:energy_saved}} of energy and {{fact:co2e_saved}}, a {{fact:co2e_saved_pct}} cut.",
       "Delivery emits {{fact:delivery_footprint}}, {{fact:delivery_share}} of service emissions. The net saving above already includes it.",
     ],
     cards: WATER_CARBON_CARDS,

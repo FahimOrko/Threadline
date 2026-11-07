@@ -9,6 +9,9 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(""),
 }));
 
+// `connection()` needs a request scope; the tests call the server component directly.
+vi.mock("next/server", () => ({ connection: async () => {} }));
+
 import { AppShell } from "@/components/app-shell";
 import { ShowMathInlineProvider, ShowMathPopover } from "@/components/show-math";
 import { STORY_PRINT_PATH } from "@/lib/story/print";
@@ -75,5 +78,50 @@ describe("export link", () => {
     };
     expect(await href({ priorities: "water,cost", sensitivity: "low" })).toMatch(/sensitivity=low.*priorities=water%2Ccost/);
     expect(await href({})).not.toContain("priorities");
+  });
+});
+
+describe("Play the review link", () => {
+  const link = async (sp: Record<string, string>, mode: "screen" | "print") => {
+    const { StoryDocument } = await import("@/app/story/_story-document");
+    render(await StoryDocument({ searchParams: Promise.resolve(sp), mode }));
+    const a = screen.queryByRole("link", { name: "Play the review" });
+    const h = a?.getAttribute("href") ?? null;
+    cleanup();
+    return h;
+  };
+  it("opens the game from the Story cover and keeps every param, including unknown ones", async () => {
+    const h = new URL((await link({ customer: "CUST002", baseline: "B_HOME", sensitivity: "high", priorities: "cost,hygiene", view: "customer", x: "1" }, "screen"))!, "http://x");
+    expect(h.pathname).toBe("/story/game");
+    expect(Object.fromEntries(h.searchParams)).toEqual({ customer: "CUST002", baseline: "B_HOME", sensitivity: "high", priorities: "cost,hygiene", view: "customer", x: "1" });
+  });
+  it("is the bare game path with no params", async () => expect(await link({}, "screen")).toBe("/story/game"));
+  it("is not printed", async () => expect(await link({}, "print")).toBeNull());
+});
+
+describe("game header actions", () => {
+  const header = async (sp: Record<string, string>) => {
+    const { GameHeaderActions } = await import("@/app/story/game/_game-header");
+    return render(await GameHeaderActions({ searchParams: Promise.resolve(sp) }));
+  };
+  it("disables the report with a visible hint before the ending, and Start over on the first beat", async () => {
+    await header({});
+    const report = screen.getByRole("button", { name: "Read the full report" }) as HTMLButtonElement;
+    expect(report.disabled).toBe(true);
+    expect(screen.getByText("Finish the review to open your report")).toBeTruthy();
+    expect((screen.getByRole("button", { name: "Start over" }) as HTMLButtonElement).disabled).toBe(true);
+  });
+  it("keeps the report disabled mid-game while Start over is a link", async () => {
+    await header({ scene: "2", beat: "3", x: "1" });
+    expect((screen.getByRole("button", { name: "Read the full report" }) as HTMLButtonElement).disabled).toBe(true);
+    expect(screen.getByRole("link", { name: "Start over" }).getAttribute("href")).toBe("/story/game?x=1");
+  });
+  it("opens the report on the ending with every param kept, and drops the hint", async () => {
+    await header({ scene: "end", beat: "1", view: "customer", x: "1", baseline: "B_HOME" });
+    const a = screen.getByRole("link", { name: "Read the full report" });
+    const u = new URL(a.getAttribute("href")!, "http://x");
+    expect(u.pathname).toBe("/story");
+    expect(Object.fromEntries(u.searchParams)).toEqual({ view: "customer", x: "1", baseline: "B_HOME" });
+    expect(screen.queryByText("Finish the review to open your report")).toBeNull();
   });
 });

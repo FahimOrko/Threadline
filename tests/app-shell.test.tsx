@@ -5,8 +5,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const push = vi.fn();
 let search = "";
+let path = "/dashboard";
 vi.mock("next/navigation", () => ({
-  usePathname: () => "/dashboard",
+  usePathname: () => path,
   useRouter: () => ({ push }),
   useSearchParams: () => new URLSearchParams(search),
 }));
@@ -27,6 +28,7 @@ const shell = () => render(<AppShell customers={customers} baselines={baselines}
 beforeEach(() => {
   push.mockClear();
   search = "";
+  path = "/dashboard";
 });
 afterEach(cleanup);
 
@@ -53,11 +55,11 @@ describe("AppShell view links", () => {
   it("keep the selected customer", () => {
     search = "customer=CUST002";
     shell();
-    expect(screen.getByRole("link", { name: "Story" }).getAttribute("href")).toBe("/story?customer=CUST002");
+    expect(screen.getByRole("link", { name: "Story" }).getAttribute("href")).toBe("/story/game?customer=CUST002");
   });
   it("stay clean without a customer param", () => {
     shell();
-    expect(screen.getByRole("link", { name: "Story" }).getAttribute("href")).toBe("/story");
+    expect(screen.getByRole("link", { name: "Story" }).getAttribute("href")).toBe("/story/game");
   });
 });
 
@@ -76,13 +78,13 @@ describe("AppShell baseline and sensitivity selectors", () => {
   it("shows local laundry and base by default", () => {
     shell();
     expect(screen.getByRole("combobox", { name: "Baseline" }).textContent).toContain("local laundry");
-    expect(screen.getByRole("combobox", { name: "Sensitivity" }).textContent).toContain("base");
+    expect(screen.getByRole("combobox", { name: "Sensitivity" }).textContent).toContain("Standard estimate");
   });
   it("falls back for unknown values, like the page", () => {
     search = "baseline=NOPE&sensitivity=extreme";
     shell();
     expect(screen.getByRole("combobox", { name: "Baseline" }).textContent).toContain("local laundry");
-    expect(screen.getByRole("combobox", { name: "Sensitivity" }).textContent).toContain("base");
+    expect(screen.getByRole("combobox", { name: "Sensitivity" }).textContent).toContain("Standard estimate");
   });
   it("changing the baseline keeps customer and sensitivity in the address", async () => {
     search = "customer=CUST002&sensitivity=high";
@@ -101,7 +103,7 @@ describe("AppShell baseline and sensitivity selectors", () => {
   it("view links keep all three params", () => {
     search = "customer=CUST002&baseline=B_HOME&sensitivity=low";
     shell();
-    expect(screen.getByRole("link", { name: "Story" }).getAttribute("href")).toBe("/story?customer=CUST002&baseline=B_HOME&sensitivity=low");
+    expect(screen.getByRole("link", { name: "Story" }).getAttribute("href")).toBe("/story/game?customer=CUST002&baseline=B_HOME&sensitivity=low");
   });
 });
 
@@ -109,7 +111,7 @@ describe("AppShell story priorities (ADR 0019)", () => {
   it("view links keep ?priorities= together with the other params", () => {
     search = "customer=CUST002&priorities=cost,hygiene";
     shell();
-    expect(screen.getByRole("link", { name: "Story" }).getAttribute("href")).toBe("/story?customer=CUST002&priorities=cost%2Chygiene");
+    expect(screen.getByRole("link", { name: "Story" }).getAttribute("href")).toBe("/story/game?customer=CUST002&priorities=cost%2Chygiene");
     expect(screen.getByRole("link", { name: "Dashboard" }).getAttribute("href")).toContain("priorities=cost%2Chygiene");
   });
   it("view links stay clean without picks", () => {
@@ -120,7 +122,7 @@ describe("AppShell story priorities (ADR 0019)", () => {
   it.each([
     ["Customer", "Other Co"],
     ["Baseline", "home washing"],
-    ["Sensitivity", "high"],
+    ["Sensitivity", "Generous estimate"],
   ])("changing %s keeps priorities and an unrelated param", async (name, option) => {
     search = "priorities=water,cost&foo=bar";
     shell();
@@ -129,5 +131,47 @@ describe("AppShell story priorities (ADR 0019)", () => {
     const url = new URL(push.mock.calls[0][0], "http://x");
     expect(url.searchParams.get("priorities")).toBe("water,cost");
     expect(url.searchParams.get("foo")).toBe("bar");
+  });
+});
+
+describe("AppShell story entry (story-game-polish)", () => {
+  it("the Story link opens the game", () => {
+    shell();
+    expect(screen.getByRole("link", { name: "Story" }).getAttribute("href")).toBe("/story/game");
+  });
+  // /story/print renders without the header (bare route), so only the two routes that show the nav can be checked.
+  it.each(["/story", "/story/game"])("marks Story active on %s", (p) => {
+    path = p;
+    shell();
+    expect(screen.getByRole("link", { name: "Story" }).getAttribute("aria-current")).toBe("page");
+    expect(screen.getByRole("link", { name: "Dashboard" }).getAttribute("aria-current")).toBeNull();
+  });
+  it("hides the three pickers on the game and keeps them elsewhere", () => {
+    path = "/story/game";
+    const { unmount } = shell();
+    for (const name of ["Customer", "Baseline", "Sensitivity"]) expect(screen.queryByRole("combobox", { name })).toBeNull();
+    unmount();
+    path = "/story";
+    shell();
+    for (const name of ["Customer", "Baseline", "Sensitivity"]) expect(screen.getByRole("combobox", { name })).toBeTruthy();
+  });
+  it("collapses the AI sidebar by default on the game only, and the user's toggle then wins", async () => {
+    path = "/story/game";
+    const { unmount } = shell();
+    expect(screen.queryByLabelText("AI assistant", { selector: "aside" })).toBeNull();
+    await userEvent.click(screen.getByRole("button", { name: "Expand AI sidebar" }));
+    expect(screen.getByLabelText("AI assistant", { selector: "aside" })).toBeTruthy();
+    unmount();
+    path = "/dashboard";
+    shell();
+    expect(screen.getByLabelText("AI assistant", { selector: "aside" })).toBeTruthy();
+  });
+});
+
+describe("AppShell print route", () => {
+  it("renders bare, with no header or Story link", () => {
+    path = "/story/print";
+    shell();
+    expect(screen.queryByRole("link", { name: "Story" })).toBeNull();
   });
 });

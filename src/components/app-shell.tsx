@@ -11,20 +11,22 @@ import { Separator } from "@/components/ui/separator";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { resolveCustomer } from "@/lib/customer";
 import { SENSITIVITY_LEVELS } from "@/lib/engine";
+import { GAME_PATH, STORY_PATH } from "@/lib/story/game";
 import { STORY_PRINT_PATH } from "@/lib/story/print";
-import { resolveBaseline, resolveSensitivity } from "@/lib/selection";
+import { SENSITIVITY_LABEL, resolveBaseline, resolveSensitivity } from "@/lib/selection";
 import { useRoleStore, type Role } from "@/store/role-store";
 
+// `match` is the route prefix that marks the view active; Story opens the game but also owns the report and print routes.
 const views = [
-  { href: "/dashboard", label: "Dashboard" },
-  { href: "/impact", label: "Impact World" },
-  { href: "/story", label: "Story" },
+  { href: "/dashboard", match: "/dashboard", label: "Dashboard" },
+  { href: "/impact", match: "/impact", label: "Impact World" },
+  { href: GAME_PATH, match: STORY_PATH, label: "Story" },
 ];
 
 type ShellCustomer = { customer_id: string; name: string };
 type ShellBaseline = { baseline_id: string; name: string };
 
-const SENSITIVITY_ITEMS = SENSITIVITY_LEVELS.map((l) => ({ value: l, label: l }));
+const SENSITIVITY_ITEMS = SENSITIVITY_LEVELS.map((l) => ({ value: l, label: SENSITIVITY_LABEL[l] }));
 
 // The layout cannot read searchParams, so the header reads the URL here. It uses the same resolvers as the page.
 function useSelection(customers: ShellCustomer[], baselines: ShellBaseline[]) {
@@ -87,8 +89,8 @@ function Selectors({ customers, baselines }: { customers: ShellCustomer[]; basel
 
 // `pathname` is undefined in the Suspense fallback: usePathname() suspends on a dynamic route, so the fallback shows no active view.
 function ViewLinkList({ query, pathname }: { query: string; pathname?: string }) {
-  return views.map(({ href, label }) => {
-    const active = pathname !== undefined && (pathname === href || pathname.startsWith(`${href}/`));
+  return views.map(({ href, match, label }) => {
+    const active = pathname !== undefined && (pathname === match || pathname.startsWith(`${match}/`));
     return (
       <Link
         key={href}
@@ -118,10 +120,14 @@ function ViewLinks({ customers, baselines }: { customers: ShellCustomer[]; basel
 
 type ShellProps = { children: React.ReactNode; customers: ShellCustomer[]; baselines: ShellBaseline[] };
 
-function Frame({ children, customers, baselines }: ShellProps) {
+// `pathname` is undefined in the Suspense fallback, which shows the pickers and the default sidebar.
+function Frame({ children, customers, baselines, pathname }: ShellProps & { pathname?: string }) {
   const role = useRoleStore((s) => s.role);
   const setRole = useRoleStore((s) => s.setRole);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  // The game is the only place its choices are made, so its sidebar starts collapsed; once the user toggles, their choice wins on every route.
+  const isGame = pathname === GAME_PATH;
+  const [userOpen, setUserOpen] = useState<boolean | null>(null);
+  const sidebarOpen = userOpen ?? !isGame;
 
   useEffect(() => {
     useRoleStore.persist.rehydrate();
@@ -131,15 +137,17 @@ function Frame({ children, customers, baselines }: ShellProps) {
     <div className="flex min-h-screen flex-col">
       <header className="flex flex-wrap items-center gap-3 border-b px-4 py-2">
         <span className="font-semibold">Threadline</span>
-        <Suspense
-          fallback={
-            <Button variant="outline" size="sm" disabled>
-              Customer
-            </Button>
-          }
-        >
-          <Selectors customers={customers} baselines={baselines} />
-        </Suspense>
+        {!isGame && (
+          <Suspense
+            fallback={
+              <Button variant="outline" size="sm" disabled>
+                Customer
+              </Button>
+            }
+          >
+            <Selectors customers={customers} baselines={baselines} />
+          </Suspense>
+        )}
         <div className="ml-auto flex items-center gap-2">
           <ToggleGroup
             aria-label="Role"
@@ -158,7 +166,7 @@ function Frame({ children, customers, baselines }: ShellProps) {
             className="hidden md:inline-flex"
             aria-label={sidebarOpen ? "Collapse AI sidebar" : "Expand AI sidebar"}
             aria-expanded={sidebarOpen}
-            onClick={() => setSidebarOpen((o) => !o)}
+            onClick={() => setUserOpen(!sidebarOpen)}
           >
             {sidebarOpen ? <CaretDoubleRight /> : <CaretDoubleLeft />}
           </Button>
@@ -189,7 +197,7 @@ function Frame({ children, customers, baselines }: ShellProps) {
 // shortcut: print route detected by pathname, not a route group; switch to (app)/(print) groups if more bare routes appear.
 function ShellOrBare(props: ShellProps) {
   const pathname = usePathname();
-  return pathname === STORY_PRINT_PATH ? <>{props.children}</> : <Frame {...props} />;
+  return pathname === STORY_PRINT_PATH ? <>{props.children}</> : <Frame {...props} pathname={pathname} />;
 }
 
 export function AppShell(props: ShellProps) {
