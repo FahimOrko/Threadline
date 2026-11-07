@@ -34,3 +34,17 @@ describe("each Fact on one page", () => {
     expect([...shown].sort()).toEqual([...old].sort());
   });
 });
+
+describe("Overview headlines", () => {
+  it("six cards in order, each the same Fact the section pages show, with a digit-free line", async () => {
+    const { overviewHeadlines } = await import("@/lib/dashboard");
+    const cards = overviewHeadlines(data, scope, baseline, DEFAULT_SENSITIVITY);
+    expect(cards.map((c) => c.fact.id)).toEqual(["water_saved", "co2e_saved", "avoided_purchase_cost", "garment_utilization", "on_time_cycle_rate", "dormant_critical_sites"]);
+    for (const { meaning } of cards) expect(meaning).not.toMatch(/\d/);
+    const footprint = footprintFacts(data, scope, baseline, DEFAULT_SENSITIVITY);
+    expect(cards[0].fact).toEqual(footprint.find((f) => f.id === "water_saved"));
+  });
+  it("the three previous Overview Facts are still shown", () => {
+    expect(sectionFacts(data, scope).overview.map((f) => f.id)).toEqual(["delivery_sites", "active_wearers", "garments_in_circulation"]);
+  });
+});

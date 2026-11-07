@@ -17,6 +17,21 @@ The engine SHALL provide a monthly series per measure, with its provenance and o
 - **WHEN** a series is requested with a site in the scope
 - **THEN** its points cover that site only
 
+### Requirement: Series windows and trend
+Each monthly series SHALL also carry the total for the last 3, 6 and 12 months (for a snapshot measure such as utilization, its value in the last month of the window) and a trend: for flow measures the change of the last three months against the three before, for utilization the change of the last month against the month three earlier, as a relative percent with a direction of up, down or flat (flat when the percent rounds to 0.0 at display). A series with fewer months than a window needs SHALL omit that window and the trend.
+
+#### Scenario: Window equals the months
+- **WHEN** the 6-month window of water saved is read
+- **THEN** it equals the sum of the last six points
+
+#### Scenario: Trend direction
+- **WHEN** the last three months total more than the three before
+- **THEN** the trend direction is up and the change is the engine's relative percent
+
+#### Scenario: Short series
+- **WHEN** a series has fewer than six points
+- **THEN** it has no trend and no 6-month window
+
 ### Requirement: Site by month matrix
 The engine SHALL provide, for utilization and for repairs, one row per site with one cell per month, each cell carrying its value and a level from 0 to 4 assigned by the engine from the customer's matrix.
 

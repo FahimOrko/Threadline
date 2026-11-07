@@ -35,7 +35,7 @@ Every chart SHALL have a text alternative: a visually hidden table of the plotte
 - **THEN** its line or outline is dashed
 
 ### Requirement: Not by colour alone
-A chart SHALL identify marks by label, dash or hatch as well as colour, SHALL use theme tokens only, and SHALL show no glow, gradient fill or animation.
+A chart SHALL identify marks by label, dash or hatch as well as colour, SHALL use theme tokens only, and SHALL show no glow, no gradient fill (an area chart may use a flat 12% tint of the subject colour) and no animation of its own.
 
 #### Scenario: Comparison bars
 - **WHEN** a comparison bar shows Lindström and the comparison laundry
@@ -56,7 +56,7 @@ A bar whose engine value is null because a team assumption is unset SHALL be dra
 - **THEN** each site shows a hatched placeholder bar labelled "Needs input"
 
 ### Requirement: Chart types
-A bar chart SHALL compare sites or products, a line SHALL show a monthly trend, a donut SHALL show a composition of at most three slices, a bullet chart SHALL compare a value with a cut-off, a waterfall SHALL show how a total is built from steps and a heatmap SHALL show sites by month.
+A bar chart SHALL compare sites or products, a line SHALL show a monthly trend, a donut SHALL show a composition of at most three slices, a bullet chart SHALL compare a value with a cut-off, a waterfall SHALL show how a total is built from steps and a heatmap SHALL show sites by month and an area chart SHALL show one measure over months.
 
 #### Scenario: Garments section
 - **WHEN** the Garments and utilization section opens
@@ -73,3 +73,29 @@ A bar chart SHALL compare sites or products, a line SHALL show a monthly trend, 
 #### Scenario: Footprint section
 - **WHEN** the Environmental footprint section opens
 - **THEN** a waterfall runs from the comparison laundry's emissions through process savings and delivery to the service total, with the net saving labelled
+
+### Requirement: Interactive area chart
+The Overview SHALL show one area chart of an engine monthly series, with a measure toggle (water saved, CO₂e saved, avoided purchase cost, garment utilization) and a range toggle (3, 6 or 12 months). The range total SHALL come from the engine's series windows; the chart SHALL only select which months to draw. A series with an estimated or illustrative method SHALL be drawn dashed. The toggles SHALL be keyboard operable and SHALL change nothing but the measure or the range.
+
+#### Scenario: Change range
+- **WHEN** the KAM selects "3 months"
+- **THEN** the chart draws the last three months and the total shown equals the engine's three-month window for that measure
+
+#### Scenario: Change measure
+- **WHEN** the KAM selects "Avoided cost"
+- **THEN** the line is dashed, the unit and chip change to that measure's, and the range stays as chosen
+
+#### Scenario: No series
+- **WHEN** the engine returns no series for a measure
+- **THEN** that measure is not offered
+
+### Requirement: One-time fade-in
+A chart section MAY fade in once on first load. It SHALL NOT replay on toggles or navigation within the page, and SHALL NOT fade with `prefers-reduced-motion: reduce`.
+
+#### Scenario: First load
+- **WHEN** a section page first renders
+- **THEN** its chart panels fade in once
+
+#### Scenario: Reduced motion
+- **WHEN** the user prefers reduced motion
+- **THEN** the panels show at once

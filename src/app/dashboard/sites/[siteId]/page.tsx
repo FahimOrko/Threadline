@@ -1,7 +1,6 @@
-import { ArrowLeft } from "@phosphor-icons/react/ssr";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import { SiteCrumb } from "@/components/app-header";
 import { FactStatCard } from "@/components/fact-stat-card";
 import { Panel } from "@/components/panel";
 import { SectionHeader } from "@/components/section-header";
@@ -53,14 +52,8 @@ async function SiteContent({
   ];
   return (
     <div className="space-y-6">
+      <SiteCrumb name={site.site_name} />
       <div className="space-y-2">
-        <Link
-          href={`/dashboard/sites?customer=${encodeURIComponent(customer.customer_id)}`}
-          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-        >
-          <ArrowLeft aria-hidden className="size-4" />
-          Back to sites
-        </Link>
         <h1 className="text-2xl font-semibold">{site.site_name}</h1>
         <p className="text-sm text-muted-foreground">
           {site.site_type} · {laundry?.laundry_name ?? site.primary_laundry_id} · {customer.customer_name} · {formatPeriod(PERIOD)}

@@ -36,12 +36,14 @@ export function factShowMath(fact: Fact): ShowMathProps {
 }
 
 // The only place a Fact becomes StatCard, ProvenanceChip and ShowMathPopover props.
-export function FactStatCard({ fact }: { fact: Fact }) {
+export function FactStatCard({ fact, note, className }: { fact: Fact; note?: string; className?: string }) {
   // A null value means a team assumption is unset (ADR 0016): show "Needs input", never 0 or an empty value.
   const missing = fact.assumptionIds.filter((id) => id.startsWith("T")).join(", ");
   return (
     <StatCard
       label={fact.label}
+      note={note}
+      className={className}
       value={fact.value === null ? undefined : formatCardValue(fact.value, fact.unit)}
       unit={fact.unit}
       needsInput={fact.value === null ? `Set ${missing || "the missing assumption"} in the assumptions config. See Show math.` : undefined}

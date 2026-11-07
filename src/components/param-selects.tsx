@@ -26,15 +26,19 @@ export function useSelection(customers: ShellCustomer[], baselines: ShellBaselin
   };
 }
 
+// Two letters for the collapsed customer switcher.
+export const initials = (name: string) => name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0].toUpperCase()).join("");
+
 // A selector only changes its own param; the others stay in the address (ADR 0017).
-export function ParamSelect({ label, name, value, items, stacked }: { label: string; name: string; value: string; items: { value: string; label: string }[]; stacked?: boolean }) {
+// `compact` is the collapsed sidebar form: the label stays for assistive tech and the trigger shows initials.
+export function ParamSelect({ label, name, value, items, stacked, compact }: { label: string; name: string; value: string; items: { value: string; label: string }[]; stacked?: boolean; compact?: boolean }) {
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
   const labelId = useId();
   return (
     <div className={cn("flex gap-2", stacked ? "flex-col" : "items-center")}>
-      <span id={labelId} className="text-sm text-muted-foreground">
+      <span id={labelId} className={cn("text-sm text-muted-foreground", compact && "sr-only")}>
         {label}
       </span>
       <Select
@@ -46,8 +50,8 @@ export function ParamSelect({ label, name, value, items, stacked }: { label: str
           router.push(`${pathname}?${next.toString()}`);
         }}
       >
-        <SelectTrigger size="sm" aria-labelledby={labelId} className={stacked ? "w-full" : undefined}>
-          <SelectValue />
+        <SelectTrigger size="sm" aria-labelledby={labelId} className={cn(stacked && "w-full", compact && "size-8 justify-center px-0 [&>svg]:hidden")}>
+          {compact ? <span aria-hidden className="text-xs font-medium">{initials(items.find((i) => i.value === value)?.label ?? "")}</span> : <SelectValue />}
         </SelectTrigger>
         <SelectContent alignItemWithTrigger={false}>
           {items.map((i) => (
@@ -61,14 +65,18 @@ export function ParamSelect({ label, name, value, items, stacked }: { label: str
   );
 }
 
-export function Selectors({ customers, baselines, stacked }: { customers: ShellCustomer[]; baselines: ShellBaseline[]; stacked?: boolean }) {
-  const { customer, baseline, sensitivity } = useSelection(customers, baselines);
+export function CustomerSelect({ customers, baselines, compact }: { customers: ShellCustomer[]; baselines: ShellBaseline[]; compact?: boolean }) {
+  const { customer } = useSelection(customers, baselines);
+  return <ParamSelect stacked compact={compact} label="Customer" name="customer" value={customer.customer_id} items={customers.map((c) => ({ value: c.customer_id, label: c.name }))} />;
+}
+
+/** The two pickers that change the numbers on a dashboard page (ADR 0017); they live in the header. */
+export function EstimateSelects({ customers, baselines }: { customers: ShellCustomer[]; baselines: ShellBaseline[] }) {
+  const { baseline, sensitivity } = useSelection(customers, baselines);
   return (
     <>
-      <ParamSelect stacked={stacked} label="Customer" name="customer" value={customer.customer_id} items={customers.map((c) => ({ value: c.customer_id, label: c.name }))} />
-      <ParamSelect stacked={stacked} label="Baseline" name="baseline" value={baseline.baseline_id} items={baselines.map((b) => ({ value: b.baseline_id, label: b.name }))} />
-      <ParamSelect stacked={stacked} label="Sensitivity" name="sensitivity" value={sensitivity} items={SENSITIVITY_ITEMS} />
+      <ParamSelect label="Baseline" name="baseline" value={baseline.baseline_id} items={baselines.map((b) => ({ value: b.baseline_id, label: b.name }))} />
+      <ParamSelect label="Estimate" name="sensitivity" value={sensitivity} items={SENSITIVITY_ITEMS} />
     </>
   );
 }
-

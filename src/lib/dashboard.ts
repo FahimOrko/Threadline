@@ -1,7 +1,7 @@
 // The dashboard's six sections (ADR 0023): route, subheading and the fixed intro template. Pure data and selection, no numbers computed here (ADR 0005).
 // Every number in an intro is a `{{fact:id}}` token resolved by the story's resolveLine; `{customer}` and `{period}` are plain words the page fills.
 import type { AppData } from "@/lib/data/schemas";
-import { operationalFacts, percentageFacts, valueFacts, type Fact, type OperationalScope } from "@/lib/engine";
+import { footprintFacts, observations, operationalFacts, percentageFacts, valueFacts, type Fact, type OperationalScope, type Sensitivity } from "@/lib/engine";
 import { resolveLine } from "@/lib/story";
 
 // Full year 2025, fixed in this version. Every engine call takes it as an argument, so a period picker only changes this.
@@ -90,4 +90,23 @@ export function sectionFacts(data: AppData, scope: OperationalScope) {
     // The Facts the intro tokens may name, from every page's group.
     tokens: [...operational, ...value],
   };
+}
+
+// The six Overview headlines in order, each with one fixed plain line (no numbers: they stay in the Fact).
+const HEADLINES: { id: string; meaning: string }[] = [
+  { id: "water_saved", meaning: "Water not used, compared with the selected comparison laundry." },
+  { id: "co2e_saved", meaning: "Net emissions avoided, with delivery counted." },
+  { id: "avoided_purchase_cost", meaning: "Garment purchases the customer did not have to make." },
+  { id: "garment_utilization", meaning: "How much of the allocated garment stock is worn." },
+  { id: "on_time_cycle_rate", meaning: "How often sampled wash cycles finished on time." },
+  { id: "dormant_critical_sites", meaning: "Sites where garments have sat unused longest." },
+];
+
+/** The Facts behind the six Overview headlines, in order; the same Facts the section pages show. An id the engine does not produce is left out. */
+export function overviewHeadlines(data: AppData, scope: OperationalScope, baseline: AppData["baselines"][number], sensitivity: Sensitivity): { fact: Fact; meaning: string }[] {
+  const pool = [...footprintFacts(data, scope, baseline, sensitivity), ...valueFacts(data, scope), ...percentageFacts(data, scope), ...observations(data, scope).facts];
+  return HEADLINES.flatMap(({ id, meaning }) => {
+    const fact = pool.find((f) => f.id === id);
+    return fact ? [{ fact, meaning }] : [];
+  });
 }

@@ -25,13 +25,13 @@ describe("print route", () => {
   it("AppShell renders no header or nav on the print path", () => {
     path = STORY_PRINT_PATH;
     shell();
-    expect(screen.queryByRole("navigation", { name: "Views" })).toBeNull();
+    expect(screen.queryByRole("navigation", { name: "Sections" })).toBeNull();
     expect(screen.getByText("story")).toBeTruthy();
   });
   it("AppShell keeps the shell elsewhere", () => {
     path = "/story";
     shell();
-    expect(screen.getByRole("navigation", { name: "Views" })).toBeTruthy();
+    expect(screen.getByRole("navigation", { name: "Sections" })).toBeTruthy();
   });
 });
 

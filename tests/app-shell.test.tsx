@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -24,207 +24,277 @@ const baselines = [
   { baseline_id: "B_INHOUSE", name: "in-house laundry" },
 ];
 const shell = () => render(<AppShell customers={customers} baselines={baselines}>x</AppShell>);
+const sidebar = () => screen.getByLabelText("Main", { selector: "aside" });
+const nav = () => within(screen.getByRole("navigation", { name: "Sections" }));
+const href = (name: string) => nav().getByRole("link", { name }).getAttribute("href");
+const ai = () => screen.queryByLabelText("AI assistant", { selector: "aside" });
 
 beforeEach(() => {
   push.mockClear();
   search = "";
   path = "/impact";
+  document.cookie = "sidebar_state=; max-age=0; path=/";
 });
 afterEach(cleanup);
 
-describe("AppShell customer picker", () => {
-  it("shows NorthStar by default", () => {
+describe("customer switcher", () => {
+  it("shows NorthStar by default and for an unknown value", () => {
     shell();
     expect(screen.getByRole("combobox", { name: "Customer" }).textContent).toContain("NorthStar Foods Group");
-  });
-  it("shows the same customer as the page for an unknown value", () => {
+    cleanup();
     search = "customer=NOPE";
     shell();
     expect(screen.getByRole("combobox", { name: "Customer" }).textContent).toContain("NorthStar Foods Group");
   });
-  it("lists every customer and navigates with the chosen id", async () => {
+  it("lists every customer and navigates with the chosen id, keeping other params", async () => {
+    search = "baseline=B_HOME&sensitivity=low";
     shell();
     await userEvent.click(screen.getByRole("combobox", { name: "Customer" }));
     expect(screen.getAllByRole("option").map((o) => o.textContent)).toEqual(["NorthStar Foods Group", "Other Co"]);
     await userEvent.click(screen.getByRole("option", { name: "Other Co" }));
-    expect(push).toHaveBeenCalledWith("/impact?customer=CUST002");
+    expect(push).toHaveBeenCalledWith("/impact?baseline=B_HOME&sensitivity=low&customer=CUST002");
   });
-});
-
-describe("AppShell view links", () => {
-  it("keep the selected customer", () => {
-    search = "customer=CUST002";
-    path = "/story";
-    shell();
-    expect(screen.getByRole("link", { name: "Story" }).getAttribute("href")).toBe("/story/game?customer=CUST002");
-  });
-  it("stay clean without a customer param", () => {
-    shell();
-    expect(screen.getByRole("link", { name: "Story" }).getAttribute("href")).toBe("/story/game");
-  });
-});
-
-describe("AppShell sidebar on narrow screens", () => {
-  it("hides the sidebar, its separator and the toggle below md", () => {
-    const { container } = shell();
-    const aside = screen.getByLabelText("AI assistant", { selector: "aside" });
-    expect(aside.className).toMatch(/\bhidden\b.*\bmd:block\b/);
-    expect(aside.previousElementSibling?.className).toMatch(/\bhidden\b.*\bmd:block\b/);
-    const toggle = container.querySelector('button[aria-label$="AI sidebar"]');
-    expect(toggle?.className).toMatch(/\bhidden\b.*\bmd:inline-flex\b/);
-  });
-});
-
-describe("AppShell baseline and sensitivity selectors", () => {
-  it("shows local laundry and base by default", () => {
-    shell();
-    expect(screen.getByRole("combobox", { name: "Baseline" }).textContent).toContain("local laundry");
-    expect(screen.getByRole("combobox", { name: "Sensitivity" }).textContent).toContain("Standard estimate");
-  });
-  it("falls back for unknown values, like the page", () => {
-    search = "baseline=NOPE&sensitivity=extreme";
-    shell();
-    expect(screen.getByRole("combobox", { name: "Baseline" }).textContent).toContain("local laundry");
-    expect(screen.getByRole("combobox", { name: "Sensitivity" }).textContent).toContain("Standard estimate");
-  });
-  it("changing the baseline keeps customer and sensitivity in the address", async () => {
-    search = "customer=CUST002&sensitivity=high";
-    shell();
-    await userEvent.click(screen.getByRole("combobox", { name: "Baseline" }));
-    await userEvent.click(await screen.findByRole("option", { name: "home washing" }));
-    expect(push).toHaveBeenCalledWith("/impact?customer=CUST002&sensitivity=high&baseline=B_HOME");
-  });
-  it("changing the customer keeps baseline and sensitivity", async () => {
-    search = "baseline=B_HOME&sensitivity=low";
+  it("keeps priorities and an unrelated param", async () => {
+    search = "priorities=water,cost&foo=bar";
     shell();
     await userEvent.click(screen.getByRole("combobox", { name: "Customer" }));
     await userEvent.click(await screen.findByRole("option", { name: "Other Co" }));
-    expect(push).toHaveBeenCalledWith("/impact?baseline=B_HOME&sensitivity=low&customer=CUST002");
-  });
-  it("view links keep all three params", () => {
-    search = "customer=CUST002&baseline=B_HOME&sensitivity=low";
-    shell();
-    expect(screen.getByRole("link", { name: "Story" }).getAttribute("href")).toBe("/story/game?customer=CUST002&baseline=B_HOME&sensitivity=low");
-  });
-});
-
-describe("AppShell story priorities (ADR 0019)", () => {
-  it("view links keep ?priorities= together with the other params", () => {
-    search = "customer=CUST002&priorities=cost,hygiene";
-    shell();
-    expect(screen.getByRole("link", { name: "Story" }).getAttribute("href")).toBe("/story/game?customer=CUST002&priorities=cost%2Chygiene");
-    expect(screen.getByRole("link", { name: "Dashboard" }).getAttribute("href")).toContain("priorities=cost%2Chygiene");
-  });
-  it("view links stay clean without picks", () => {
-    search = "customer=CUST002";
-    shell();
-    expect(screen.getByRole("link", { name: "Story" }).getAttribute("href")).not.toContain("priorities");
-  });
-  it.each([
-    ["Customer", "Other Co"],
-    ["Baseline", "home washing"],
-    ["Sensitivity", "Generous estimate"],
-  ])("changing %s keeps priorities and an unrelated param", async (name, option) => {
-    search = "priorities=water,cost&foo=bar";
-    shell();
-    await userEvent.click(screen.getByRole("combobox", { name }));
-    await userEvent.click(await screen.findByRole("option", { name: option }));
     const url = new URL(push.mock.calls[0][0], "http://x");
     expect(url.searchParams.get("priorities")).toBe("water,cost");
     expect(url.searchParams.get("foo")).toBe("bar");
   });
-});
-
-describe("AppShell story entry (story-game-polish)", () => {
-  it("the Story link opens the game", () => {
-    shell();
-    expect(screen.getByRole("link", { name: "Story" }).getAttribute("href")).toBe("/story/game");
-  });
-  // /story/print renders without the header (bare route), so only the two routes that show the nav can be checked.
-  it.each(["/story", "/story/game"])("marks Story active on %s", (p) => {
-    path = p;
-    shell();
-    expect(screen.getByRole("link", { name: "Story" }).getAttribute("aria-current")).toBe("page");
-    expect(screen.getByRole("link", { name: "Dashboard" }).getAttribute("aria-current")).toBeNull();
-  });
-  it("hides the three pickers on the game and keeps them elsewhere", () => {
+  it("is hidden on the game and shown elsewhere", () => {
     path = "/story/game";
     const { unmount } = shell();
-    for (const name of ["Customer", "Baseline", "Sensitivity"]) expect(screen.queryByRole("combobox", { name })).toBeNull();
+    expect(screen.queryByRole("combobox", { name: "Customer" })).toBeNull();
     unmount();
     path = "/story";
     shell();
-    for (const name of ["Customer", "Baseline", "Sensitivity"]) expect(screen.getByRole("combobox", { name })).toBeTruthy();
+    expect(screen.getByRole("combobox", { name: "Customer" })).toBeTruthy();
   });
-  it("collapses the AI sidebar by default on the game only, and the user's toggle then wins", async () => {
-    path = "/story/game";
-    const { unmount } = shell();
-    expect(screen.queryByLabelText("AI assistant", { selector: "aside" })).toBeNull();
-    await userEvent.click(screen.getByRole("button", { name: "Expand AI sidebar" }));
-    expect(screen.getByLabelText("AI assistant", { selector: "aside" })).toBeTruthy();
-    unmount();
+  it("collapsed, it shows initials and keeps its accessible name", () => {
     path = "/dashboard";
     shell();
-    expect(screen.getByLabelText("AI assistant", { selector: "aside" })).toBeTruthy();
+    expect(sidebar().getAttribute("data-state")).toBe("collapsed");
+    const box = screen.getByRole("combobox", { name: "Customer" });
+    expect(box.textContent).toContain("NF");
+    expect(box.textContent).not.toContain("NorthStar");
   });
 });
 
-describe("AppShell print route", () => {
-  it("renders bare, with no header or Story link", () => {
-    path = "/story/print";
+describe("sidebar items", () => {
+  it("KAM sees the six sections, then Story and Impact World", () => {
     shell();
-    expect(screen.queryByRole("link", { name: "Story" })).toBeNull();
+    expect(nav().getAllByRole("link").map((l) => l.textContent)).toEqual(["Overview", "Garments and utilization", "Costs", "Environmental footprint", "Signals", "Sites", "Story", "Impact World"]);
   });
-});
-
-describe("AppShell view mode (?view=)", () => {
-  const names = () => screen.getAllByRole("link").map((l) => l.textContent);
-  it("shows Dashboard, Impact World and Story for KAM", () => {
-    shell();
-    expect(screen.getAllByRole("navigation", { name: "Views" })[0].textContent).toContain("Dashboard");
-  });
-  it("hides the Dashboard link in customer view", () => {
+  it("customer view shows only Story and Impact World", () => {
     search = "view=customer";
     shell();
-    expect(screen.queryByRole("link", { name: "Dashboard" })).toBeNull();
-    expect(names()).toEqual(expect.arrayContaining(["Story", "Impact World"]));
+    expect(nav().getAllByRole("link").map((l) => l.textContent)).toEqual(["Story", "Impact World"]);
   });
+  it("marks the current section and keeps Sites active on a site page", () => {
+    path = "/dashboard/costs";
+    const { unmount } = shell();
+    expect(nav().getByRole("link", { name: "Costs" }).getAttribute("aria-current")).toBe("page");
+    expect(nav().getByRole("link", { name: "Overview" }).getAttribute("aria-current")).toBeNull();
+    unmount();
+    path = "/dashboard/sites/S1";
+    shell();
+    expect(nav().getByRole("link", { name: "Sites" }).getAttribute("aria-current")).toBe("page");
+  });
+  it.each(["/story", "/story/game"])("marks Story active on %s", (p) => {
+    path = p;
+    shell();
+    expect(nav().getByRole("link", { name: "Story" }).getAttribute("aria-current")).toBe("page");
+    expect(nav().getByRole("link", { name: "Impact World" }).getAttribute("aria-current")).toBeNull();
+  });
+  it("the Story link opens the game and stays clean without params", () => {
+    shell();
+    expect(href("Story")).toBe("/story/game");
+  });
+  it("Story and Impact World keep all params inside Story", () => {
+    path = "/story";
+    search = "customer=CUST002&baseline=B_HOME&sensitivity=low&priorities=cost,hygiene";
+    shell();
+    expect(href("Impact World")).toBe("/impact?customer=CUST002&baseline=B_HOME&sensitivity=low&priorities=cost%2Chygiene");
+  });
+  it("dashboard sections keep customer, baseline, sensitivity and view; leaving keeps view only", () => {
+    path = "/dashboard";
+    search = "customer=CUST002&baseline=B_HOME&sensitivity=high&priorities=water";
+    shell();
+    expect(href("Signals")).toBe("/dashboard/signals?customer=CUST002&baseline=B_HOME&sensitivity=high&priorities=water");
+    expect(href("Story")).toBe("/story/game");
+    cleanup();
+    search = "customer=CUST002&view=customer";
+    path = "/story";
+    shell();
+    expect(href("Impact World")).toBe("/impact?customer=CUST002&view=customer");
+  });
+  it("collapsed, every link keeps an accessible name", () => {
+    path = "/dashboard";
+    shell();
+    expect(sidebar().getAttribute("data-state")).toBe("collapsed");
+    expect(nav().getByRole("link", { name: "Costs" })).toBeTruthy();
+    expect(nav().getByRole("link", { name: "Impact World" })).toBeTruthy();
+  });
+});
+
+describe("view and theme toggles in the sidebar footer", () => {
   it("the toggle sets and clears ?view= and keeps other params", () => {
     search = "customer=CUST002";
     shell();
     expect(screen.getByRole("link", { name: "Customer" }).getAttribute("href")).toBe("/impact?customer=CUST002&view=customer");
     expect(screen.getByRole("link", { name: "KAM" }).getAttribute("href")).toBe("/impact?customer=CUST002");
   });
-  it("marks the mode from the URL, so a reload keeps it", () => {
+  it("marks the mode from the URL; an unknown view is KAM", () => {
     search = "view=customer";
     shell();
     expect(screen.getByRole("link", { name: "Customer" }).getAttribute("aria-current")).toBe("true");
-    expect(screen.getByRole("link", { name: "KAM" }).getAttribute("aria-current")).toBeNull();
-  });
-  it("an unknown view is KAM", () => {
+    cleanup();
     search = "view=admin";
     shell();
     expect(screen.getByRole("link", { name: "KAM" }).getAttribute("aria-current")).toBe("true");
   });
+  it("collapsed, one icon link switches to the other view", () => {
+    path = "/dashboard";
+    search = "customer=CUST002";
+    shell();
+    expect(screen.getByRole("link", { name: "Switch to customer view" }).getAttribute("href")).toBe("/dashboard?customer=CUST002&view=customer");
+  });
+  it("has a theme toggle", () => {
+    shell();
+    expect(screen.getByRole("button", { name: /theme/i })).toBeTruthy();
+  });
 });
 
-describe("AppShell on the dashboard", () => {
-  it("leaving for Story or Impact World drops customer, baseline and sensitivity and keeps view", () => {
+describe("header", () => {
+  it("shows the baseline and estimate pickers on dashboard routes only", () => {
     path = "/dashboard";
-    search = "customer=CUST002&baseline=B_HOME&sensitivity=high&priorities=water&view=customer";
+    const { unmount } = shell();
+    expect(screen.getByRole("combobox", { name: "Baseline" }).textContent).toContain("local laundry");
+    expect(screen.getByRole("combobox", { name: "Estimate" }).textContent).toContain("Standard estimate");
+    unmount();
+    path = "/impact";
     shell();
-    expect(screen.getByRole("link", { name: "Story" }).getAttribute("href")).toBe("/story/game?view=customer");
-    expect(screen.getByRole("link", { name: "Impact World" }).getAttribute("href")).toBe("/impact?view=customer");
+    for (const name of ["Baseline", "Estimate"]) expect(screen.queryByRole("combobox", { name })).toBeNull();
   });
-  it("leaving as KAM adds nothing", () => {
+  it("falls back for unknown values, like the page", () => {
+    path = "/dashboard";
+    search = "baseline=NOPE&sensitivity=extreme";
+    shell();
+    expect(screen.getByRole("combobox", { name: "Baseline" }).textContent).toContain("local laundry");
+    expect(screen.getByRole("combobox", { name: "Estimate" }).textContent).toContain("Standard estimate");
+  });
+  it("lists the plain estimate labels and changing one keeps the other params", async () => {
     path = "/dashboard/costs";
-    search = "customer=CUST002&baseline=B_HOME";
+    search = "customer=CUST002&baseline=B_HOME&priorities=water";
     shell();
-    expect(screen.getByRole("link", { name: "Story" }).getAttribute("href")).toBe("/story/game");
+    await userEvent.click(screen.getByRole("combobox", { name: "Estimate" }));
+    expect((await screen.findAllByRole("option")).map((o) => o.textContent)).toEqual(["Cautious estimate", "Standard estimate", "Generous estimate"]);
+    await userEvent.click(screen.getByRole("option", { name: "Generous estimate" }));
+    expect(push).toHaveBeenCalledWith("/dashboard/costs?customer=CUST002&baseline=B_HOME&priorities=water&sensitivity=high");
   });
-  it("shows no pickers in the header (they are in the dashboard sidebar)", () => {
-    path = "/dashboard/sites/S1";
+  it("changing the baseline keeps customer and sensitivity", async () => {
+    path = "/dashboard";
+    search = "customer=CUST002&sensitivity=high";
     shell();
-    for (const name of ["Customer", "Baseline", "Sensitivity"]) expect(screen.queryByRole("combobox", { name })).toBeNull();
+    await userEvent.click(screen.getByRole("combobox", { name: "Baseline" }));
+    await userEvent.click(await screen.findByRole("option", { name: "home washing" }));
+    expect(push).toHaveBeenCalledWith("/dashboard?customer=CUST002&sensitivity=high&baseline=B_HOME");
+  });
+  it("the game shows no picker at all", () => {
+    path = "/story/game";
+    shell();
+    for (const name of ["Customer", "Baseline", "Estimate"]) expect(screen.queryByRole("combobox", { name })).toBeNull();
+  });
+  it("breadcrumb names the section; a site page links back to Sites", () => {
+    path = "/dashboard/costs";
+    const { unmount } = shell();
+    const crumbs = within(screen.getByRole("navigation", { name: "Breadcrumb" }));
+    expect(crumbs.getByText("Costs").getAttribute("aria-current")).toBe("page");
+    unmount();
+    path = "/dashboard/sites/S1";
+    search = "customer=CUST002";
+    shell();
+    const site = within(screen.getByRole("navigation", { name: "Breadcrumb" }));
+    expect(site.getByRole("link", { name: "Sites" }).getAttribute("href")).toBe("/dashboard/sites?customer=CUST002");
+    expect(site.getByText("Site").getAttribute("aria-current")).toBe("page");
+  });
+});
+
+describe("AI sidebar", () => {
+  it("hides the sidebar, its separator and the toggle below md", () => {
+    const { container } = shell();
+    const aside = screen.getByLabelText("AI assistant", { selector: "aside" });
+    expect(aside.className).toMatch(/\bhidden\b.*\bmd:block\b/);
+    expect(aside.previousElementSibling?.className).toMatch(/\bhidden\b.*\bmd:block\b/);
+    expect(container.querySelector('button[aria-label$="AI sidebar"]')?.className).toMatch(/\bhidden\b.*\bmd:inline-flex\b/);
+  });
+  it("starts collapsed on the game only, and the user's toggle then wins", async () => {
+    path = "/story/game";
+    const { unmount } = shell();
+    expect(ai()).toBeNull();
+    await userEvent.click(screen.getByRole("button", { name: "Expand AI sidebar" }));
+    expect(ai()).toBeTruthy();
+    unmount();
+    path = "/dashboard";
+    shell();
+    expect(ai()).toBeTruthy();
+  });
+});
+
+describe("app sidebar and the AI sidebar (ADR 0025)", () => {
+  it("is expanded outside the dashboard even with the AI sidebar open", () => {
+    shell();
+    expect(ai()).toBeTruthy();
+    expect(sidebar().getAttribute("data-state")).toBe("expanded");
+  });
+  it("collapses on the dashboard while the AI sidebar is open and restores when it closes", async () => {
+    path = "/dashboard";
+    shell();
+    expect(sidebar().getAttribute("data-state")).toBe("collapsed");
+    await userEvent.click(screen.getByRole("button", { name: "Collapse AI sidebar" }));
+    expect(sidebar().getAttribute("data-state")).toBe("expanded");
+    await userEvent.click(screen.getByRole("button", { name: "Expand AI sidebar" }));
+    expect(sidebar().getAttribute("data-state")).toBe("collapsed");
+  });
+  it("an automatic collapse never writes the preference", async () => {
+    path = "/dashboard";
+    shell();
+    expect(document.cookie).not.toContain("sidebar_state");
+    await userEvent.click(screen.getByRole("button", { name: "Collapse AI sidebar" }));
+    expect(document.cookie).not.toContain("sidebar_state");
+  });
+  it("a toggle in between wins: expanded by hand, it stays expanded when the AI sidebar closes", async () => {
+    path = "/dashboard";
+    shell();
+    await userEvent.click(screen.getByRole("button", { name: "Expand sidebar" }));
+    expect(sidebar().getAttribute("data-state")).toBe("expanded");
+    await userEvent.click(screen.getByRole("button", { name: "Collapse AI sidebar" }));
+    expect(sidebar().getAttribute("data-state")).toBe("expanded");
+  });
+  it("a manual collapse is remembered in the cookie and survives closing the AI sidebar", async () => {
+    path = "/impact";
+    shell();
+    await userEvent.click(screen.getByRole("button", { name: "Collapse sidebar" }));
+    expect(sidebar().getAttribute("data-state")).toBe("collapsed");
+    expect(document.cookie).toContain("sidebar_state=false");
+    cleanup();
+    shell();
+    expect(sidebar().getAttribute("data-state")).toBe("collapsed");
+  });
+  it("Ctrl+B toggles it", async () => {
+    shell();
+    await userEvent.keyboard("{Control>}b{/Control}");
+    expect(sidebar().getAttribute("data-state")).toBe("collapsed");
+  });
+});
+
+describe("print route", () => {
+  it("renders bare, with no sidebar or header", () => {
+    path = "/story/print";
+    shell();
+    expect(screen.queryByLabelText("Main", { selector: "aside" })).toBeNull();
+    expect(screen.queryByRole("link", { name: "Story" })).toBeNull();
   });
 });

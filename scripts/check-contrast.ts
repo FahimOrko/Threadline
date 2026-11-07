@@ -56,6 +56,10 @@ const pairs: [string, string, number][] = [
   ["primary-foreground", "primary", 4.5],
   ["certain-foreground", "certain", 4.5],
   ["uncertain-foreground", "uncertain", 4.5],
+  ["sidebar-foreground", "sidebar", 4.5],
+  ["sidebar-accent-foreground", "sidebar-accent", 4.5],
+  ["muted-foreground", "sidebar", 4.5], // group labels and the Theme label
+  ["sidebar-border", "sidebar", 1.1],
   ["border", "background", 1.2], // hairline is visible but quiet
   ["certain", "background", 1.05], // chip fill vs page (edge comes from the chip border)
   ["uncertain", "background", 1.1],
@@ -70,7 +74,7 @@ const edges: [string, string, number, number][] = [
 let failed = 0;
 for (const [name, sel] of [["light", ":root"], ["dark", ".dark"]] as const) {
   const t = tokens(sel);
-  const bgOf = (k: string) => (k === "card" ? t.card : t[k]);
+  const bgOf = (k: string) => t[k];
   console.log(`\n${name}`);
   for (const [fgName, bgName, min] of pairs) {
     const bg = bgOf(bgName);
