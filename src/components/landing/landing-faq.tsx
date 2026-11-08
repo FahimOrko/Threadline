@@ -9,9 +9,9 @@ export function LandingFaq({ items = FAQ }: { items?: FaqItem[] }) {
     <section aria-labelledby="landing-faq" className="mx-auto max-w-6xl px-8 pb-24 pt-8">
       <div className="mb-10 text-center">
         <h2 id="landing-faq" className="text-3xl font-semibold tracking-tight">Finding your way around</h2>
-        <p className="mx-auto mt-3 max-w-md text-muted-foreground">{FAQ_INTRO}</p>
+        <p className="mt-3 text-muted-foreground">{FAQ_INTRO}</p>
       </div>
-      <Accordion className="mx-auto max-w-[720px]">
+      <Accordion>
         {items.map((q) => (
           <AccordionItem key={q.id} value={q.id}>
             <AccordionTrigger className="items-center py-5 text-base">{q.question}</AccordionTrigger>
