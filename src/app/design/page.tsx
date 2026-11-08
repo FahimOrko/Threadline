@@ -28,6 +28,10 @@ import { StoryChapter } from "@/components/story-chapter";
 import { StoryHeader } from "@/components/story-header";
 import { EmptyState, ErrorState, StatCardSkeleton } from "@/components/states";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { LandingBento } from "@/components/landing/landing-bento";
+import { LandingFaq } from "@/components/landing/landing-faq";
+import { LandingFooter } from "@/components/landing/landing-footer";
+import { LandingHero } from "@/components/landing/landing-hero";
 import { Tooltip } from "@/components/tooltip";
 import { METHODS, SOURCES } from "@/lib/provenance";
 import { HowWeGotHere } from "@/components/how-we-got-here";
@@ -41,7 +45,7 @@ import { PartBar, Ring } from "@/components/charts-simple";
 import { ZONES } from "@/lib/world";
 import { SAMPLE_LABEL, sampleHubFacts, sampleTrees, sampleSteps, sampleFact, sampleNeedsInputFact, sampleMathWorstCase, sampleObservations, sampleSiteLinks, sampleStats, sampleSiteTable, stressChip } from "./_sample/data";
 
-const sections = ["Tokens", "Provenance", "Data display", "Controls", "States", "Effects", "Impact World"];
+const sections = ["Tokens", "Provenance", "Data display", "Controls", "States", "Effects", "Impact World", "Landing"];
 const tokenNames = [
   "background", "card", "muted", "primary", "certain", "uncertain", "border", "destructive",
 ];
@@ -489,6 +493,16 @@ export default function DesignPage() {
             <h3 className="text-sm font-medium">TreesStage: needs input</h3>
             <TreesStage stage={null} {...sampleTrees.missing} comparisonName="local laundry" />
           </div>
+        </div>
+      </section>
+
+      <section id="landing" className="space-y-4">
+        <SectionHeader title="Landing" description="The sections of the page at /. They carry copy only, no figures and no sample data, so there is nothing to label." />
+        <div className="space-y-6 overflow-hidden rounded-lg border">
+          <LandingHero />
+          <LandingBento />
+          <LandingFaq />
+          <LandingFooter />
         </div>
       </section>
     </div>

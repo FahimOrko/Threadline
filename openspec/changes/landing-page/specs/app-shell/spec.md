@@ -44,19 +44,19 @@ The app SHALL provide an empty AI sidebar on the right that the user can collaps
 - **THEN** every dashboard card and every "Show math" popover trigger can be clicked with the mouse
 
 ### Requirement: App sidebar
-The app SHALL show a left navigation sidebar on every view except the landing page at `/`. It SHALL be expanded on every page load, SHALL collapse to an icon column and expand again by a trigger in the header and by `Ctrl+B`, and SHALL show a label tooltip on each icon when collapsed. A collapse SHALL last until the page is reloaded; it SHALL NOT be stored in a cookie or a URL param. Its group "Dashboard" SHALL list Overview, Garments and utilization, Costs, Environmental footprint, Signals and Sites; its group "Shared" SHALL list the Story group (see its requirement) and Impact World. The active item SHALL be marked `aria-current="page"`. Every item SHALL use a Phosphor icon, and the active and hovered item SHALL show an indicator that glides between items; under `prefers-reduced-motion: reduce` it SHALL be a static fill. The wordmark SHALL be its own row above the customer switcher and SHALL link to `/` with no params. The sidebar's footer SHALL hold the KAM / Customer view links and the theme toggle. There SHALL be no top tab bar.
+The app SHALL show a left navigation sidebar on every view except the landing page at `/`. It SHALL be expanded by default, SHALL collapse to an icon column and expand again by a trigger in the header and by `Ctrl+B`, and SHALL show a label tooltip on each icon when collapsed. The chosen state SHALL persist in a cookie and SHALL NOT be a URL param; with no cookie it is expanded. Its group "Dashboard" SHALL list Overview, Garments and utilization, Costs, Environmental footprint, Signals and Sites; its group "Shared" SHALL list the Story group (see its requirement) and Impact World. The active item SHALL be marked `aria-current="page"`. Every item SHALL use a Phosphor icon, and the active and hovered item SHALL show an indicator that glides between items; under `prefers-reduced-motion: reduce` it SHALL be a static fill. The wordmark SHALL be its own row above the customer switcher and SHALL link to `/` with no params. The sidebar's footer SHALL hold the KAM / Customer view links and the theme toggle. There SHALL be no top tab bar.
 
 #### Scenario: Collapse
 - **WHEN** the user activates the trigger
 - **THEN** the sidebar shrinks to icons, the main area takes the space, and each icon still has an accessible name and a tooltip
 
 #### Scenario: Open on first load
-- **WHEN** the dashboard, `/story`, `/story/game` or `/world` is opened
+- **WHEN** the dashboard, `/story`, `/story/game` or `/world` is opened with no saved choice
 - **THEN** the sidebar is expanded
 
 #### Scenario: Persisted
 - **WHEN** the user collapsed it and reloads
-- **THEN** it is expanded again, because a collapse is not stored
+- **THEN** it is collapsed again once the page has loaded
 
 #### Scenario: Active item
 - **WHEN** the route is `/dashboard/costs`

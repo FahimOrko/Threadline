@@ -14,7 +14,7 @@ Opening Threadline today drops you straight into the account manager's dashboard
 - **FAQ.** shadcn Accordion with eight navigation-guide questions. The questions and answers live in one static module (`src/lib/landing-content.ts`) that a future AI guide can read.
 - **Footer.** "Synthetic data, not audit-ready".
 - **AI sidebar closed by default everywhere.** It opens only when the user clicks its toggle. The per-route default is removed.
-- **App sidebar open on every page load.** The user can still collapse it with the toggle. See Decisions for what happens to the saved cookie.
+- **App sidebar open on every page load.** The user can still collapse it with the toggle. The saved cookie is still honoured; with none, it is open.
 - **Motion** through `motion`, static under `prefers-reduced-motion`. React Bits only where it fits (see Decisions for licence).
 - **Docs.** Landing sections added to `/design` and `docs/design.md`; copy rules checked against the Copy voice section; app-shell spec updated.
 
@@ -24,7 +24,7 @@ Everything below follows the Copy voice section (warm, plain, a little more expl
 
 | | Headline | Subline |
 |---|---|---|
-| **A (proposed)** | Your year of laundry, told as a story. | See what working with Lindström saved, where it came from and how we worked it out. Start as the account manager, or look through the customer's eyes. |
+| **A (chosen)** | Your year of laundry, told as a story. | See what working with Lindström saved and how we worked it out, from either side of the table. (Subline tightened to 19 words in the polish pass; headline unchanged.) |
 | B | The numbers behind your year with Lindström. | Every figure shows where it came from and how it was calculated, so the conversation is about what to do next, not whether to trust them. |
 | C | A value review you can actually follow. | Walk through the year with Lindström, one honest step at a time. Pick the side of the table you are on. |
 
@@ -44,7 +44,7 @@ Everything below follows the Copy voice section (warm, plain, a little more expl
 
 ### Modified Capabilities
 
-- `app-shell`: the AI sidebar is collapsed by default on every route; the app sidebar is open on every page load; `/` renders without the shell; the sidebar wordmark links to `/`; the cookie persistence and "AI sidebar collapses the app sidebar" requirements change accordingly.
+- `app-shell`: the AI sidebar is collapsed by default on every route; the app sidebar is open when no cookie exists; `/` renders without the shell; the sidebar wordmark links to `/`; the cookie persistence and "AI sidebar collapses the app sidebar" requirements change accordingly.
 - `dashboard-navigation`: "Customer view has no dashboard" gains the rule that `/` is never redirected and stays reachable in customer view.
 - `design-system`: the `/design` gallery includes the landing sections.
 
@@ -54,7 +54,7 @@ Chosen by me, not specified in the request. Push back on any.
 
 1. **No route move.** `/dashboard` already exists, so "dashboard moves to /dashboard" reduces to replacing the `/` redirect. `src/proxy.ts` needs no logic change (its matcher is `/dashboard/:path*`, so `/` is already untouched); I add a test that proves it.
 2. **Landing is bare, not a route group.** `AppShell` returns `children` alone when the pathname is `/`. Moving every route into a `(app)` group would touch dozens of files for the same result. Trade-off: the shell component knows one path.
-3. **Left nav ignores the saved cookie on load.** "Open by default on page load" is read literally: every load opens it. A collapse lasts for that page view only; the `sidebar_state` cookie is no longer read. I keep writing nothing new. Alternative: keep honouring the cookie and only default to open when none exists. Say if you prefer that.
+3. **Left nav keeps honouring the cookie** (reviewed): open by default when no `sidebar_state` cookie exists; `SIDEBAR_COOKIE` stays. Existing code already does this, so no nav change beyond the tests.
 4. **Opening the AI sidebar on the dashboard still collapses the left nav** (ADR 0025), since both being open squeezes a dashboard that fits 1280px. Because the AI sidebar now starts closed, this only happens after a click.
 5. **Proposed hero copy is option A.** B and C are alternatives; pick one before apply.
 6. **Eight FAQ items**, in this order: What is the Dashboard? What is the Story? What is Impact World? Why does Impact World open after the review in the customer view? How do I switch customer? How do I switch between account manager and customer view? How does export work? What will the AI guide do? (It is the answer that says it is coming later.)
@@ -67,7 +67,7 @@ Chosen by me, not specified in the request. Push back on any.
 ## Impact
 
 - **Code:** `src/app/page.tsx`, new landing components and `src/lib/landing-content.ts`, `src/components/app-shell.tsx`, `src/components/app-sidebar.tsx` (wordmark link), `src/components/ui/accordion.tsx` (shadcn), `src/app/design/page.tsx`.
-- **Tests:** `tests/app-shell.test.tsx` (AI default, nav default, cookie), `tests/nav.test.ts`, new `tests/landing.test.tsx` and additions to `tests/on-screen-wording.test.ts` (banned words and digit-free landing copy).
+- **Tests:** `tests/app-shell.test.tsx` (AI default, nav default), `tests/nav.test.ts`, new `tests/landing.test.tsx` and additions to `tests/on-screen-wording.test.ts` (banned words and digit-free landing copy).
 - **Docs:** ADR 0034 and its index row, `docs/design.md`, `docs/conventions.md` (landing and logo rule). `docs/product-spec.md` is untouched.
 - **Dependencies:** shadcn `accordion` (base-nova, on `@base-ui/react`, already installed). No new package unless a React Bits component needs one.
 - **Out of scope:** phone layout, a real AI guide, any live figure on the landing page, remembering the view across the logo click.

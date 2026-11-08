@@ -29,6 +29,7 @@ const shell = () => render(<AppShell customers={customers} baselines={baselines}
 const sidebar = () => screen.getByLabelText("Main", { selector: "aside" });
 const nav = () => within(screen.getByRole("navigation", { name: "Sections" }));
 const href = (name: string) => nav().getByRole("link", { name }).getAttribute("href");
+const openAi = () => userEvent.click(screen.getByRole("button", { name: "Expand AI sidebar" }));
 const ai = () => screen.queryByLabelText("AI assistant", { selector: "aside" });
 
 beforeEach(() => {
@@ -75,9 +76,10 @@ describe("customer switcher", () => {
     shell();
     expect(trigger()).toBeTruthy();
   });
-  it("collapsed, it is the avatar alone and keeps its accessible name", () => {
+  it("collapsed, it is the avatar alone and keeps its accessible name", async () => {
     path = "/dashboard";
     shell();
+    await openAi();
     expect(sidebar().getAttribute("data-state")).toBe("collapsed");
     const t = trigger();
     expect(t.textContent).toBe("NF");
@@ -200,10 +202,11 @@ describe("sidebar items", () => {
     expect(href("Impact World")).toBe("/world?customer=CUST002&baseline=B_HOME&sensitivity=low&priorities=cost%2Chygiene");
     expect(nav().getAllByRole("link").some((l) => l.getAttribute("href") === "#chapter-methodology")).toBe(true); // anchors leave the query untouched
   });
-  it("dashboard sections keep customer, baseline, sensitivity and view; leaving keeps view only", () => {
+  it("dashboard sections keep customer, baseline, sensitivity and view; leaving keeps view only", async () => {
     path = "/dashboard";
     search = "customer=CUST002&baseline=B_HOME&sensitivity=high&priorities=water";
     shell();
+    await openAi();
     expect(href("Signals")).toBe("/dashboard/signals?customer=CUST002&baseline=B_HOME&sensitivity=high&priorities=water");
     expect(href("Story")).toBe("/story/game");
     cleanup();
@@ -212,9 +215,10 @@ describe("sidebar items", () => {
     shell();
     expect(href("Impact World")).toBe("/world?customer=CUST002&view=customer");
   });
-  it("collapsed, every link keeps an accessible name", () => {
+  it("collapsed, every link keeps an accessible name", async () => {
     path = "/dashboard";
     shell();
+    await openAi();
     expect(sidebar().getAttribute("data-state")).toBe("collapsed");
     expect(nav().getByRole("link", { name: "Costs" })).toBeTruthy();
     expect(nav().getByRole("link", { name: "Impact World" })).toBeTruthy();
@@ -237,10 +241,11 @@ describe("view and theme toggles in the sidebar footer", () => {
     shell();
     expect(screen.getByRole("link", { name: "KAM" }).getAttribute("aria-current")).toBe("true");
   });
-  it("collapsed, one icon link switches to the other view", () => {
+  it("collapsed, one icon link switches to the other view", async () => {
     path = "/dashboard";
     search = "customer=CUST002";
     shell();
+    await openAi();
     expect(screen.getByRole("link", { name: "Switch to customer view" }).getAttribute("href")).toBe("/dashboard?customer=CUST002&view=customer");
   });
   it("has a theme toggle", () => {
@@ -357,8 +362,9 @@ describe("header", () => {
 });
 
 describe("AI sidebar", () => {
-  it("hides the sidebar, its separator and the toggle below md", () => {
+  it("hides the sidebar, its separator and the toggle below md", async () => {
     const { container } = shell();
+    await openAi();
     const aside = screen.getByLabelText("AI assistant", { selector: "aside" });
     expect(aside.className).toMatch(/\bhidden\b.*\bmd:block\b/);
     expect(aside.previousElementSibling?.className).toMatch(/\bhidden\b.*\bmd:block\b/);
@@ -369,28 +375,49 @@ describe("AI sidebar", () => {
     shell();
     expect(ai()).toBeNull();
   });
-  it("starts collapsed on the game and the world page only, and the user's toggle then wins", async () => {
+  it("starts collapsed on every route in both views, and only the toggle opens it", async () => {
+    for (const p of ["/dashboard", "/dashboard/costs", "/story", "/story/game", "/world", "/elsewhere"]) {
+      for (const v of ["", "view=customer"]) {
+        path = p;
+        search = v;
+        const { unmount } = shell();
+        expect(ai(), `${p} ${v}`).toBeNull();
+        unmount();
+      }
+    }
     path = "/story/game";
-    const { unmount } = shell();
-    expect(ai()).toBeNull();
-    await userEvent.click(screen.getByRole("button", { name: "Expand AI sidebar" }));
-    expect(ai()).toBeTruthy();
-    unmount();
-    path = "/dashboard";
     shell();
+    await openAi();
     expect(ai()).toBeTruthy();
+  });
+  it("renders the landing page bare: no sidebar, header or AI aside", () => {
+    path = "/";
+    render(<AppShell customers={customers} baselines={baselines}><p>landing</p></AppShell>);
+    expect(screen.getByText("landing")).toBeTruthy();
+    expect(screen.queryByLabelText("Main", { selector: "aside" })).toBeNull();
+    expect(ai()).toBeNull();
   });
 });
 
 describe("app sidebar and the AI sidebar (ADR 0025)", () => {
-  it("is expanded outside the dashboard even with the AI sidebar open", () => {
+  it("is expanded outside the dashboard even with the AI sidebar open", async () => {
     shell();
+    await openAi();
     expect(ai()).toBeTruthy();
     expect(sidebar().getAttribute("data-state")).toBe("expanded");
+  });
+  it("is expanded on first load of the dashboard, the story, the game and the world", () => {
+    for (const p of ["/dashboard", "/story", "/story/game", "/world"]) {
+      path = p;
+      const { unmount } = shell();
+      expect(sidebar().getAttribute("data-state"), p).toBe("expanded");
+      unmount();
+    }
   });
   it("collapses on the dashboard while the AI sidebar is open and restores when it closes", async () => {
     path = "/dashboard";
     shell();
+    await openAi();
     expect(sidebar().getAttribute("data-state")).toBe("collapsed");
     await userEvent.click(screen.getByRole("button", { name: "Collapse AI sidebar" }));
     expect(sidebar().getAttribute("data-state")).toBe("expanded");
@@ -400,6 +427,7 @@ describe("app sidebar and the AI sidebar (ADR 0025)", () => {
   it("an automatic collapse never writes the preference", async () => {
     path = "/dashboard";
     shell();
+    await openAi();
     expect(document.cookie).not.toContain("sidebar_state");
     await userEvent.click(screen.getByRole("button", { name: "Collapse AI sidebar" }));
     expect(document.cookie).not.toContain("sidebar_state");
@@ -407,6 +435,7 @@ describe("app sidebar and the AI sidebar (ADR 0025)", () => {
   it("a toggle in between wins: expanded by hand, it stays expanded when the AI sidebar closes", async () => {
     path = "/dashboard";
     shell();
+    await openAi();
     await userEvent.click(screen.getByRole("button", { name: "Expand sidebar" }));
     expect(sidebar().getAttribute("data-state")).toBe("expanded");
     await userEvent.click(screen.getByRole("button", { name: "Collapse AI sidebar" }));

@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-30 -95 500 480" fill="none" stroke="#00797a" stroke-linecap="round">
+  <style>@media (prefers-color-scheme: dark){svg{stroke:#5fd3d4}circle{fill:#111}}circle{fill:#fff}</style>
+  <path d="M0 250 C 70 250 80 90 150 110 S 240 250 300 190 S 380 40 440 60" stroke-width="40"/>
+  <circle cx="150" cy="110" r="30" stroke-width="40"/><circle cx="300" cy="190" r="30" stroke-width="40"/><circle cx="440" cy="60" r="30" stroke-width="40"/>
+</svg>

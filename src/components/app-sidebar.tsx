@@ -5,6 +5,7 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { motion, useReducedMotion } from "motion/react";
 import { Suspense, useEffect, useState } from "react";
 import { BookOpen, Buildings, Bell, CaretRight, Coins, Eye, Globe, Leaf, Lock, SquaresFour, TShirt, UserCircle } from "@phosphor-icons/react";
+import { Logo } from "@/components/logo";
 import { CustomerSwitcher, type ShellBaseline, type ShellCustomer } from "@/components/param-selects";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Tooltip } from "@/components/tooltip";
@@ -197,7 +198,8 @@ function ViewToggle({ pathname, params }: { pathname?: string; params: URLSearch
 
 function Wordmark() {
   const { state } = useSidebar();
-  return <span className={cn("px-2 font-semibold", state === "collapsed" && "text-center px-0")}>{state === "collapsed" ? "T" : "Threadline"}</span>;
+  const collapsed = state === "collapsed";
+  return <Logo compact={collapsed} className={cn("px-2", collapsed && "px-0")} />;
 }
 
 /** `params` may be a query string, so a server page (the /design gallery) can pass it across the client boundary. */

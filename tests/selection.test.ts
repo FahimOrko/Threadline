@@ -91,6 +91,10 @@ describe("customerViewRedirect", () => {
     expect(r("/dashboard?view=kam")).toBeNull();
     expect(r("/dashboard?view=nope")).toBeNull();
   });
+  it("never redirects the landing page", () => {
+    expect(r("/")).toBeNull();
+    expect(r("/?view=customer")).toBeNull();
+  });
   it("ignores other routes", () => expect(r("/story?view=customer")).toBeNull());
   it("does not match lookalike paths", () => expect(r("/dashboardx?view=customer")).toBeNull());
 });

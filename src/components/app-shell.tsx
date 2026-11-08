@@ -7,18 +7,14 @@ import { AppSidebar } from "@/components/app-sidebar";
 import type { ShellBaseline, ShellCustomer } from "@/components/param-selects";
 import { Separator } from "@/components/ui/separator";
 import { SIDEBAR_COOKIE, SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import { GAME_PATH } from "@/lib/story/game";
-import { WORLD_PATH } from "@/lib/world";
 
 type ShellProps = { children: React.ReactNode; customers: ShellCustomer[]; baselines: ShellBaseline[] };
 
 // `pathname` is undefined in the Suspense fallback, which shows the default sidebar with no active item.
 function Frame({ children, customers, baselines, pathname }: ShellProps & { pathname?: string }) {
-  // The game is the only place its choices are made, so its AI sidebar starts collapsed; once the user toggles, their choice wins on every route.
-  // Impact World is a full-width stage, so its AI sidebar starts collapsed too (ADR 0031).
-  const isGame = pathname === GAME_PATH || pathname === WORLD_PATH;
+  // The AI sidebar starts collapsed on every route and opens only on the user's toggle.
   const [userAiOpen, setUserAiOpen] = useState<boolean | null>(null);
-  const aiOpen = userAiOpen ?? !isGame;
+  const aiOpen = userAiOpen ?? false;
   const onDashboard = pathname !== undefined && (pathname === "/dashboard" || pathname.startsWith("/dashboard/"));
 
   // `pref` is what the user chose for the app sidebar (the cookie). While the AI sidebar is open on the dashboard the sidebar shows collapsed, unless the
@@ -33,6 +29,9 @@ function Frame({ children, customers, baselines, pathname }: ShellProps & { path
   const pref = chosen ?? saved;
   const [touched, setTouched] = useState(false);
   const sidebarOpen = onDashboard && aiOpen && !touched ? false : pref;
+
+  // The landing page at `/` has its own logo and no shell.
+  if (pathname === "/") return <>{children}</>;
 
   return (
     <SiteNameProvider>

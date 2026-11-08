@@ -13,7 +13,7 @@ See proposal.md for motivation. `/` currently redirects to `/dashboard`. `AppShe
 ## Decisions
 
 1. **Bare shell by pathname.** `Frame` in `app-shell.tsx` returns `children` alone when `pathname === "/"`. Alternative, route groups `(app)` and `(landing)`, moves every route and test for the same result.
-2. **Sidebar defaults.** Remove `isGame` and `userAiOpen ?? !isGame`; `aiOpen = userAiOpen ?? false`. Remove the cookie read: `pref` starts `true` and only `chosen` overrides it. `SIDEBAR_COOKIE` and the cookie write in `ui/sidebar.tsx` go if nothing else uses them (check before deleting). The automatic collapse on the dashboard stays, so opening the AI aside there still collapses the nav.
+2. **Sidebar defaults.** Remove `isGame` and `userAiOpen ?? !isGame`; `aiOpen = userAiOpen ?? false`. The cookie logic stays: with no cookie the nav is already open (`saved` defaults to true). The automatic collapse on the dashboard stays, so opening the AI aside there still collapses the nav.
 3. **Content module.** `src/lib/landing-content.ts` exports `FAQ: { id, question, answer }[]`, plain strings, no JSX, no digits. Bento copy and hero copy sit in the same file. The accordion renders it.
 4. **Accordion.** Add shadcn `accordion` for base-nova via the shadcn MCP (`get_add_command_for_items`), then check it against `@base-ui/react`.
 5. **Components.** `src/components/landing/` holds `LandingHero`, `LandingBento`, `BentoCard` (with a `visual` slot), `LandingFaq`, `LandingFooter`. Server components except `LandingFaq` and a small `Reveal` motion wrapper. Visuals are inline SVG on theme tokens (no hard-coded colour, Phosphor icons only).
@@ -26,6 +26,5 @@ See proposal.md for motivation. `/` currently redirects to `/dashboard`. `AppShe
 ## Risks / Trade-offs
 
 - A logo click from the customer view loses `view`; a customer must pick again. Accepted, stated in ADR 0034.
-- Dropping the cookie means a returning KAM who preferred a collapsed nav sees it open each load. Stated in the proposal as a decision for review.
 - The Suspense fallback of `AppShell` has no pathname; on `/` it would flash the shell. Check in the browser; if it does, read the path with `usePathname` outside Suspense since `/` has no dynamic segment.
 - React Bits licence is a community-confirmed reading, not the licence text; re-read `LICENSE.md` when copying.
