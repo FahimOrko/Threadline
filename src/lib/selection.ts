@@ -75,8 +75,9 @@ export function resolvePriorities(param: Param): { priorities: Priority[]; rejec
 }
 
 /** Story link that keeps customer, baseline, sensitivity and the priority picks (ADR 0014, 0017, 0019). */
-export function storyHref(params: { customer: string; baseline: string; sensitivity: string; priorities: readonly Priority[] }): string {
+export function storyHref(params: { customer: string; baseline: string; sensitivity: string; priorities: readonly Priority[]; view?: View }): string {
   const q = new URLSearchParams({ customer: params.customer, baseline: params.baseline, sensitivity: params.sensitivity });
+  if (params.view === "customer") q.set("view", "customer"); // ADR 0023: every link keeps the view
   // The comma stays literal so the address reads ?priorities=water,cost.
   const picks = params.priorities.length > 0 ? `&priorities=${params.priorities.join(",")}` : "";
   return `/story?${q.toString()}${picks}`;

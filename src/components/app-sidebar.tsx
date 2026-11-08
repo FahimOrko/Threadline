@@ -25,7 +25,7 @@ import {
   SidebarSeparator,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { isActive, navGroupsFor, navHref, storyChapters, storyChildren, type NavGroup, type NavIcon, type NavItem } from "@/lib/nav";
+import { isActive, navGroupsFor, navHref, storyChapters, storyChildren, type NavChild, type NavGroup, type NavIcon, type NavItem } from "@/lib/nav";
 import { carryParams, resolvePriorities, resolveView, type View } from "@/lib/selection";
 import { GAME_PATH, STORY_PATH } from "@/lib/story/game";
 import { cn } from "@/lib/utils";
@@ -68,6 +68,13 @@ function useActiveChapter(ids: string[], enabled: boolean) {
   return enabled ? (active ?? ids[0]) : null;
 }
 
+/** A route sub-row's link with the carried params; Review from the report adds the ending, so it never reads as a restart. */
+function reviewHref(c: NavChild, pathname: string | undefined, params: URLSearchParams) {
+  const q = new URLSearchParams(carryParams(pathname ?? STORY_PATH, c.href, params));
+  if (c.ending) { q.set("scene", "end"); q.set("beat", "0"); }
+  return q.size ? `${c.href}?${q}` : c.href;
+}
+
 // The Story group (ADR 0029, sidebar-07 nested pattern): the parent row toggles Review and, on the report page, the chapter anchors. Open follows the route until the reader toggles it; not persisted.
 function StoryChildren({ pathname, params, activeChapter }: { pathname?: string; params: URLSearchParams; activeChapter?: string | null }) {
   const priorities = resolvePriorities(params.get("priorities") ?? undefined).priorities;
@@ -77,7 +84,7 @@ function StoryChildren({ pathname, params, activeChapter }: { pathname?: string;
         const current = c.chapter ? activeChapter === c.key.replace("chapter-", "") : pathname === GAME_PATH;
         return (
           <SidebarMenuSubItem key={c.key}>
-            <SidebarMenuSubButton render={<Link href={c.chapter ? c.href : `${c.href}${carryParams(pathname ?? STORY_PATH, c.href, params)}`} aria-current={current ? (c.chapter ? "location" : "page") : undefined} />} isActive={current}>
+            <SidebarMenuSubButton render={<Link href={c.chapter ? c.href : reviewHref(c, pathname, params)} aria-current={current ? (c.chapter ? "location" : "page") : undefined} />} isActive={current}>
               <span>{c.label}</span>
             </SidebarMenuSubButton>
           </SidebarMenuSubItem>

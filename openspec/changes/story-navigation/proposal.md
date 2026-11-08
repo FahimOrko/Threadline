@@ -12,6 +12,8 @@ The story is two screens (the game, then the report) but the sidebar treats it a
 - **Report header**: the Story header block takes the scenario strip's look (teal-tinted border and background) and the priority chips become a segmented-style group. Styling only.
 - **Bug**: before a customer is chosen, the game's right panel shows a placeholder instead of the Net CO2e figure.
 - **Bug**: the "Customer" label in the game's right panel renders highlighted like a stray selection or focus style. One reproduction attempt (light theme, customer view); if it does not reproduce, it is dropped and noted as likely a user text selection.
+- **Bug**: in the customer view the report's priority chips and site links dropped `?view=customer` (and a customer-view reader could land in the KAM view); every in-app link now carries `view` unchanged (ADR 0023). The game's own links already did; tests pin them.
+- **Bug**: the sidebar Review sub-row on `/story` opened the game at the first beat, which looked like a restart; from `/story` it now opens the ending with the address's params, so the report is already unlocked. Start over remains the only restart. No new state.
 - Right panel content and layout otherwise unchanged. Not touched: the open questions section, the print route, export.
 
 ## Capabilities

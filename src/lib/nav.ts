@@ -48,7 +48,7 @@ export function breadcrumbFor(pathname: string | undefined, siteName?: string): 
   return [{ label: item?.label ?? "Threadline" }];
 }
 
-export type NavChild = { key: string; label: string; href: string; /** A chapter anchor on `/story`; the rest are routes that carry params. */ chapter?: boolean };
+export type NavChild = { key: string; label: string; href: string; /** A chapter anchor on `/story`; the rest are routes that carry params. */ chapter?: boolean; /** Opens the game at its ending (Review from the report). */ ending?: boolean };
 
 /** The report chapters in page order: the picked priorities lead (buildStory), then the two fixed closing chapters. Ids match the section headings (`chapter-<id>`). */
 export const storyChapters = (priorities: readonly Priority[]): { id: string; label: string }[] => [
@@ -59,6 +59,6 @@ export const storyChapters = (priorities: readonly Priority[]): { id: string; la
 
 /** The Story group's sub-rows (ADR 0029): Review always, the chapter anchors only on the report page. Pure data from the route and the picks, no state. */
 export const storyChildren = (pathname: string | undefined, priorities: readonly Priority[]): NavChild[] => [
-  { key: "review", label: "Review", href: GAME_PATH },
+  { key: "review", label: "Review", href: GAME_PATH, ...(pathname === STORY_PATH ? { ending: true } : {}) },
   ...(pathname === STORY_PATH ? storyChapters(priorities).map((c) => ({ key: `chapter-${c.id}`, label: c.label, href: `#chapter-${c.id}`, chapter: true })) : []),
 ];

@@ -36,6 +36,12 @@
 - [x] 6.1 `npm test`, `npm run check:contrast`, `npm run check:design-imports`, lint and typecheck pass
 - [x] 6.2 After the user approves and all of the above is applied: browser check at 1230px and 1280px, dark and light, in KAM and customer view, covering the sidebar group on `/story/game` and `/story` (chapter in view, reorder with priorities, collapsed icons), Previous through a choice, the picker and Start over, the placeholder, the label, the report header
 
+## 7. Follow-up bugs
+
+- [x] 7.1 Links keep `view`: `storyHref`, `PriorityPicker` and the report's site links carry it (export unchanged); tests that picker choices, Previous, Next, Start over and the exit links keep `view=customer`
+- [x] 7.2 Review from `/story` opens `scene=end&beat=0` with the carried params (`NavChild.ending`); test in `tests/app-shell.test.tsx`
+- [x] 7.3 Browser check: customer picker keeps customer view; Review from `/story` lands on the ending; 1280px dark and 1230px light, KAM and customer view
+
 ## Notes
 
 - 3.4: not reproduced. One attempt in light theme and customer view (plus dark, KAM, after a click-through): no path-strip label had a background, outline or selection style (computed styles checked). Dropped as likely a user text selection; the spec requirement for it was removed.

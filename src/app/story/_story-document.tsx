@@ -22,7 +22,7 @@ import { generatedQuality, generatedSource } from "@/lib/data/generated";
 import { baselineShortName, dataReadinessFacts, footprintComparison, monthlySeries, type Fact } from "@/lib/engine";
 import { explainer, renderTemplate, type Sentence } from "@/lib/explain";
 import { formatPeriod } from "@/lib/format";
-import { SENSITIVITY_LABEL, resolveBaseline, resolvePriorities, resolveSensitivity, siteHref } from "@/lib/selection";
+import { SENSITIVITY_LABEL, resolveBaseline, resolvePriorities, resolveSensitivity, resolveView, siteHref } from "@/lib/selection";
 import { FIGURE_LABEL, buildStory, factText } from "@/lib/story";
 import { BASELINE_CAVEAT, DATA_GAPS, DATA_SOURCES, OPEN_QUESTIONS, ROUNDING_NOTE, assumptionRows, sensitivityNote } from "@/lib/story/closing";
 import Link from "next/link";
@@ -49,7 +49,8 @@ export async function StoryDocument({ searchParams, mode }: { searchParams: Page
   const { sensitivity, rejected: badSensitivity } = resolveSensitivity(params.sensitivity);
   const { priorities, rejected: badPriorities } = resolvePriorities(params.priorities);
   const short = baselineShortName(baseline);
-  const linkParams = { customer: customer.customer_id, baseline: baseline.baseline_id, sensitivity };
+  const exportParams = { customer: customer.customer_id, baseline: baseline.baseline_id, sensitivity };
+  const linkParams = { ...exportParams, view: resolveView(params.view) }; // in-app links keep the view (ADR 0023); the export does not
   const scope = { customerId: customer.customer_id, period: PERIOD };
   const { facts, observations, observationFacts } = storyFacts(data, scope, baseline, sensitivity);
   const fact = (id: string): Fact => {
@@ -72,7 +73,7 @@ export async function StoryDocument({ searchParams, mode }: { searchParams: Page
   const cmp = footprintComparison(data, scope, baseline, sensitivity);
 
   const print = mode === "print";
-  const exportQuery = new URLSearchParams({ ...linkParams, ...(priorities.length ? { priorities: priorities.join(",") } : {}) });
+  const exportQuery = new URLSearchParams({ ...exportParams, ...(priorities.length ? { priorities: priorities.join(",") } : {}) });
   const cover = `Value review for ${formatPeriod(PERIOD)}, compared against ${short}, using the ${SENSITIVITY_LABEL[sensitivity]}.`;
   const sourceName = (f: Fact) => f.label.replace("Invalid or unmapped rows: ", "");
 

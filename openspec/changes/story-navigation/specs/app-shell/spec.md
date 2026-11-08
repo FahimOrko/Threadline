@@ -8,11 +8,15 @@
 ## MODIFIED Requirements
 
 ### Requirement: Story group in the sidebar
-The sidebar's "Shared" section SHALL show Story as a collapsible group: a parent row "Story" with a chevron and indented sub-rows. The sub-row "Review" SHALL always be present and open `/story/game`. In the expanded sidebar the parent row SHALL toggle the sub-rows; in the collapsed icon sidebar it SHALL be a link to `/story/game` and the sub-rows SHALL be hidden. The group SHALL start expanded on `/story`, `/story/game` and `/story/print` and collapsed elsewhere; the reader's toggle wins until reload and is not persisted. The parent row SHALL show the active style on all three routes. Links SHALL keep the existing carried params as before.
+The sidebar's "Shared" section SHALL show Story as a collapsible group: a parent row "Story" with a chevron and indented sub-rows. The sub-row "Review" SHALL always be present and open `/story/game`; reached from `/story` it SHALL open the game at its ending (`scene=end&beat=0`) with the address's customer, comparison, estimate and priorities, so it never reads as a restart. In the expanded sidebar the parent row SHALL toggle the sub-rows; in the collapsed icon sidebar it SHALL be a link to `/story/game` and the sub-rows SHALL be hidden. The group SHALL start expanded on `/story`, `/story/game` and `/story/print` and collapsed elsewhere; the reader's toggle wins until reload and is not persisted. The parent row SHALL show the active style on all three routes. Links SHALL keep the existing carried params as before.
 
 #### Scenario: Link target
 - **WHEN** the reader activates "Review"
 - **THEN** `/story/game` opens with the carried params
+
+#### Scenario: Review from the report
+- **WHEN** the route is `/story?customer=CUST002&priorities=cost,hygiene&view=customer` and the reader activates "Review"
+- **THEN** `/story/game` opens at the ending with the same params and `scene=end&beat=0`, and "Read the full report" is already enabled
 
 #### Scenario: Active state
 - **WHEN** the route is `/story/game`

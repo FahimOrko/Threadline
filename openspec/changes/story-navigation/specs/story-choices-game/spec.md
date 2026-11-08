@@ -95,3 +95,14 @@ Until `?customer=` holds a customer, the right panel's net CO2e line SHALL show 
 #### Scenario: After the choice
 - **WHEN** a customer is chosen
 - **THEN** the net CO2e line shows the figure for that customer with its chip and Show math
+
+### Requirement: Game links keep the view
+Every link in the game and every link from the report back into the app SHALL carry `?view=` unchanged (ADR 0023): the company picker choices, Previous, Next, Start over, "Read the full report", "Open PDF version", the priority chips and the site links.
+
+#### Scenario: Picker keeps the customer view
+- **WHEN** the reader in the customer view chooses a company
+- **THEN** the address still holds `view=customer` and the customer view is shown
+
+#### Scenario: Report links
+- **WHEN** `/story?view=customer` is open
+- **THEN** every priority chip and site link holds `view=customer`, and the export link is unchanged

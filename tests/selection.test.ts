@@ -30,6 +30,11 @@ describe("resolvePriorities", () => {
 });
 
 describe("storyHref", () => {
+  it("keeps the customer view and adds nothing in KAM view", () => {
+    const b = { customer: "CUST001", baseline: "B_LOCAL", sensitivity: "base", priorities: [] };
+    expect(storyHref({ ...b, view: "customer" })).toBe("/story?customer=CUST001&baseline=B_LOCAL&sensitivity=base&view=customer");
+    expect(storyHref({ ...b, view: "kam" })).not.toContain("view");
+  });
   const base = { customer: "CUST001", baseline: "B_LOCAL", sensitivity: "base" };
   it("keeps every selection and the picks", () => expect(storyHref({ ...base, priorities: ["cost", "hygiene"] })).toBe("/story?customer=CUST001&baseline=B_LOCAL&sensitivity=base&priorities=cost,hygiene"));
   it("leaves out empty picks", () => expect(storyHref({ ...base, priorities: [] })).toBe("/story?customer=CUST001&baseline=B_LOCAL&sensitivity=base"));

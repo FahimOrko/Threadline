@@ -152,6 +152,15 @@ describe("links keep every existing param", () => {
 });
 
 describe("customer view scene 1", () => {
+  const q = (href: string) => new URLSearchParams(href.split("?")[1]);
+  it("every picker choice, Previous and Next keep view=customer", () => {
+    const p = { view: "customer", x: "1" };
+    for (const c of ["CUST001", "CUST002", "CUST003"]) expect(q(stepHref(p, 1, 3, { customer: c })).get("view")).toBe("customer");
+    expect(q(previousHref(p, "customer", 1, 3) as string).get("view")).toBe("customer");
+    expect(q(stepHref(p, 1, 3)).get("view")).toBe("customer");
+    expect(q(startOverHref(p)).get("view")).toBe("customer");
+    expect(q(exitHref("/story", p, { customer: "CUST001", baseline: "B_LOCAL", sensitivity: "base", priorities: [] })).get("view")).toBe("customer");
+  });
   it("is generic intro lines, no explain beats (they read the default customer), then the picker and the usual follow-up", () => {
     const beats = beatsFor(SCENES[0], "customer");
     expect(beats.map((b) => b.kind)).toEqual([...CUSTOMER_VIEW_INTRO.map(() => "line"), "ask", "react", "answer", ...SCENES[0].meaning.map(() => "meaning")]);

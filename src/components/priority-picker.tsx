@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { PRIORITY_LABEL } from "@/components/story-chapter";
 import { SEGMENT_GROUP, segmentClass } from "@/lib/segmented-style";
-import { PRIORITIES, storyHref, togglePriority, type Priority } from "@/lib/selection";
+import { PRIORITIES, storyHref, togglePriority, type Priority, type View } from "@/lib/selection";
 
 /** Two-of-six priority chips as plain links: no client state, the picks live in the address (ADR 0019). Each link keeps customer, baseline and sensitivity. */
-export function PriorityPicker({ picks, params }: { picks: readonly Priority[]; params: { customer: string; baseline: string; sensitivity: string } }) {
+export function PriorityPicker({ picks, params }: { picks: readonly Priority[]; params: { customer: string; baseline: string; sensitivity: string; view?: View } }) {
   const labelId = "priority-picker-label";
   return (
     <div className="space-y-2" data-slot="priority-picker">

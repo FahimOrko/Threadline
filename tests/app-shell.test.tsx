@@ -166,6 +166,14 @@ describe("sidebar items", () => {
     await userEvent.click(story());
     expect(href("Review")).toBe("/story/game?customer=CUST002&baseline=B_HOME&priorities=cost&view=customer");
   });
+  it("Review from the report opens the game at its ending with the same params", () => {
+    path = "/story";
+    search = "customer=CUST002&baseline=B_HOME&sensitivity=high&priorities=cost,hygiene&view=customer";
+    shell();
+    const q = new URL(href("Review")!, "http://x").searchParams;
+    expect(new URL(href("Review")!, "http://x").pathname).toBe("/story/game");
+    expect(Object.fromEntries(q)).toEqual({ customer: "CUST002", baseline: "B_HOME", sensitivity: "high", priorities: "cost,hygiene", view: "customer", scene: "end", beat: "0" });
+  });
   it("Story and Impact World keep all params inside Story", () => {
     path = "/story";
     search = "customer=CUST002&baseline=B_HOME&sensitivity=low&priorities=cost,hygiene";
