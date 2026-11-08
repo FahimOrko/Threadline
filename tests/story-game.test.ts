@@ -67,12 +67,20 @@ describe("dialogue templates", () => {
     expect(ids.length).toBeGreaterThan(5);
     for (const id of new Set(ids)) expect(facts.some((f) => f.id === id), id).toBe(true);
   });
-  it("frame the estimate as the team's declared range, not a measurement, with the plain labels", () => {
+  it("frame the estimate as the team's own range, not a measurement, with the plain labels", () => {
     const s = SCENES.find((x) => x.id === "sensitivity")!;
     const text = [...s.intro.map((l) => l.text), ...s.explain.flatMap(slotTexts), s.answer, ...s.meaning.flatMap(slotTexts)].join(" ");
-    expect(text).toMatch(/declared/);
+    expect(text).toMatch(/our team's/);
+    expect(text).toContain("T002");
     expect(text).toMatch(/not a measurement/);
     for (const l of ["Cautious", "Standard", "Generous"]) expect(text).toContain(l);
+  });
+  it("keep the copy voice: no data pack talk, no raw ids, no spec words", () => {
+    for (const t of ALL_TEMPLATES) {
+      const plain = t.replace(/\{\{[^}]+\}\}|\{[^}]+\}/g, "");
+      expect(plain, t).not.toMatch(/data pack|illustrative values|\b[a-z]+_[a-z_]+\b/i);
+      expect(plain, t).not.toMatch(/\b(saved trees|trees saved)\b/i);
+    }
   });
   it("never say baseline, sensitivity or Fact in a line, with tokens left out", () => {
     for (const t of [...ALL_TEMPLATES, ...leadLines]) expect(t.replace(/\{\{fact:[a-z0-9_]+\}\}|\{[a-zA-Z]+\}/g, ""), t).not.toMatch(/\b(baseline|sensitivity|fact)s?\b/i);
@@ -231,11 +239,11 @@ describe("impact world link", () => {
     expect(u.pathname).toBe("/world");
     expect([u.searchParams.get("view"), u.searchParams.get("x"), u.searchParams.get("customer"), u.searchParams.get("scene")]).toEqual(["customer", "1", "CUST002", null]);
   });
-  it("opens the game with a why-it-matters line and the world afterwards, in both views", () => {
+  it("opens both views with the reviewed first slide, verbatim, and points to the world afterwards", () => {
+    const first = "Good to see you. Let's look back at your year with us: what our service saved you, and what it cost, compared with washing the same workwear another way. You can open the math behind any number.";
     for (const intro of [SCENES[0].intro, CUSTOMER_VIEW_INTRO]) {
-      const text = intro.map((l) => l.text).join(" ");
-      expect(text).toContain("matters");
-      expect(text).toContain("how it impacts the world");
+      expect(intro[0]).toEqual({ speaker: "kam", text: first });
+      expect(intro.map((l) => l.text).join(" ")).toContain("what it means for the world");
     }
   });
 });

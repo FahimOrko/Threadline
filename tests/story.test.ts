@@ -78,7 +78,7 @@ describe("story over real Facts", () => {
     const { all, words } = await factsFor("CUST001");
     const euros = buildStory(["cost"])[0];
     const text = euros.lines.map((s) => renderTemplate([s], all, { ...words, comparison: words.baseline })).join(" ");
-    expect(text).toContain("The cost of unused garments can be shown once Lindström provides a rental fee.");
+    expect(text).toContain("I can show what unused garments cost once Lindström supplies a weekly rental fee for them.");
     expect(text).not.toMatch(/needs input/i);
   });
   it.each(["CUST001", "CUST002", "CUST003"])("%s: nulling any single Fact leaves no Needs input in a chapter sentence", async (customerId) => {

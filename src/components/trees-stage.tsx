@@ -98,7 +98,7 @@ export function TreesStage({ stage, comparison, service, saved, scale, compariso
   const summary =
     stage === null
       ? "Illustration: the tree figures need input, so no trees are drawn."
-      : `Illustration of the tree figures. ${comparisonName} needs ${count(comparison)}. The Lindström service needs ${count(service)}. ${saving ? `${count(saved)} are saved.` : "No trees are saved with this comparison."} One tree icon stands for ${count(scale)} trees.`;
+      : `Illustration of the tree figures. ${comparisonName} needs ${count(comparison)}. The Lindström service needs ${count(service)}. ${saving ? `The avoided emissions equal what ${count(saved)} young trees absorb in ten years.` : "With this comparison there are no avoided emissions to show as trees."} One tree icon stands for ${count(scale)} trees.`;
   return (
     <figure data-slot="trees-stage" className="space-y-2">
       <div className="relative overflow-hidden rounded-lg border bg-card">
@@ -122,7 +122,7 @@ export function TreesStage({ stage, comparison, service, saved, scale, compariso
           <p aria-hidden className="trees-beats absolute top-2 left-2 text-xs font-medium text-foreground">
             <span className="beat beat-1">{comparisonName} needs these trees</span>
             <span className="beat beat-2">Lindström needs these</span>
-            <span className="beat beat-3">{saving ? "The rest are saved" : "Lindström needs more"}</span>
+            <span className="beat beat-3">{saving ? "The rest equal the avoided emissions" : "Lindström needs more"}</span>
           </p>
         )}
         {stage === null && <p className="absolute inset-0 flex items-center justify-center text-sm text-muted-foreground">Needs input</p>}
@@ -134,9 +134,9 @@ export function TreesStage({ stage, comparison, service, saved, scale, compariso
       </div>
       <figcaption className="flex flex-wrap items-center gap-x-5 gap-y-1 text-xs text-muted-foreground">
         <span className="flex items-center gap-1.5"><span aria-hidden className="size-2.5 rounded-full bg-chart-subject" /> Needed with Lindström</span>
-        <span className="flex items-center gap-1.5"><span aria-hidden className={saving ? "size-2.5 rounded-full bg-chart-comparison opacity-30" : "size-2.5 rounded-full bg-chart-subject opacity-55"} /> {saving ? "Not needed" : "Extra trees Lindström needs"}</span>
+        <span className="flex items-center gap-1.5"><span aria-hidden className={saving ? "size-2.5 rounded-full bg-chart-comparison opacity-30" : "size-2.5 rounded-full bg-chart-subject opacity-55"} /> {saving ? "Avoided emissions" : "Extra trees Lindström needs"}</span>
         <span>
-          One tree icon = <span className="num text-foreground">{count(scale)}</span> trees. The step changes with the comparison.
+          One tree icon = <span className="num text-foreground">{count(scale)}</span> young trees. The step changes with the comparison.
         </span>
       </figcaption>
     </figure>

@@ -19,7 +19,7 @@ export function iconScale(most: number): number {
 const NOTE =
   "An illustration, not a measurement: a CO2 factor applied to CO2e as an approximation. Icon counts are the tree counts divided by the icon scale, rounded up for drawing, and at most 300 icons are drawn.";
 
-/** The five tree Facts and the stage counts. Null Facts, and a null stage, when either footprint is unset or the factor is. */
+/** The tree Facts and the stage counts. Null Facts, and a null stage, when either footprint is unset or the factor is. */
 export function treeFacts(footprint: Fact[]): { facts: Fact[]; stage: TreeStage | null } {
   const comparison = footprint.find((f) => f.id === "comparison_footprint");
   const service = footprint.find((f) => f.id === "service_footprint");
@@ -60,7 +60,8 @@ export function treeFacts(footprint: Fact[]): { facts: Fact[]; stage: TreeStage 
     make("tree_factor", "Carbon one tree absorbs", factor, t011.unit, "tCO2e absorbed by one urban tree seedling grown for 10 years (US EPA)", []),
     make("trees_comparison", "Trees needed for the comparison's emissions", c, "trees", "trees = comparison footprint (tCO2e) / tree factor", [comparison]),
     make("trees_service", "Trees needed for Lindström's emissions", s, "trees", "trees = service footprint (process + delivery, tCO2e) / tree factor", [service]),
-    make("trees_saved", "Trees saved", saved, "trees", "trees saved = trees for the comparison - trees for Lindström", [comparison, service]),
+    make("trees_saved", "Young trees equal to the emissions avoided", saved, "young trees", "young trees equal to the emissions avoided = trees for the comparison - trees for Lindström (an equivalence, not something saved)", [comparison, service]),
+    make("trees_extra", "Extra young trees Lindström's emissions equal", saved === null ? null : Math.max(0, -saved), "young trees", "extra young trees = trees for Lindström - trees for the comparison, when that is above zero; otherwise 0", [comparison, service]),
     make("tree_icon_scale", "Trees per icon", perIcon, "trees per icon", `icon scale = smallest step of 1, 5, 10, 25, 50, 100, 250 ... that keeps the larger tree count within ${MAX_TREE_ICONS} icons`, [], [{ label: "Icon cap", value: MAX_TREE_ICONS, unit: "icons" }]),
   ];
   if (c === null || s === null || perIcon === null) return { facts, stage: null };

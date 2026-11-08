@@ -192,6 +192,16 @@ export function footprintFacts(data: FootprintData, scope: OperationalScope, bas
       formula: "per tonne washed = service footprint / (washed kg / 1000)",
       inputs: serviceInputs,
     }),
+    build(data, scope, {
+      ...common,
+      id: "washed_kg",
+      label: "Garments washed (weight)",
+      value: t.kg,
+      unit: "kg",
+      methods: ["ALLOCATED"],
+      formula: "washed weight = sum of the customer's washed kg over its laundry-months (the weight every footprint factor is multiplied by)",
+      inputs: kgInputs,
+    }),
   ];
   const wearers = activeWearers(data, scope).value;
   if (wearers !== null && wearers > 0)

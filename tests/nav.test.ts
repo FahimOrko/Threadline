@@ -31,6 +31,10 @@ describe("active item", () => {
   it("Story is active on the game and report routes", () => {
     for (const p of ["/story", "/story/game"]) expect(active(p)).toEqual(["story"]);
   });
+  it("only Impact World carries the review gate", () => {
+    expect(navGroupsFor("customer").flatMap((g) => g.items).filter((i) => i.gate).map((i) => i.key)).toEqual(["impact"]);
+  });
+
   it("Impact World is active on /world", () => {
     expect(active("/world")).toEqual(["impact"]);
   });

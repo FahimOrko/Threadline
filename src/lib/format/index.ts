@@ -11,10 +11,11 @@ export function formatPercent(n: number): string {
   return new Intl.NumberFormat("en-US", { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(n).replaceAll(",", " ");
 }
 
-/** Card headline: 100 or more prints whole, below 100 one decimal ("1 406 483", "146.96" -> "147", "7.68" -> "7.7"). "%" keeps its fixed one decimal. */
+/** Card headline: 100 or more prints whole, below 100 one decimal, below 1 up to three ("1 406 483", "146.96" -> "147", "7.68" -> "7.7"). "%" keeps its fixed one decimal. */
 export function formatCardValue(n: number, unit?: string): string {
   if (unit === "%") return formatPercent(n);
-  const digits = Math.abs(n) >= 100 ? 0 : 1;
+  // Under one, a third decimal keeps a small factor honest (0.060 reads "0.06", never "0.1").
+  const digits = Math.abs(n) >= 100 ? 0 : Math.abs(n) < 1 && n !== 0 ? 3 : 1;
   return new Intl.NumberFormat("en-US", { maximumFractionDigits: digits }).format(n).replaceAll(",", " ");
 }
 

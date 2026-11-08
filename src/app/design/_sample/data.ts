@@ -1,5 +1,6 @@
 // Sample data for the /design gallery only. Not engine output, never computed.
 // Nothing outside src/app/design/ may import this folder (npm run check:design-imports).
+import type { DerivationStep } from "@/components/how-we-got-here";
 import type { ShowMathProps } from "@/components/show-math";
 import type { Fact, Observation, SiteRows } from "@/lib/engine";
 
@@ -151,3 +152,25 @@ export const sampleTrees = {
   stageMore: { perIcon: 1, comparisonIcons: 120, serviceIcons: 180, savedIcons: 0, extraIcons: 60 },
 };
 export const sampleHubFacts: Fact[] = [tree("trees_saved", 7200), { ...tree("water_saved", 1200000, "L"), methods: ["ALLOCATED"], source: "SYNTHETIC" }, tree("energy_saved", null, "kWh"), tree("recycling_reuse_share", 62.5, "%"), tree("delivery_footprint", 18000, "kgCO2e")];
+
+const sampleFigure = (id: string, value: number | null, unit: string): Fact => ({ ...tree(id, value, unit), id });
+/** Sample derivation steps for HowWeGotHere: labelled sample data, not engine output. */
+export const sampleSteps = (more: boolean, missing = false): DerivationStep[] => [
+  { title: "Garments washed", text: "Sample sentence for the weight of what was washed.", figures: [{ fact: { ...sampleFigure("washed_kg", missing ? null : 480000, "kg"), methods: ["ALLOCATED" as const], source: "SYNTHETIC" as const }, label: "Washed" }] },
+  {
+    title: "CO2e from washing",
+    text: "Sample sentence naming both ways of washing, delivery included.",
+    figures: [
+      { fact: sampleFigure("service_footprint", missing ? null : more ? 10800 : 144000, "kgCO2e"), label: "With Lindström" },
+      { fact: sampleFigure("comparison_footprint", missing ? null : more ? 7200 : 576000, "kgCO2e"), label: "With a local laundry" },
+    ],
+  },
+  {
+    title: more ? "Extra young trees" : "Young trees",
+    text: "Sample sentence for the difference divided by the factor of one tree.",
+    figures: [
+      { fact: sampleFigure("tree_factor", 0.06, "tCO2e"), label: "One young tree absorbs" },
+      { fact: sampleFigure(more ? "trees_extra" : "trees_saved", missing ? null : more ? 60 : 7200, "young trees"), label: more ? "Extra young trees" : "Young trees equal to the avoided emissions" },
+    ],
+  },
+];

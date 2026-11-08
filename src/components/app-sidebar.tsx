@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { motion, useReducedMotion } from "motion/react";
 import { Suspense, useEffect, useState } from "react";
-import { BookOpen, Buildings, Bell, CaretRight, Coins, Eye, Globe, Leaf, SquaresFour, TShirt, UserCircle } from "@phosphor-icons/react";
+import { BookOpen, Buildings, Bell, CaretRight, Coins, Eye, Globe, Leaf, Lock, SquaresFour, TShirt, UserCircle } from "@phosphor-icons/react";
 import { CustomerSwitcher, type ShellBaseline, type ShellCustomer } from "@/components/param-selects";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Tooltip } from "@/components/tooltip";
@@ -27,7 +27,8 @@ import {
 } from "@/components/ui/sidebar";
 import { isActive, navGroupsFor, navHref, storyChapters, storyChildren, type NavChild, type NavGroup, type NavIcon, type NavItem } from "@/lib/nav";
 import { carryParams, resolvePriorities, resolveView, type View } from "@/lib/selection";
-import { GAME_PATH, STORY_PATH } from "@/lib/story/game";
+import { GAME_PATH, STORY_PATH, WORLD_HINT } from "@/lib/story/game";
+import { useReviewEnded } from "@/lib/story/use-review-ended";
 import { cn } from "@/lib/utils";
 
 const ICONS: Record<NavIcon, React.ElementType> = {
@@ -97,6 +98,9 @@ function StoryChildren({ pathname, params, activeChapter }: { pathname?: string;
 // The hover and active indicators glide between items (ADR 0025's motion list). Under reduced motion they are plain static fills: no layout animation.
 function Items({ groups, pathname, params, activeChapter, href }: { groups: NavGroup[]; pathname?: string; params: URLSearchParams; activeChapter?: string | null; href: (item: NavItem) => string }) {
   const { state } = useSidebar();
+  const view = resolveView(params.get("view") ?? undefined);
+  // Unknown (null) reads as locked: the sidebar item is the safe default, and `ended=1` in the address opens it.
+  const reviewEnded = useReviewEnded(view, params.get("customer")) === true || params.get("ended") === "1";
   const reduced = useReducedMotion();
   const [hover, setHover] = useState<string | null>(null);
   const [toggled, setToggled] = useState<boolean | null>(null);
@@ -118,7 +122,16 @@ function Items({ groups, pathname, params, activeChapter, href }: { groups: NavG
                 {group && <CaretRight aria-hidden className={cn("ml-auto size-3.5! transition-transform motion-reduce:transition-none", open && "rotate-90")} />}
               </>
             );
-            const link = group ? (
+            const locked = item.gate === "review" && view === "customer" && !reviewEnded;
+            const link = locked ? (
+              <SidebarMenuButton render={<button type="button" aria-disabled="true" aria-describedby="world-locked-hint" className="cursor-not-allowed text-muted-foreground" />}>
+                <Lock aria-hidden />
+                <span>{item.label}</span>
+                <span id="world-locked-hint" className="sr-only">
+                  {WORLD_HINT}
+                </span>
+              </SidebarMenuButton>
+            ) : group ? (
               <SidebarMenuButton render={<button type="button" aria-expanded={open} aria-controls="story-subrows" onClick={() => setToggled(!open)} />} isActive={active}>
                 {inner}
               </SidebarMenuButton>
@@ -134,7 +147,7 @@ function Items({ groups, pathname, params, activeChapter, href }: { groups: NavG
                     <motion.span aria-hidden data-indicator="hover" layoutId={reduced ? undefined : "nav-hover"} transition={{ duration: 0.18, ease: "easeOut" }} className="absolute inset-0 rounded-md bg-sidebar-accent/70" />
                   )}
                   {active && <motion.span aria-hidden data-indicator="active" layoutId={reduced ? undefined : "nav-active"} transition={{ duration: 0.22, ease: "easeOut" }} className="absolute inset-0 rounded-md bg-sidebar-accent" />}
-                  {state === "collapsed" ? <Tooltip label={item.label}>{link}</Tooltip> : link}
+                  {state === "collapsed" ? <Tooltip label={locked ? `${item.label}: ${WORLD_HINT}` : item.label}>{link}</Tooltip> : link}
                 </div>
                 {group && open && (
                   <div id="story-subrows">

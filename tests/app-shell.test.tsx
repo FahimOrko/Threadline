@@ -14,6 +14,7 @@ vi.mock("next/navigation", () => ({
 
 import { AppShell } from "@/components/app-shell";
 import { ScenarioStrip } from "@/components/scenario-strip";
+import { markEnded } from "@/lib/story/progress";
 
 const customers = [
   { customer_id: "CUST001", name: "NorthStar Foods Group", industry: "Food production", sites: 12 },
@@ -111,8 +112,26 @@ describe("sidebar items", () => {
   it("customer view shows only the Story group and Impact World", () => {
     search = "view=customer";
     shell();
-    expect(nav().getAllByRole("link").map((l) => l.textContent)).toEqual(["Impact World"]);
+    expect(nav().queryAllByRole("link").map((l) => l.textContent)).toEqual([]);
+    expect(nav().getByRole("button", { name: /Impact World/ }).getAttribute("aria-disabled")).toBe("true");
+    expect(nav().getByText("Finish the review to open your Impact World")).toBeTruthy();
     expect(story()).toBeTruthy();
+  });
+  it("customer view unlocks Impact World once the ending is recorded or the address holds ended=1", () => {
+    search = "view=customer&customer=CUST002";
+    markEnded("customer", "CUST002");
+    shell();
+    expect(nav().getByRole("link", { name: "Impact World" }).getAttribute("href")).toBe("/world?customer=CUST002&view=customer");
+    cleanup();
+    sessionStorage.clear();
+    search = "view=customer&customer=CUST002&ended=1";
+    shell();
+    expect(nav().getByRole("link", { name: "Impact World" })).toBeTruthy();
+  });
+  it("KAM is never locked, with or without progress", () => {
+    sessionStorage.clear();
+    shell();
+    expect(nav().getByRole("link", { name: "Impact World" })).toBeTruthy();
   });
   it("marks the current section and keeps Sites active on a site page", () => {
     path = "/dashboard/costs";
@@ -188,7 +207,7 @@ describe("sidebar items", () => {
     expect(href("Signals")).toBe("/dashboard/signals?customer=CUST002&baseline=B_HOME&sensitivity=high&priorities=water");
     expect(href("Story")).toBe("/story/game");
     cleanup();
-    search = "customer=CUST002&view=customer";
+    search = "customer=CUST002&view=customer&ended=1";
     path = "/story";
     shell();
     expect(href("Impact World")).toBe("/world?customer=CUST002&view=customer");

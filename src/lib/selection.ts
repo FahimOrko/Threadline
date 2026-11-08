@@ -18,9 +18,9 @@ export function resolveBaseline<B extends { baseline_id: string }>(param: Param,
 export const SENSITIVITY_LABEL: Record<Sensitivity, string> = { low: "Cautious estimate", base: "Standard estimate", high: "Generous estimate" };
 /** One plain sentence per level. The declared T002 spread lives in Show math and methodology, not here. */
 export const SENSITIVITY_DESCRIPTION: Record<Sensitivity, string> = {
-  low: "The old laundry is assumed more efficient than the data pack says, so savings come out smaller.",
-  base: "Factors as given in the data pack.",
-  high: "The old laundry is assumed less efficient than the data pack says, so savings come out larger.",
+  low: "We assume the other laundry was more efficient than our data says, so the savings come out smaller.",
+  base: "The figures exactly as we have them.",
+  high: "We assume the other laundry was less efficient than our data says, so the savings come out larger.",
 };
 /** The scenario strip's tooltips (ADR 0017): what each estimate means, and that the range is declared by the team, not measured. */
 export const SENSITIVITY_TOOLTIP: Record<Sensitivity, string> = {

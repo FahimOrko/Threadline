@@ -30,6 +30,7 @@ import { EmptyState, ErrorState, StatCardSkeleton } from "@/components/states";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Tooltip } from "@/components/tooltip";
 import { METHODS, SOURCES } from "@/lib/provenance";
+import { HowWeGotHere } from "@/components/how-we-got-here";
 import { TreesStage } from "@/components/trees-stage";
 import { WorldHub } from "@/components/world-hub";
 import { WorldHeader } from "@/components/world-header";
@@ -38,7 +39,7 @@ import { CompanyPicker } from "@/components/company-picker";
 import { FigurePanel } from "@/components/figure-panel";
 import { PartBar, Ring } from "@/components/charts-simple";
 import { ZONES } from "@/lib/world";
-import { SAMPLE_LABEL, sampleHubFacts, sampleTrees, sampleFact, sampleNeedsInputFact, sampleMathWorstCase, sampleObservations, sampleSiteLinks, sampleStats, sampleSiteTable, stressChip } from "./_sample/data";
+import { SAMPLE_LABEL, sampleHubFacts, sampleTrees, sampleSteps, sampleFact, sampleNeedsInputFact, sampleMathWorstCase, sampleObservations, sampleSiteLinks, sampleStats, sampleSiteTable, stressChip } from "./_sample/data";
 
 const sections = ["Tokens", "Provenance", "Data display", "Controls", "States", "Effects", "Impact World"];
 const tokenNames = [
@@ -450,7 +451,7 @@ export default function DesignPage() {
           <WorldHub zones={ZONES} facts={sampleHubFacts} customerName="Sample Co" hrefFor={() => "/design#impact-world"} />
         </div>
         <div className="space-y-2">
-          <h3 className="text-sm font-medium">ZoneLayout with TreesStage: trees saved</h3>
+          <h3 className="text-sm font-medium">ZoneLayout with TreesStage: avoided emissions as young trees</h3>
           <p className="max-w-[65ch] text-sm text-muted-foreground">Explanation top-left, stage left, compact card right, a way back to the hub. Replay restarts the fall.</p>
           <ZoneLayout
             name="Trees"
@@ -462,13 +463,22 @@ export default function DesignPage() {
             card={
               <FigurePanel
                 title="Trees"
-                hero={{ fact: sampleTrees.saved, label: "Trees saved" }}
-                aside={<Ring percent={75} label="Share of the comparison's trees saved" />}
-                visual={<PartBar label="Trees needed with Lindström and trees not needed" parts={[{ label: "Needed with Lindström", value: 2400, unit: "trees" }, { label: "Not needed", value: 7200, unit: "trees" }]} />}
+                hero={{ fact: sampleTrees.saved, label: "Young trees equal to the avoided emissions" }}
+                aside={<Ring percent={75} label="Share of the comparison's emissions avoided" />}
+                visual={<PartBar label="Young trees for Lindström and for the avoided emissions" parts={[{ label: "For Lindström's emissions", value: 2400, unit: "young trees" }, { label: "For the avoided emissions", value: 7200, unit: "young trees" }]} />}
                 stats={[{ fact: sampleTrees.comparison, label: "Needed for local laundry" }, { fact: sampleTrees.service, label: "Needed with Lindström" }]}
               />
             }
           />
+        </div>
+        <div className="space-y-2">
+          <h3 className="text-sm font-medium">HowWeGotHere</h3>
+          <p className="max-w-[65ch] text-sm text-muted-foreground">Three numbered steps from the washed weight to the headline figure, each Fact with its chip and Show math. When Lindström needs more, step 3 reads as extra trees; a missing Fact reads &quot;Needs input&quot;, never 0. No motion.</p>
+          <HowWeGotHere steps={sampleSteps(false)} />
+          <p className="text-xs text-muted-foreground">Lindström needs more</p>
+          <HowWeGotHere title="How we got here (extra)" steps={sampleSteps(true)} />
+          <p className="text-xs text-muted-foreground">Needs input</p>
+          <HowWeGotHere title="How we got here (missing)" steps={sampleSteps(false, true)} />
         </div>
         <div className="grid gap-4 lg:grid-cols-2">
           <div className="space-y-2">

@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { StatCardSkeleton } from "@/components/states";
 import { GameHeaderActions } from "./_game-header";
+import { GameProgress } from "./_game-progress";
 import { GameView } from "./_game-view";
 
 // searchParams is runtime data, so it is read inside Suspense and the heading and skeleton prerender.
@@ -19,6 +20,9 @@ export default function Page({ searchParams }: PageProps<"/story/game">) {
           <GameHeaderActions searchParams={searchParams} />
         </Suspense>
       </div>
+      <Suspense fallback={null}>
+        <GameProgress />
+      </Suspense>
       <Suspense fallback={<StatCardSkeleton />}>
         <GameView searchParams={searchParams} />
       </Suspense>

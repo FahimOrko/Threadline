@@ -8,7 +8,9 @@ import { CompanyPicker } from "@/components/company-picker";
 import { TreesStage, layoutTrees } from "@/components/trees-stage";
 import { WorldHeader } from "@/components/world-header";
 import { WorldHub, wedgePolygon } from "@/components/world-hub";
+import { HowWeGotHere } from "@/components/how-we-got-here";
 import { ZoneLayout } from "@/components/zone-layout";
+import { EXPLAIN } from "@/lib/explain";
 import type { Fact, TreeStage } from "@/lib/engine";
 import { ZONES, worldHref } from "@/lib/world";
 
@@ -56,7 +58,7 @@ describe("TreesStage", () => {
     expect(container.querySelectorAll("use")).toHaveLength(40);
     expect(container.querySelectorAll(".tree-service")).toHaveLength(10);
     expect(container.querySelectorAll(".tree-saved")).toHaveLength(30);
-    expect(screen.getByRole("img").getAttribute("aria-label")).toContain("150 are saved");
+    expect(screen.getByRole("img").getAttribute("aria-label")).toContain("equal what 150 young trees absorb");
     expect(screen.getByText(/One tree icon =/).textContent).toContain("5");
     expect(screen.getByText("Illustration")).toBeTruthy();
   });
@@ -72,7 +74,7 @@ describe("TreesStage", () => {
     const { container } = render(<TreesStage stage={more} {...props} service={fact("trees_service", 14)} comparison={fact("trees_comparison", 10)} saved={fact("trees_saved", -4)} />);
     expect(container.querySelectorAll(".tree-extra")).toHaveLength(4);
     expect(container.querySelectorAll(".tree-saved")).toHaveLength(0);
-    expect(screen.getByRole("img").getAttribute("aria-label")).toContain("No trees are saved");
+    expect(screen.getByRole("img").getAttribute("aria-label")).toContain("no avoided emissions");
   });
   it("draws no trees and says Needs input without a stage", () => {
     const { container } = render(<TreesStage stage={null} {...props} service={fact("trees_service", null)} />);
@@ -113,5 +115,47 @@ describe("CompanyPicker and WorldHeader", () => {
     expect(within(header).getByRole("radiogroup", { name: "Comparing against" })).toBeTruthy();
     expect(within(header).getByRole("radiogroup", { name: "Estimate" })).toBeTruthy();
     expect(within(header).getByRole("link", { name: "Change company" }).getAttribute("href")).toBe("/world?view=customer");
+  });
+});
+
+describe("Trees framing", () => {
+  const steps = (more = false, missing = false) => [
+    { title: "Garments washed", text: "t1", figures: [{ fact: fact("washed_kg", missing ? null : 1000, "kg"), label: "Washed" }] },
+    { title: "CO2e from washing", text: "t2", figures: [{ fact: fact("service_footprint", missing ? null : 5, "kgCO2e"), label: "With Lindström" }, { fact: fact("comparison_footprint", missing ? null : 9, "kgCO2e"), label: "With a laundry" }] },
+    { title: more ? "Extra young trees" : "Young trees", text: "t3", figures: [{ fact: fact("tree_factor", 0.06, "tCO2e"), label: "One young tree absorbs" }, { fact: fact(more ? "trees_extra" : "trees_saved", missing ? null : 4, "young trees"), label: "Young trees" }] },
+  ];
+
+  it("shows three numbered steps with a chip and Show math on every figure", () => {
+    render(<HowWeGotHere steps={steps()} />);
+    expect(screen.getAllByRole("heading", { level: 4 }).map((h) => h.textContent)).toEqual(["Garments washed", "CO2e from washing", "Young trees"]);
+    expect(screen.getAllByRole("listitem").length).toBeGreaterThanOrEqual(3);
+    expect(screen.getAllByRole("button", { name: /show math/i })).toHaveLength(5);
+  });
+
+  it("reads the Lindström-needs-more case as extra trees, not a saving", () => {
+    const { container } = render(<HowWeGotHere steps={steps(true)} />);
+    expect(screen.getByText("Extra young trees")).toBeTruthy();
+    expect(container.textContent!.toLowerCase()).not.toContain("saved");
+  });
+
+  it("reads Needs input, never 0, when a Fact is unset", () => {
+    const { container } = render(<HowWeGotHere steps={steps(false, true)} />);
+    expect(screen.getAllByText("Needs input").length).toBeGreaterThanOrEqual(3);
+    expect(container.textContent).not.toMatch(/\b0 (kg|young)/);
+  });
+
+  it("never says trees are saved in the registry text or the stage", () => {
+    for (const k of ["zone:trees", "text:trees-saving", "text:trees-more", "text:trees-needs-input"]) expect(JSON.stringify(EXPLAIN[k]).replace(/{{fact:\w+}}/g, "").toLowerCase()).not.toMatch(/saved|saving in trees/);
+    render(<TreesStage stage={stage} comparison={fact("trees_comparison", 200)} service={fact("trees_service", 50)} saved={fact("trees_saved", 150)} scale={fact("tree_icon_scale", 5)} comparisonName="local laundry" />);
+    expect(screen.getByRole("img").getAttribute("aria-label")!.toLowerCase()).not.toContain("saved");
+  });
+});
+
+import { formatCardValue } from "@/lib/format";
+describe("small values", () => {
+  it("keeps a per-tree factor of 0.06 readable", () => {
+    expect(formatCardValue(0.06, "tCO2e")).toBe("0.06");
+    expect(formatCardValue(7.68)).toBe("7.7");
+    expect(formatCardValue(0)).toBe("0");
   });
 });

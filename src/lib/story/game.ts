@@ -66,35 +66,35 @@ export const SCENES: Scene[] = [
     setting: "meeting-room",
     name: "Customer",
     intro: [
-      { speaker: "kam", text: "Welcome to the value review. It matters because you should see what the Lindström service did for your year, in plain figures you can check. We compare it with another way of washing the same garments." },
-      { speaker: "kam", text: "We will make four choices together, and I will show what each one changes. Every figure comes from the data pack. Afterwards you will see how it impacts the world." },
-      { speaker: "ops", text: "Good. I would like to see our own year, and how we got to the answer." },
+      { speaker: "kam", text: "Good to see you. Let's look back at your year with us: what our service saved you, and what it cost, compared with washing the same workwear another way. You can open the math behind any number." },
+      { speaker: "kam", text: "There are four short choices to make along the way, and after each one I'll show you what moved. Every figure comes from your data, and when we're done you can see what it means for the world around you." },
+      { speaker: "ops", text: "Good, that's what I was hoping for. I'd like to see our own year, and understand how each answer is reached." },
     ],
     explain: [
       {
         speaker: "kam",
-        rules: [{ when: { data: "largestSite" }, text: "The first step sets whose garments, sites and washing we look at, and everything after follows from it. The largest of these sites is {largestSite}, by garments in circulation, so that is where the year weighs most." }],
-        fallback: "The first step sets whose garments, sites and washing we look at, and everything after follows from it. I will look at the account as a whole.",
+        rules: [{ when: { data: "largestSite" }, text: "First we decide whose year we're looking at. Everything that follows, the sites, the garments and the washing, depends on that. Your largest site is {largestSite}, judging by garments in circulation, so that's where the year weighs most." }],
+        fallback: "First we decide whose year we're looking at. Everything that follows, the sites, the garments and the washing, depends on that. I'll look at your account as a whole.",
       },
       {
         speaker: "ops",
-        rules: [{ when: { obs: "obs_repair_spike" }, text: "One thing I want explained: repairs at {spikeSites} rose well above the site's own trend in at least one month." }],
-        fallback: "Nothing in our repair data stands out against each site's own trend, so I would like to see the year as a whole.",
+        rules: [{ when: { obs: "obs_repair_spike" }, text: "One thing I'd like explained: repairs at {spikeSites} rose well above what those sites usually see, in at least one month." }],
+        fallback: "Nothing in our repairs looks odd next to each site's usual level, so I'd like to see the year as a whole.",
       },
     ],
     question: "Whose year are we looking at?",
-    react: "Yes, that is the account I know. Let's see how the year looked.",
-    answer: "For {company}, {{fact:delivery_sites}} were served for {{fact:active_wearers}}, with {{fact:garments_in_circulation}} in circulation. The card shows what moved against the starting customer.",
+    react: "Yes, that's the account I know. Let's see how the year looked.",
+    answer: "So for {company}: we served {{fact:delivery_sites}}, dressing {{fact:active_wearers}}, with {{fact:garments_in_circulation}} in circulation. The card on the right shows how this differs from where we started.",
     meaning: [
       {
         speaker: "kam",
-        rules: [{ when: { obs: "obs_over_allocation" }, text: "What this says about the year: at {overSites}, more garments were allocated than were scanned last month, so some garments sat idle." }],
-        fallback: "What this says about the year: no site had more garments allocated than scanned last month.",
+        rules: [{ when: { obs: "obs_over_allocation" }, text: "Here's what that says about your year: at {overSites}, more garments were set aside than were scanned last month, so some of them sat idle." }],
+        fallback: "Here's what that says about your year: no site had more garments set aside than were scanned last month, so nothing sat idle on that account.",
       },
       {
         speaker: "kam",
-        rules: [{ when: { factNull: "cost_of_unused_allocation" }, text: "The cost of unused allocation needs input from Lindström: the weekly rental fee per garment. Without it we cannot say what idle garments cost, so no figure is shown." }],
-        fallback: "Idle garments cost {{fact:cost_of_unused_allocation}} over the year.",
+        rules: [{ when: { factNull: "cost_of_unused_allocation" }, text: "I can't put a price on the idle garments yet. That needs the weekly rental fee per garment, and only Lindström can supply it. Rather than guess, I've left the figure out." }],
+        fallback: "Idle garments cost {{fact:cost_of_unused_allocation}} over the year. That is money tied up in garments nobody wore.",
       },
     ],
     cards: ["delivery_sites", "active_wearers", "garments_in_circulation", "co2e_saved", "cost_of_unused_allocation"],
@@ -105,25 +105,25 @@ export const SCENES: Scene[] = [
     setting: "plant-floor",
     name: "Comparison",
     intro: [
-      { speaker: "kam", text: "This is where the washing happens. Savings only mean something against a comparison, and the comparison is a choice." },
-      { speaker: "ops", text: "Then what are we comparing against? I expect the answer depends on it." },
+      { speaker: "kam", text: "This is where the washing happens. A saving only means something next to something else, and which comparison we use is your choice." },
+      { speaker: "ops", text: "Then what are we comparing against? I expect the answer changes the picture." },
     ],
     explain: [
-      say("kam", "This choice picks the laundry we compare the service with: a local laundry, washing at home or an in-house laundry, each washing the same garments. The savings are the difference between that laundry and the service, in litres (L) of water, kilowatt hours (kWh) of energy and kilograms of CO2e."),
+      say("kam", "A saving only means something next to something else. So pick the way of washing you'd like us to compare against: a local laundry, washing at home, or your own in-house laundry, all washing the same garments. The saving is simply the gap between that and our service, counted in litres (L) of water, kilowatt hours (kWh) of energy and kilograms of CO2e (CO2e is carbon dioxide and other greenhouse gases, put on one scale)."),
       {
         speaker: "ops",
-        rules: [{ when: { obs: "obs_replacements_postponed" }, text: "Our repairs kept garments in use, so I want the comparison to be fair to how we run." }],
-        fallback: "So the comparison decides how large the savings look.",
+        rules: [{ when: { obs: "obs_replacements_postponed" }, text: "Our repairs kept garments in use for longer, so I'd like the comparison to be fair to how we run." }],
+        fallback: "So the comparison we pick decides how big the savings look.",
       },
     ],
-    question: "Which laundry should we compare the service against?",
-    react: "Compared with {comparison}, then. I expect the figures to move.",
-    answer: "Compared with {comparison}, the service saved {{fact:water_saved}} of water, {{fact:energy_saved}} of energy and {{fact:co2e_saved}}. The factors for these comparison laundries are illustrative values in the data pack, not metered savings.",
+    question: "Which way of washing should we compare our service with?",
+    react: "Compared with {comparison}, then. I expect the figures to shift.",
+    answer: "Compared with {comparison}, our service saved {{fact:water_saved}} of water, {{fact:energy_saved}} of energy and {{fact:co2e_saved}}. One honest note: the washing figures for those other laundries are typical values from the data, not measurements from your plants.",
     meaning: [
       {
         speaker: "kam",
-        rules: [{ when: { data: "zeroDelivery" }, text: "Read this carefully: the service's delivery alone looks worse than this comparison, because washing that way has no delivery at all. Read delivery together with the net CO2e saved, which covers washing and delivery." }],
-        fallback: "What this means: the figures show how the service compares with {comparison}. A saving means the service used less, and the card shows the direction and the size.",
+        rules: [{ when: { data: "zeroDelivery" }, text: "Read this one carefully. Our delivery on its own looks worse than this comparison, because washing that way has no delivery at all. So look at delivery together with the net CO2e saved, which counts both washing and delivery." }],
+        fallback: "Here's what that means: the figures show how our service compares with {comparison}. A saving means we used less, and the card shows which way each figure moved and by how much.",
       },
     ],
   },
@@ -133,29 +133,29 @@ export const SCENES: Scene[] = [
     setting: "sustainability-office",
     name: "Estimate",
     intro: [
-      { speaker: "kam", text: "The comparison laundries' factors were not measured at your plants, so the savings are an estimate. We can show a cautious, a standard and a generous version." },
+      { speaker: "kam", text: "Since nobody measured the other laundries at your plants, the savings are an estimate, and an estimate is better shown as a range. I can show you a cautious, a standard and a generous version." },
       { speaker: "ops", text: "Who decides how wide that range is?" },
-      { speaker: "kam", text: "The team declared it as assumption T002. It is the team's estimate range, not a measurement." },
+      { speaker: "kam", text: "The width of that range is our own team's call, recorded as T002. It's a sensible spread, not a measurement." },
     ],
     explain: [
       {
         speaker: "kam",
-        rules: [{ when: { data: "spreadUnset" }, text: "The size of the range needs input from Lindström. Until it is set, only the Standard estimate can be shown, because the other two depend on it." }],
-        fallback: "Cautious assumes the old laundry was more efficient than the data pack says, so savings come out smaller. Generous assumes it was less efficient, so savings come out larger. Standard uses the factors exactly as given.",
+        rules: [{ when: { data: "spreadUnset" }, text: "The width of the range still needs input from Lindström. Until it's set I can only show the Standard estimate, because the other two depend on it." }],
+        fallback: "Cautious assumes the other laundry was more efficient than our data says, so the savings come out smaller. Generous assumes it was less efficient, so they come out larger. Standard uses the figures exactly as we have them.",
       },
     ],
     question: "How cautious should the savings be?",
-    react: "The {estimate}, then. I will read the figures with that in mind.",
-    answer: "With the {estimate}, the service saved {{fact:co2e_saved}}. This is the team's declared estimate range applied to the comparison laundry's factors. It is not a measurement or a forecast.",
+    react: "The {estimate}, then. I'll read the figures with that in mind.",
+    answer: "With the {estimate}, our service saved {{fact:co2e_saved}}. That comes from applying our team's estimate range to the other laundry's figures, so please read it as an estimate, not a measurement or a forecast.",
     meaning: [
       {
         speaker: "kam",
         rules: [
-          { when: { level: "low" }, text: "What this means: the Cautious estimate is the low end of the declared range, so these savings are the smallest of the three. If they still look worthwhile, the case holds on cautious assumptions." },
-          { when: { level: "base" }, text: "What this means: the Standard estimate uses the data pack's factors as given. It is the middle of the declared range, not a measurement." },
-          { when: { level: "high" }, text: "What this means: the Generous estimate is the high end of the declared range, so these savings are the largest of the three. Treat it as the upper end of the team's estimate, not as a measurement." },
+          { when: { level: "low" }, text: "Here's what that tells us: the Cautious estimate is the careful end of the range, so these are the smallest savings of the three. If they still look worthwhile to you, the case holds even when we assume the least." },
+          { when: { level: "base" }, text: "Here's what that tells us: the Standard estimate uses the figures exactly as we have them. It sits in the middle of the range, and it is still an estimate, not a measurement." },
+          { when: { level: "high" }, text: "Here's what that tells us: the Generous estimate is the generous end of the range, so these are the largest savings of the three. Treat it as the top of what our team thinks is reasonable, not as something measured." },
         ],
-        fallback: "What this means: the estimate range is the team's declared range, not a measurement.",
+        fallback: "Here's what that tells us: the range is our team's own spread, not a measurement.",
       },
     ],
   },
@@ -165,27 +165,27 @@ export const SCENES: Scene[] = [
     setting: "meeting-room",
     name: "Priority",
     intro: [
-      { speaker: "ops", text: "One last thing. When I take this to my team, I do not want to hand them everything at once." },
-      { speaker: "kam", text: "Then choose what the story should lead with. The figures stay the same, only the order changes." },
+      { speaker: "ops", text: "One last thing. When I take this to my team, I don't want to hand them everything at once." },
+      { speaker: "kam", text: "Then choose what the story should lead with. The numbers stay the same, only the order changes." },
     ],
     explain: [
       {
         speaker: "kam",
-        rules: [{ when: { obs: "obs_dormant_critical" }, text: "A priority decides which chapter of the written report comes first. One thing deserves raising early: garments at {dormantSites} sat unused for a long time." }],
-        fallback: "A priority decides which chapter of the written report comes first. No garments reached the longest unused tier, so nothing here is urgent.",
+        rules: [{ when: { obs: "obs_dormant_critical" }, text: "Your priority decides which chapter of the written report comes first. One thing is worth raising early: garments at {dormantSites} sat unused for a long time." }],
+        fallback: "Your priority decides which chapter of the written report comes first. No garments reached our longest unused stage, so nothing here is urgent.",
       },
     ],
     question: "What should the story lead with?",
-    react: "{chapter}, first. That is what I will open with.",
+    react: "{chapter}, first. That's what I'll open with.",
     answer: "The story now opens with {chapter}. {lead}",
     meaning: [
       {
         speaker: "kam",
         rules: [
-          { when: { obs: "obs_repair_spike" }, text: "For your year, repairs rose above the usual trend at {spikeSites}, and that sits in the risk chapter of the report." },
-          { when: { obs: "obs_over_allocation" }, text: "For your year, garments were allocated but not used at {overSites}, and that sits in the risk chapter of the report." },
+          { when: { obs: "obs_repair_spike" }, text: "Looking at your year, repairs rose above the usual level at {spikeSites}, and you'll find that in the risk chapter of the report." },
+          { when: { obs: "obs_over_allocation" }, text: "Looking at your year, garments were set aside but not used at {overSites}, and that's in the risk chapter of the report." },
         ],
-        fallback: "The figures behind every chapter stay the same. The order only decides what your team reads first.",
+        fallback: "None of the numbers change with this choice. It only decides which chapter your team reads first, so start with what matters most to them.",
       },
     ],
   },
@@ -193,26 +193,26 @@ export const SCENES: Scene[] = [
 
 /** The customer view's scene 1 (ADR 0029): two lines that name no customer, then the company picker. Nothing here may depend on a customer, because none is chosen yet. */
 export const CUSTOMER_VIEW_INTRO: Line[] = [
-  { speaker: "kam", text: "Welcome to the value review. It matters because you should see what the Lindström service did for your year, in plain figures you can check. We compare it with another way of washing the same garments." },
-  { speaker: "kam", text: "We will make four choices together, and I will show what each one changes. Every figure comes from the data pack. Afterwards you will see how it impacts the world." },
-  { speaker: "ops", text: "Good. I would like to go through our own year with you." },
+  { speaker: "kam", text: "Good to see you. Let's look back at your year with us: what our service saved you, and what it cost, compared with washing the same workwear another way. You can open the math behind any number." },
+  { speaker: "kam", text: "There are four short choices to make along the way, and after each one I'll show you what moved. Every figure comes from your data, and when we're done you can see what it means for the world around you." },
+  { speaker: "ops", text: "Good. I'd like to go through our own year with you." },
 ];
 export const CUSTOMER_VIEW_QUESTION = "Which company are you from?";
 /** The customer view's answer to scene 1: the card shows the company's figures as they stand, so it never says "against the starting customer". */
-export const CUSTOMER_VIEW_ANSWER = "For {company}, {{fact:delivery_sites}} were served for {{fact:active_wearers}}, with {{fact:garments_in_circulation}} in circulation. The card shows these figures as they stand.";
+export const CUSTOMER_VIEW_ANSWER = "So for {company}: we served {{fact:delivery_sites}}, dressing {{fact:active_wearers}}, with {{fact:garments_in_circulation}} in circulation. The card on the right shows these figures as they stand.";
 
 export const END_LINES = {
-  recap: "That is the review. This is the path we took, in order.",
-  actions: "You can download the data, read the full report or see your impact on the world. Each keeps every choice you made.",
+  recap: "That's the review. Here's the path we took, one choice at a time.",
+  actions: "From here you can download the data, read the full report or see what your year means for the world. Each one keeps every choice you made.",
 };
 
 export const SUGGESTED_BADGE = "Suggested for a first run";
 /** The one plain line under each scene's suggested option. The rules that pick the option are in `suggest`. */
 export const SUGGESTION_WHY: Record<SceneId, string> = {
-  customer: "This account has the most going on in the data, so the story has the most to say.",
-  baseline: "The headline savings figure uses this comparison.",
-  sensitivity: "These are the factors exactly as given in the data pack.",
-  priority: "This is where your year had the most going on. Pick what matters most to you.",
+  customer: "This account has the most going on in the data, so there's the most to talk about.",
+  baseline: "This is the comparison behind the headline savings figure.",
+  sensitivity: "These are the figures exactly as we have them.",
+  priority: "This is where your year had the most going on. Choose what matters most to you.",
 };
 
 export const slotTexts = (slot: Slot): string[] => [...(slot.rules ?? []).map((r) => r.text), slot.fallback];
@@ -296,8 +296,8 @@ export const stepHref = (params: Params, scene: number | "end", beat: number, ch
   gameHref(GAME_PATH, params, { scene: String(scene), beat: String(beat), ...choice });
 
 /** A link out of the game (`/story`): leaves scene and beat behind and spells out the four resolved levers. */
-export function exitHref(path: string, params: Params, state: { customer: string; baseline: string; sensitivity: string; priorities: readonly Priority[] }): string {
-  return gameHref(path, params, { scene: null, beat: null, customer: state.customer, baseline: state.baseline, sensitivity: state.sensitivity, priorities: state.priorities.length ? state.priorities.join(",") : null });
+export function exitHref(path: string, params: Params, state: { customer: string; baseline: string; sensitivity: string; priorities: readonly Priority[] }, ended = false): string {
+  return gameHref(path, params, { scene: null, beat: null, ended: ended ? "1" : null, customer: state.customer, baseline: state.baseline, sensitivity: state.sensitivity, priorities: state.priorities.length ? state.priorities.join(",") : null });
 }
 
 /** The state before a scene's choice: the same address with that scene's lever back at its default. */
@@ -470,8 +470,8 @@ export function suggest(scene: Scene, view: View, ctx: { customerIds: readonly s
 /** The row label without the comparison: "Water saved vs local laundry" reads "Water saved". Facts that name no baseline keep their label. */
 export const neutralLabel = (f: Pick<Fact, "label" | "baseline">): string => (f.baseline ? f.label.replace(/ vs [^,]+/, "") : f.label);
 
-/** Start over: scene, beat, the customer and the other levers go; `view` and unknown params stay. In the customer view this returns to the company picker. */
-export const startOverHref = (params: Params): string => gameHref(GAME_PATH, params, { scene: null, beat: null, customer: null, baseline: null, sensitivity: null, priorities: null });
+/** Start over: scene, beat, the `ended` flag, the customer and the other levers go; `view` and unknown params stay. In the customer view this returns to the company picker. */
+export const startOverHref = (params: Params): string => gameHref(GAME_PATH, params, { scene: null, beat: null, customer: null, baseline: null, sensitivity: null, priorities: null, ended: null });
 
 /** True on the very first beat of scene 1: no scene or beat past the start. */
 export function isFirstBeat(params: Params, view: View): boolean {
@@ -482,7 +482,7 @@ export function isFirstBeat(params: Params, view: View): boolean {
 /** The Start over control: always shown, disabled only when pressing it would change nothing (the first beat with no lever chosen). */
 export function startOverState(params: Params, view: View): { href: string; disabled: boolean } {
   const levers: Lever[] = ["customer", "baseline", "sensitivity", "priorities"];
-  return { href: startOverHref(params), disabled: isFirstBeat(params, view) && !levers.some((l) => first(params[LEVER_KEY[l]]) !== undefined) };
+  return { href: startOverHref(params), disabled: isFirstBeat(params, view) && first(params.ended) === undefined && !levers.some((l) => first(params[LEVER_KEY[l]]) !== undefined) };
 }
 
 /** The Previous control's target from the beat now shown: the beat before it, or the last beat of the scene before (the ending steps back into the last scene). Null on the first beat of scene 1. Only `scene` and `beat` change, so every choice stays in the address. */
@@ -493,6 +493,8 @@ export function previousHref(params: Params, view: View, scene: number | "end", 
 }
 
 export const REPORT_HINT = "Finish the review to open your report";
+/** The same pattern for the Impact World gate (customer view, ADR 0033). */
+export const WORLD_HINT = "Finish the review to open your Impact World";
 
 /** The header's "Read the full report": disabled on every beat until the ending, then it opens `/story` with every param kept (scene and beat dropped). */
 export function reportLinkState(params: Params): { href: string; disabled: boolean } {

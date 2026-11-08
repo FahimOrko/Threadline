@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import { resolveView } from "@/lib/selection";
+import { StartOverLink } from "./_game-progress";
 import { REPORT_HINT, reportLinkState, startOverState } from "@/lib/story/game";
 
 const cls = buttonVariants({ variant: "outline", size: "sm" });
@@ -8,7 +9,8 @@ const cls = buttonVariants({ variant: "outline", size: "sm" });
 /** Start over and Read the full report, beside the title. Both are always in place and are disabled, not hidden, when they would do nothing, so the layout never jumps. */
 export async function GameHeaderActions({ searchParams }: { searchParams: PageProps<"/story/game">["searchParams"] }) {
   const params = await searchParams;
-  const start = startOverState(params, resolveView(params.view));
+  const view = resolveView(params.view);
+  const start = startOverState(params, view);
   const report = reportLinkState(params);
   return (
     <>
@@ -17,9 +19,7 @@ export async function GameHeaderActions({ searchParams }: { searchParams: PagePr
           Start over
         </button>
       ) : (
-        <Link href={start.href} className={cls}>
-          Start over
-        </Link>
+        <StartOverLink href={start.href} view={view} className={cls} />
       )}
       {report.disabled ? (
         <>

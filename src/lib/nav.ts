@@ -6,7 +6,7 @@ import { GAME_PATH, STORY_PATH } from "@/lib/story/game";
 import { WORLD_PATH } from "@/lib/world";
 
 export type NavIcon = SectionSlug | "story" | "impact";
-export type NavItem = { key: string; href: string; /** Route prefix that marks the item active. */ match: string; label: string; icon: NavIcon; /** Shows sub-rows (the Story group, ADR 0029). */ expandable?: boolean };
+export type NavItem = { key: string; href: string; /** Route prefix that marks the item active. */ match: string; label: string; icon: NavIcon; /** Shows sub-rows (the Story group, ADR 0029). */ expandable?: boolean; /** Locked in the customer view until the review ends (ADR 0033). */ gate?: "review" };
 export type NavGroup = { label: string; items: NavItem[] };
 
 const DASHBOARD: NavGroup = {
@@ -17,7 +17,7 @@ const SHARED: NavGroup = {
   label: "Shared",
   items: [
     { key: "story", href: GAME_PATH, match: STORY_PATH, label: "Story", icon: "story", expandable: true },
-    { key: "impact", href: WORLD_PATH, match: WORLD_PATH, label: "Impact World", icon: "impact" },
+    { key: "impact", href: WORLD_PATH, match: WORLD_PATH, label: "Impact World", icon: "impact", gate: "review" },
   ],
 };
 

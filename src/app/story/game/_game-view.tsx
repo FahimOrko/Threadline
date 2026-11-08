@@ -95,14 +95,14 @@ export async function GameView({ searchParams }: { searchParams: PageProps<"/sto
   let consequence: React.ReactNode = null;
   if (scene !== "end" && (beat.kind === "react" || beat.kind === "answer" || beat.kind === "meaning")) {
     if (lead) {
-      consequence = <ConsequenceCard heading="Facts in the leading chapter" against={`Compared with ${st.short}, using the ${estimate}. Priorities move no figure, so these stand as they are.`} standing={lead.cards.slice(0, 4).map(fact)} emptyText="No figures." />;
+      consequence = <ConsequenceCard heading="Figures in the first chapter" against={`Compared with ${st.short}, using the ${estimate}. Your priority doesn't move any figure, so these stay as they are.`} standing={lead.cards.slice(0, 4).map(fact)} emptyText="There are no figures to show here yet." />;
     } else if (view === "customer" && scene.id === "customer") {
       // The customer view never shows another customer's figures, so there is no before value: the chosen company's figures stand as they are.
-      consequence = <ConsequenceCard heading="Your year" against={`Compared with ${st.short}, using the ${estimate}.`} standing={(scene.cards ?? []).map(fact)} emptyText="No figures." />;
+      consequence = <ConsequenceCard heading="Your year" against={`Compared with ${st.short}, using the ${estimate}.`} standing={(scene.cards ?? []).map(fact)} emptyText="There are no figures to show here yet." />;
     } else if (scene.id !== "priority") {
       const before = resolveState(data, beforeParams(scene, params));
       const label = scene.id === "customer" ? before.customer.customer_name : scene.id === "baseline" ? before.short : SENSITIVITY_LABEL[before.sensitivity];
-      consequence = <ConsequenceCard heading="What changed" against={`Against ${label}`} columns={{ before: before.short, after: st.short }} changes={changedFacts(scope(before), facts, scene.cards)} emptyText={`Nothing changed against ${label}.`} />;
+      consequence = <ConsequenceCard heading="What moved" against={`Against ${label}`} columns={{ before: before.short, after: st.short }} changes={changedFacts(scope(before), facts, scene.cards)} emptyText={`Nothing moved compared with ${label}.`} />;
     }
   }
 
@@ -180,7 +180,7 @@ export async function GameView({ searchParams }: { searchParams: PageProps<"/sto
       box = (
         <DialogueBox key={key} speaker="kam" tag={tag("kam")} text={END_LINES.actions} previousHref={previous}>
           <div className="flex flex-wrap gap-2">
-            <ChoiceButton primary href={exitHref(IMPACT_WORLD_HREF, params, exitState)} label="See your impact on the world" />
+            <ChoiceButton primary href={exitHref(IMPACT_WORLD_HREF, params, exitState, true)} label="See your impact on the world" />
             <ChoiceButton href={`${exitHref(STORY_PATH, params, exitState)}#export`} label="Download the data" />
             <ChoiceButton href={exitHref(STORY_PATH, params, exitState)} label="Read the full report" />
           </div>

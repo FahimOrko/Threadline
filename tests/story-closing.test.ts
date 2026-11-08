@@ -20,15 +20,15 @@ describe("closing text", () => {
   it("asks all five questions for Lindström", () => {
     expect(OPEN_QUESTIONS).toHaveLength(5);
     const all = OPEN_QUESTIONS.join(" ");
-    for (const k of ["washing_pct", "rental fee", "CO2-per-tree", "route kilometres", "comparison laundry be reviewed"]) expect(all).toContain(k);
+    for (const k of ["washing percentage", "rental fee", "CO2-per-tree", "route kilometres", "comparison laundry be reviewed"]) expect(all).toContain(k);
   });
   it("has no digit outside an assumption id", () => {
     for (const t of [...DATA_SOURCES, ...DATA_GAPS, ...OPEN_QUESTIONS, BASELINE_CAVEAT, ROUNDING_NOTE, sensitivityNote("high")]) expect(strip(t)).not.toMatch(/\d/);
   });
-  it("frames sensitivity as the declared spread and names the level", () => {
+  it("frames sensitivity as a spread the team chose and names the level", () => {
     const n = sensitivityNote("high");
     expect(n).toContain("Generous estimate");
-    expect(n).toContain("declared spread");
+    expect(n).toContain("spread our team chose");
     expect(n).toContain("not a measured range");
   });
   it("calls the comparison laundry illustrative", () => expect(BASELINE_CAVEAT).toContain("illustrative local laundry"));

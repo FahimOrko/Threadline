@@ -56,6 +56,18 @@ describe("tree Facts", () => {
     expect(r.stage).toBeNull();
   });
 
+  it("calls the difference an equivalence, never a saving", () => {
+    for (const x of facts) expect(x.label.toLowerCase()).not.toContain("saved");
+    expect(t.trees_saved.unit).toBe("young trees");
+  });
+
+  it("washed_kg is the weight behind the footprint and absent without it", () => {
+    expect(f.washed_kg.unit).toBe("kg");
+    expect(f.washed_kg.value).toBeGreaterThan(0);
+    expect(f.service_footprint_per_tonne.value).toBeCloseTo(f.service_footprint.value! / (f.washed_kg.value! / 1000), 6);
+    expect(footprintFacts(data, { customerId: "NO_SUCH", period }, baseline(DEFAULT_BASELINE_ID)).find((x) => x.id === "washed_kg")).toBeUndefined();
+  });
+
   it("gives nothing without footprint Facts", () => expect(treeFacts([])).toEqual({ facts: [], stage: null }));
 });
 

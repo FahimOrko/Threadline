@@ -24,7 +24,7 @@ export const EXPORT_TEXT = {
   figures: "Figures",
   charts: "Chart data",
   assumptions: "Team assumptions",
-  assumptionsNote: "Values only the team or Lindström can supply. A value that is not set reads Needs input and is never replaced by a number.",
+  assumptionsNote: "These are values only our team or Lindström can supply. One that is not set yet reads Needs input, and we never fill it with a made-up number.",
   readiness: "Data readiness",
   findings: "Findings",
   rowsLeftOut: "Rows left out",
@@ -45,7 +45,7 @@ export const EXPORT_TEXT = {
   notModelled: "not modelled",
   notApplicable: "not applicable",
   confidence: "Confidence",
-  readinessIntro: "Counts come from the build's data-quality report. A row that is invalid or unmapped is counted and left out of every figure, never dropped silently.",
+  readinessIntro: "These counts come from the data-quality report made when the data was built. A row that is invalid or cannot be matched is counted and left out of every figure, so nothing disappears without a trace.",
   noRowsLeftOut: "No invalid or unmapped rows were found in any source.",
 } as const;
 
