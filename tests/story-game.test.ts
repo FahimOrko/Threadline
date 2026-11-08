@@ -135,7 +135,8 @@ describe("links keep every existing param", () => {
     expect(h.get("customer")).toBe("CUST002");
   });
   it("a choice replaces the lever instead of repeating it", () => expect(q(stepHref(params, 2, 3, { baseline: "B_LOCAL" })).getAll("baseline")).toEqual(["B_LOCAL"]));
-  it.each(["/story", "/story/print"])("%s keeps unknown params, spells out the four levers and drops scene and beat", (path) => {
+  it("/story keeps unknown params, spells out the four levers and drops scene and beat", () => {
+    const path = "/story";
     const href = exitHref(path, { ...params, scene: "end", beat: "2" }, state);
     expect(href.startsWith(`${path}?`)).toBe(true);
     const h = q(href);
@@ -236,7 +237,7 @@ describe("the one sensitivity label map", () => {
     const opts = optionsFor(SCENES[2], data, labels);
     expect(opts.map((o) => [o.value, o.label, o.hint])).toEqual((["low", "base", "high"] as const).map((l) => [l, SENSITIVITY_LABEL[l], SENSITIVITY_DESCRIPTION[l]]));
   });
-  it("is what the story text and the print cover show", async () => {
+  it("is what the story text shows", async () => {
     const { facts, st } = await factsFor({ sensitivity: "high" });
     const lead = leadingChapter("water").lines[0];
     expect(renderLine(lead, facts, { baseline: st.short, sensitivity: SENSITIVITY_LABEL[st.sensitivity], company: "" })).toContain("Generous estimate");

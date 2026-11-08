@@ -404,12 +404,3 @@ describe("app sidebar and the AI sidebar (ADR 0025)", () => {
     expect(sidebar().getAttribute("data-state")).toBe("collapsed");
   });
 });
-
-describe("print route", () => {
-  it("renders bare, with no sidebar or header", () => {
-    path = "/story/print";
-    shell();
-    expect(screen.queryByLabelText("Main", { selector: "aside" })).toBeNull();
-    expect(screen.queryByRole("link", { name: "Story" })).toBeNull();
-  });
-});

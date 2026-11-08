@@ -5,13 +5,12 @@ import type { Fact, FootprintComparison } from "@/lib/engine";
 import { formatCardValue } from "@/lib/format";
 
 /** The net CO2e comparison chart with its sentence, shared by the dashboard's Environmental footprint page and the Story (same engine output, same text). `explain` is the page's registry lookup. */
-export function Co2eComparisonChart({ cmp, short, year, co2eSaved, explain, asTable }: { cmp: FootprintComparison; short: string; year: string; co2eSaved?: Fact; explain: (key: string) => string; asTable?: boolean }) {
+export function Co2eComparisonChart({ cmp, short, year, co2eSaved, explain }: { cmp: FootprintComparison; short: string; year: string; co2eSaved?: Fact; explain: (key: string) => string}) {
   return (
     <ChartFrame
       title="Why is the net CO2e saving what it is?"
       explain={explain("chart:co2e-comparison")}
       caption={`${year}, in kgCO2e. The dashed outline is the net saving.`}
-      asTable={asTable}
       summary={`Net CO2e: ${formatCardValue(cmp.metrics.co2e.comparison, "kgCO2e")} kgCO2e for ${short}, ${formatCardValue(cmp.metrics.co2e.service, "kgCO2e")} for the service, a saving of ${formatCardValue(cmp.netSaving, "kgCO2e")}.`}
       table={{
         caption: "CO2e by bar, kgCO2e",

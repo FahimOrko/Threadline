@@ -44,7 +44,6 @@ import {
   type Beat,
   type Scene,
 } from "@/lib/story/game";
-import { STORY_PRINT_PATH } from "@/lib/story/print";
 import { PERIOD } from "../_story-document";
 import { ConsequenceCard } from "./_consequence-card";
 
@@ -181,7 +180,7 @@ export async function GameView({ searchParams }: { searchParams: PageProps<"/sto
       box = (
         <DialogueBox key={key} speaker="kam" tag={tag("kam")} text={END_LINES.actions} previousHref={previous}>
           <div className="flex flex-wrap gap-2">
-            <ChoiceButton primary newTab href={exitHref(STORY_PRINT_PATH, params, exitState)} label="Open PDF version" />
+            <ChoiceButton primary href={`${exitHref(STORY_PATH, params, exitState)}#export`} label="Download the data" />
             <ChoiceButton href={exitHref(STORY_PATH, params, exitState)} label="Read the full report" />
             {/* Impact World slot: the Impact World change sets IMPACT_WORLD_HREF in game.ts and renders its button here. Empty on purpose until that route exists. */}
             {IMPACT_WORLD_HREF !== null && <ChoiceButton href={exitHref(IMPACT_WORLD_HREF, params, exitState)} label="Open Impact World" />}

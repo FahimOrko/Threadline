@@ -8,7 +8,6 @@ import type { ShellBaseline, ShellCustomer } from "@/components/param-selects";
 import { Separator } from "@/components/ui/separator";
 import { SIDEBAR_COOKIE, SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { GAME_PATH } from "@/lib/story/game";
-import { STORY_PRINT_PATH } from "@/lib/story/print";
 
 type ShellProps = { children: React.ReactNode; customers: ShellCustomer[]; baselines: ShellBaseline[] };
 
@@ -73,16 +72,14 @@ function Frame({ children, customers, baselines, pathname }: ShellProps & { path
 }
 
 // usePathname suspends on routes with a dynamic param (site pages), so it is read inside Suspense; the fallback is the full shell.
-// shortcut: print route detected by pathname, not a route group; switch to (app)/(print) groups if more bare routes appear.
-function ShellOrBare(props: ShellProps) {
-  const pathname = usePathname();
-  return pathname === STORY_PRINT_PATH ? <>{props.children}</> : <Frame {...props} pathname={pathname} />;
+function ShellWithPath(props: ShellProps) {
+  return <Frame {...props} pathname={usePathname()} />;
 }
 
 export function AppShell(props: ShellProps) {
   return (
     <Suspense fallback={<Frame {...props} />}>
-      <ShellOrBare {...props} />
+      <ShellWithPath {...props} />
     </Suspense>
   );
 }

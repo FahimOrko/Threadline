@@ -13,6 +13,9 @@ export const DATA_SOURCES = [
 export const BASELINE_CAVEAT =
   "The CO2e saved figure compares the service with an illustrative local laundry. Its process factor is a team placeholder, not a measured value, and it drives most of the saving. Open Show math on a CO2e saved figure to see the factor and its source.";
 
+/** Shown above the data pack's own assumptions table, whose cells stay verbatim (the pack's wording is data). */
+export const DATA_PACK_NOTE = "The wording in this table is the data pack's own. Where it speaks of a starting or default comparison, it means the comparison chosen at the top of this report.";
+
 export const ROUNDING_NOTE = "Values are calculated at full precision and rounded only when displayed. Show math lists the unrounded inputs.";
 
 export function sensitivityNote(level: Sensitivity): string {

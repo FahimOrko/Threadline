@@ -8,6 +8,7 @@ import { ChoiceButton } from "@/components/choice-button";
 import { DeltaBadge } from "@/components/delta-badge";
 import { DialogueBox } from "@/components/dialogue-box";
 import { FactStatCard } from "@/components/fact-stat-card";
+import { ExportCard } from "@/components/export-card";
 import { Notice } from "@/components/notice";
 import { ObservationCard } from "@/components/observation-card";
 import { Panel } from "@/components/panel";
@@ -20,8 +21,7 @@ import { Suspense } from "react";
 import { ChartGallery } from "./_charts";
 import { SiteTable, SiteTableSkeleton } from "@/components/site-table";
 import { SectionHeader } from "@/components/section-header";
-import { PrintButton } from "@/components/print-button";
-import { ShowMathInlineProvider, ShowMathPopover } from "@/components/show-math";
+import { ShowMathPopover } from "@/components/show-math";
 import { StatCard } from "@/components/stat-card";
 import { Collapsible } from "@/components/collapsible";
 import { StoryChapter } from "@/components/story-chapter";
@@ -129,23 +129,6 @@ export default function DesignPage() {
             <ShowMathPopover {...sampleMathWorstCase} defaultOpen />
           </div>
         </Panel>
-        <Panel className="space-y-2">
-          <SampleLabel />
-          <h3 className="text-sm font-medium">Show math inline (print)</h3>
-          <p className="max-w-[65ch] text-sm text-muted-foreground">
-            Inside ShowMathInlineProvider the same ShowMathPopover renders expanded in the page flow, with the thread line, no trigger. Used by the print route.
-          </p>
-          <ShowMathInlineProvider inline>
-            <ShowMathPopover {...sampleMathWorstCase} />
-          </ShowMathInlineProvider>
-        </Panel>
-        <Panel className="space-y-2">
-          <h3 className="text-sm font-medium">PrintButton and print scope</h3>
-          <p className="max-w-[65ch] text-sm text-muted-foreground">
-            PrintButton opens the browser print dialog and is hidden when printing. The <code>.print-scope</code> class re-declares the light tokens so a dark app theme cannot reach the printed story.
-          </p>
-          <PrintButton />
-        </Panel>
       </section>
 
       <Separator />
@@ -196,17 +179,16 @@ export default function DesignPage() {
         <div className="space-y-2">
           <h3 className="text-sm font-medium">Notice</h3>
           <p className="max-w-[65ch] text-sm text-muted-foreground">
-            An inline status line, such as a fallback notice. The screen-only variant is marked so a print route can hide it.
+            An inline status line, such as a fallback notice.
           </p>
           <div className="grid gap-3 lg:grid-cols-2">
             <Notice>Sample notice: an unknown value was replaced by the default.</Notice>
-            <Notice screenOnly>Sample screen-only notice: hidden when printed.</Notice>
           </div>
         </div>
         <div className="space-y-2">
           <h3 className="text-sm font-medium">StoryChapter</h3>
           <p className="max-w-[65ch] text-sm text-muted-foreground">
-            One chapter of the Story: title, a &quot;Your priority&quot; badge per pick (in words, so a chapter serving two picks shows two), template lines and the cards below. Always fully expanded and kept whole on a printed page. The text here is sample text, not engine output.
+            One chapter of the Story: title, a &quot;Your priority&quot; badge per pick (in words, so a chapter serving two picks shows two), template lines and the cards below. Always fully expanded. The text here is sample text, not engine output.
           </p>
           <div className="grid gap-6 lg:grid-cols-2">
             <StoryChapter id="design-sample" title="Sample chapter" lines={["A sample line with no figures. Real lines resolve fact tokens from the engine."]}>
@@ -218,7 +200,7 @@ export default function DesignPage() {
         <div className="space-y-2">
           <h3 className="text-sm font-medium">StoryHeader and Collapsible</h3>
           <p className="max-w-[65ch] text-sm text-muted-foreground">
-            The Story page&apos;s one header block, styled like the scenario strip (accent-tinted border and background; customer and what the review covers, the actions, the priority picker beneath) and the closed-by-default detail section for tables only. The print route renders the section open.
+            The Story page&apos;s one header block, styled like the scenario strip (accent-tinted border and background; customer and what the review covers, the actions, the priority picker beneath) and the closed-by-default detail section for tables only.
           </p>
           <StoryHeader title="Sample customer" summary="Sample text, not engine output." actions={<span className="text-sm text-muted-foreground">Actions</span>}>
             <p className="text-sm text-muted-foreground">The priority picker sits here.</p>
@@ -226,9 +208,13 @@ export default function DesignPage() {
           <Collapsible title="Sample detail table">
             <p className="text-sm">Closed by default; opens with a click, Enter or Space.</p>
           </Collapsible>
-          <Collapsible title="Sample detail table, open" open>
-            <p className="text-sm">The same section as the print route shows it.</p>
-          </Collapsible>
+        </div>
+        <div className="space-y-2">
+          <h3 className="text-sm font-medium">ExportCard</h3>
+          <p className="max-w-[65ch] text-sm text-muted-foreground">
+            The last card of the Story report: what the data is for and two downloads, Markdown and JSON. The files are built on the server; the buttons only save them. The sample text here is not engine output.
+          </p>
+          <ExportCard md="# Sample" json="{}" fileBase="sample-customer-value-review" />
         </div>
         <div className="space-y-2">
           <h3 className="text-sm font-medium">PriorityPicker</h3>

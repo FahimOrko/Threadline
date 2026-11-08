@@ -10,11 +10,11 @@ export const PRIORITY_LABEL: Record<Priority, string> = {
   hygiene: "Hygiene",
 };
 
-/** One chapter of the story. Always fully expanded, and `break-inside-avoid` keeps it whole on a printed page. A picked chapter carries a "Your priority" badge per pick, in words. */
+/** One chapter of the story. Always fully expanded. A picked chapter carries a "Your priority" badge per pick, in words. */
 export function StoryChapter({ id, title, picked = [], lines, children }: { id: string; title: string; picked?: Priority[]; lines: string[]; children?: React.ReactNode }) {
   const headingId = `chapter-${id}`;
   return (
-    <section aria-labelledby={headingId} data-slot="story-chapter" className="space-y-4 break-inside-avoid">
+    <section aria-labelledby={headingId} data-slot="story-chapter" className="space-y-4">
       <div className="space-y-1.5">
         <div className="flex flex-wrap items-center gap-2">
           <h2 id={headingId} className="scroll-mt-16 text-base font-medium">

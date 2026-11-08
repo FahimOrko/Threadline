@@ -23,7 +23,7 @@ const SHARED: NavGroup = {
 /** The dashboard is the KAM's workspace (ADR 0023), so the customer view has no Dashboard group. */
 export const navGroupsFor = (view: View): NavGroup[] => (view === "kam" ? [DASHBOARD, SHARED] : [SHARED]);
 
-/** Overview is active only on its own route; every other item stays active below its prefix (Sites on a site page, Story on its report and print routes). */
+/** Overview is active only on its own route; every other item stays active below its prefix (Sites on a site page, Story on its report). */
 export function isActive(item: NavItem, pathname: string | undefined): boolean {
   if (pathname === undefined) return false;
   if (item.href === "/dashboard") return pathname === item.href;

@@ -28,8 +28,8 @@ describe("active item", () => {
   it("Sites stays active on a site page", () => {
     expect(active("/dashboard/sites/S001")).toEqual(["sites"]);
   });
-  it("Story is active on the game, report and print routes", () => {
-    for (const p of ["/story", "/story/game", "/story/print"]) expect(active(p)).toEqual(["story"]);
+  it("Story is active on the game and report routes", () => {
+    for (const p of ["/story", "/story/game"]) expect(active(p)).toEqual(["story"]);
   });
   it("Impact World is active on /impact", () => {
     expect(active("/impact")).toEqual(["impact"]);

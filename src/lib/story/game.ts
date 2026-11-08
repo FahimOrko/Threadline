@@ -293,7 +293,7 @@ export function gameHref(path: string, params: Params, set: Record<string, strin
 export const stepHref = (params: Params, scene: number | "end", beat: number, choice: Record<string, string> = {}) =>
   gameHref(GAME_PATH, params, { scene: String(scene), beat: String(beat), ...choice });
 
-/** A link out of the game (`/story`, `/story/print`): leaves scene and beat behind and spells out the four resolved levers. */
+/** A link out of the game (`/story`): leaves scene and beat behind and spells out the four resolved levers. */
 export function exitHref(path: string, params: Params, state: { customer: string; baseline: string; sensitivity: string; priorities: readonly Priority[] }): string {
   return gameHref(path, params, { scene: null, beat: null, customer: state.customer, baseline: state.baseline, sensitivity: state.sensitivity, priorities: state.priorities.length ? state.priorities.join(",") : null });
 }

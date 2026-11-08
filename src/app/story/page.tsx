@@ -16,7 +16,7 @@ export default function Page({ searchParams }: PageProps<"/story">) {
           </div>
         }
       >
-        <StoryDocument searchParams={searchParams} mode="screen" />
+        <StoryDocument searchParams={searchParams} />
       </Suspense>
     </div>
   );

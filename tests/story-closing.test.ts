@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { BANNED_ON_SCREEN } from "@/lib/explain";
-import { BASELINE_CAVEAT, DATA_GAPS, DATA_SOURCES, OPEN_QUESTIONS, ROUNDING_NOTE, assumptionRows, sensitivityNote } from "@/lib/story/closing";
+import { BASELINE_CAVEAT, DATA_GAPS, DATA_PACK_NOTE, DATA_SOURCES, OPEN_QUESTIONS, ROUNDING_NOTE, assumptionRows, sensitivityNote } from "@/lib/story/closing";
 
 // Assumption ids (T001) and the formula CO2 are names, not figures.
 const strip = (s: string) => s.replace(/\b[AT]\d{3}\b/g, "").replace(/CO2/g, "CO");
@@ -33,6 +33,6 @@ describe("closing text", () => {
   });
   it("calls the comparison laundry illustrative", () => expect(BASELINE_CAVEAT).toContain("illustrative local laundry"));
   it("keeps assumption ids and banned words out of the visible text", () => {
-    for (const t of [...DATA_SOURCES, ...DATA_GAPS, ...OPEN_QUESTIONS, BASELINE_CAVEAT, ROUNDING_NOTE, sensitivityNote("high"), ...assumptionRows().flatMap((r) => [r.label, r.meaning, r.value])]) expect(t).not.toMatch(BANNED_ON_SCREEN);
+    for (const t of [...DATA_SOURCES, ...DATA_GAPS, ...OPEN_QUESTIONS, BASELINE_CAVEAT, DATA_PACK_NOTE, ROUNDING_NOTE, sensitivityNote("high"), ...assumptionRows().flatMap((r) => [r.label, r.meaning, r.value])]) expect(t).not.toMatch(BANNED_ON_SCREEN);
   });
 });
