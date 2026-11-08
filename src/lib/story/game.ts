@@ -11,8 +11,8 @@ import { buildStory, resolveLine } from "./index";
 export const GAME_PATH = "/story/game";
 export const STORY_PATH = "/story";
 
-// shortcut: the Impact World route does not exist yet. Set this to its path in the Impact World change; while null the ending renders nothing.
-export const IMPACT_WORLD_HREF: string | null = null;
+/** The Impact World route (ADR 0031). */
+export const IMPACT_WORLD_HREF = "/world";
 
 type Param = string | string[] | undefined;
 export type Params = Record<string, Param>;
@@ -66,7 +66,8 @@ export const SCENES: Scene[] = [
     setting: "meeting-room",
     name: "Customer",
     intro: [
-      { speaker: "kam", text: "Welcome to the value review. We will make four choices together, and I will show what each one changes. Every figure comes from the data pack." },
+      { speaker: "kam", text: "Welcome to the value review. It matters because you should see what the Lindström service did for your year, in plain figures you can check. We compare it with another way of washing the same garments." },
+      { speaker: "kam", text: "We will make four choices together, and I will show what each one changes. Every figure comes from the data pack. Afterwards you will see how it impacts the world." },
       { speaker: "ops", text: "Good. I would like to see our own year, and how we got to the answer." },
     ],
     explain: [
@@ -192,7 +193,8 @@ export const SCENES: Scene[] = [
 
 /** The customer view's scene 1 (ADR 0029): two lines that name no customer, then the company picker. Nothing here may depend on a customer, because none is chosen yet. */
 export const CUSTOMER_VIEW_INTRO: Line[] = [
-  { speaker: "kam", text: "Welcome to the value review. We will make four choices together, and I will show what each one changes. Every figure comes from the data pack." },
+  { speaker: "kam", text: "Welcome to the value review. It matters because you should see what the Lindström service did for your year, in plain figures you can check. We compare it with another way of washing the same garments." },
+  { speaker: "kam", text: "We will make four choices together, and I will show what each one changes. Every figure comes from the data pack. Afterwards you will see how it impacts the world." },
   { speaker: "ops", text: "Good. I would like to go through our own year with you." },
 ];
 export const CUSTOMER_VIEW_QUESTION = "Which company are you from?";
@@ -201,7 +203,7 @@ export const CUSTOMER_VIEW_ANSWER = "For {company}, {{fact:delivery_sites}} were
 
 export const END_LINES = {
   recap: "That is the review. This is the path we took, in order.",
-  actions: "You can open the PDF version or read the full report. Both keep every choice you made.",
+  actions: "You can download the data, read the full report or see your impact on the world. Each keeps every choice you made.",
 };
 
 export const SUGGESTED_BADGE = "Suggested for a first run";

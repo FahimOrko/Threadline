@@ -171,3 +171,48 @@
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
 }
+
+/* Impact World (ADR 0031). The base style of every piece is its end state, so reduced motion shows the finished picture and the numbers.
+   All movement lives in the no-preference block below: a fixed timeline, per-icon delays set inline as --fall and --tint (milliseconds). */
+.tree {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+}
+.tree-service { color: var(--chart-subject); }
+.tree-saved { color: var(--chart-comparison); opacity: 0.3; }
+.tree-extra { color: var(--chart-subject); opacity: 0.55; }
+.trees-beats .beat { display: none; }
+.trees-beats .beat-3 { display: inline; }
+.hub-wedge-wrap { transition: transform 180ms ease-out; }
+.hub-wedge-wrap:has(.hub-wedge[href]:hover),
+.hub-wedge-wrap:has(.hub-wedge[href]:focus-visible) { transform: translate(var(--tx), var(--ty)); }
+.hub-wedge[href]:hover,
+.hub-wedge[href]:focus-visible { background-color: color-mix(in oklab, var(--primary) 22%, transparent); outline: none; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .tree-service { animation: tree-fall 700ms ease-in var(--fall) both, tree-tint 400ms ease-out var(--tint) both; }
+  .tree-saved { animation: tree-fall 700ms ease-in var(--fall) both, tree-fade 600ms ease-out 3600ms both; }
+  .tree-extra { animation: tree-fall 700ms ease-in var(--fall) both, tree-tint 400ms ease-out var(--tint) both; }
+  .trees-beats .beat { display: inline; opacity: 0; position: absolute; white-space: nowrap; }
+  .trees-beats .beat-1 { animation: beat-first 3000ms both; }
+  .trees-beats .beat-2 { animation: beat-middle 600ms 3000ms both; }
+  .trees-beats .beat-3 { animation: beat-last 400ms 3600ms both; opacity: 1; }
+  .world-cloud { animation: cloud-drift 60s linear infinite alternate; }
+  .world-cloud-slow { animation-duration: 90s; }
+  .hub-wedge-wrap { animation: hub-grow 450ms ease-out calc(var(--n) * 70ms) backwards; }
+  .hub-ring { animation: hub-turn 60s linear infinite; }
+}
+@keyframes tree-fall {
+  from { transform: translateY(-380px); }
+  70% { transform: translateY(0) scaleY(1); }
+  85% { transform: translateY(0) scaleY(0.88); }
+  to { transform: translateY(0) scaleY(1); }
+}
+@keyframes tree-tint { from { color: var(--chart-comparison); } to { color: var(--chart-subject); } }
+@keyframes tree-fade { from { opacity: 1; } to { opacity: 0.3; } }
+@keyframes beat-first { 0%, 90% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes beat-middle { 0% { opacity: 0; } 15%, 85% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes beat-last { from { opacity: 0; } to { opacity: 1; } }
+@keyframes cloud-drift { from { transform: translateX(-40px); } to { transform: translateX(120px); } }
+@keyframes hub-grow { from { opacity: 0; transform: scale(0.6); } to { opacity: 1; transform: scale(1); } }
+@keyframes hub-turn { to { transform: rotate(360deg); } }

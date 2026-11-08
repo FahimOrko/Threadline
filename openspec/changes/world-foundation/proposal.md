@@ -11,7 +11,7 @@ Everything shown is an illustration of engine Facts, never audit-ready reporting
 - **Route `/world`**, full width in the app shell, replacing the empty `/impact` stub (deleted). The sidebar's Impact World row points to it in both views. The AI sidebar starts collapsed here, as on the game, so the stage gets the width. The zone is held in `?zone=trees` (no stored state); no `zone` shows the hub; an unknown value shows the hub with a notice.
 - **Customer**: KAM uses the sidebar switcher. Customer view uses `?customer=`; with none, `/world` shows the "Which company are you from?" picker (same wording and buttons as the game). A "Change company" link clears it.
 - **Header strip**: the Story-header surface with customer name, period, and the existing comparison and estimate controls. The two segmented controls are extracted from `ScenarioStrip` into one shared piece so no new control is built.
-- **Hub**: a central circle of six equal segments (Trees, Water, Air, Energy, Circularity, Delivery). Equal on purpose, never sized by data (the units do not compare). Each segment shows its headline Fact with chip and Show math. Trees is built; the other five are visibly "Coming soon" and keep their place.
+- **Hub**: a central circle of six equal segments (Trees, Water, Air, Energy, Circularity, Delivery). Equal on purpose, never sized by data (the units do not compare). Each segment shows its headline Fact with chip and Show math, except Air, which shows "Coming soon" and no figure until `world-zones` defines its framing. Trees is built; the other five are visibly "Coming soon" and keep their place.
 - **Zone layout** (shared): explanation top-left (plain words, Show math, "i"), stage left, compact data card right (a `FigurePanel` with a ring and one small bar), "All zones" button back to the hub.
 - **Trees zone**: trees fall and settle. Trees needed for the comparison's emissions against trees needed for Lindström's (delivery included); the difference is trees saved. If Lindström needs more (possible with home washing), the zone says so plainly and shows no "saved". Factor: US EPA, 0.060 tCO2e per urban tree seedling grown for 10 years, ILLUSTRATIVE and PUBLIC_REFERENCE, source in Show math. Icons capped at 300 with a fixed legend (one icon = N trees).
 - **Engine**: new Facts for tree counts and the legend scale, all computed in `src/lib/engine`. New assumptions-config entry **T011** for the factor.
@@ -38,7 +38,7 @@ Total about 4.5s, with a Replay button. Under reduced motion nothing moves: the 
 
 ### Decisions I made (say if you disagree)
 
-- **Air** headline is net CO2e saved (kg). The pack has no air-quality data, so Air is the climate side of the same Fact that Trees re-expresses.
+- **Air** has no headline Fact for now (the user's review): it shows "Coming soon" only, and `world-zones` defines its framing. The registry's `headlineFactId` is optional for that reason.
 - Other hub headlines: Water = water saved, Energy = energy saved, Circularity = recycling and reuse share, Delivery = delivery emissions (absolute, so delivery stays honest).
 - Zone lives in `?zone=` rather than `/world/trees`, so every link keeps its params through the existing helpers.
 - The icon legend step comes from the engine and can change when the comparison changes; the legend says so.

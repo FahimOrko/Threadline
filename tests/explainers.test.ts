@@ -4,14 +4,17 @@ import { buildData } from "@/lib/data/pipeline";
 import { SECTIONS, sectionFacts, sectionIntro } from "@/lib/dashboard";
 import { heatmapLegend } from "@/lib/dashboard-data";
 import { BANNED_ON_SCREEN, CAN_BE_UNSET, EXPLAIN, EXPLAINED_KEYS, explainer, needsInputHint, renderTemplate, templateTokens, type Template } from "@/lib/explain";
-import { DEFAULT_SENSITIVITY, baselineShortName, footprintFacts, observations, overAllocationCutoffPercent, percentageFacts, repairSpikeRule } from "@/lib/engine";
+import { DEFAULT_SENSITIVITY, baselineShortName, footprintFacts, observations, overAllocationCutoffPercent, percentageFacts, repairSpikeRule, treeFacts } from "@/lib/engine";
 import { factText } from "@/lib/story";
 
 const stems = ["data_dictionary", "repairs", "sites", "customers", "assumptions", "service_activity", "products", "service_cycles", "waste_circularity", "customer_impacts", "laundry_resources", "baselines", "laundries"];
 const { data } = buildData(Object.fromEntries(stems.map((s) => [s, readFileSync(`data/raw/${s}.csv`, "utf8")])));
 const scope = { customerId: "CUST001", period: { from: "2025-01", to: "2025-12" } };
 const baseline = (id: string) => data.baselines.find((b) => b.baseline_id === id)!;
-const pool = (id = "B_LOCAL") => [...sectionFacts(data, scope).tokens, ...footprintFacts(data, scope, baseline(id), DEFAULT_SENSITIVITY), ...percentageFacts(data, scope), ...observations(data, scope).facts];
+const pool = (id = "B_LOCAL") => {
+  const fp = footprintFacts(data, scope, baseline(id), DEFAULT_SENSITIVITY);
+  return [...sectionFacts(data, scope).tokens, ...fp, ...treeFacts(fp).facts, ...percentageFacts(data, scope), ...observations(data, scope).facts];
+};
 const words = (id = "B_LOCAL") => {
   const short = baselineShortName(baseline(id));
   return { comparison: short, Comparison: `${short[0].toUpperCase()}${short.slice(1)}` };
@@ -40,6 +43,16 @@ describe("explanation registry", () => {
   it("a token resolves to the Fact's own text", () => {
     const f = pool().find((x) => x.id === "water_saved")!;
     expect(explainer(pool(), words())("water_saved")).toContain(factText(f));
+  });
+});
+
+describe("Impact World wording", () => {
+  it("names the trees in plain words from the tree Facts, and never claims audit-ready reporting", () => {
+    const t = explainer(pool(), words());
+    expect(t("text:trees-saving")).toMatch(/trees/);
+    expect(t("text:trees-saving")).not.toMatch(/\{|Needs input/);
+    expect(t("zone:trees")).toMatch(/not audit-ready reporting/);
+    expect(t("text:world-hub")).toMatch(/not audit-ready reporting/);
   });
 });
 

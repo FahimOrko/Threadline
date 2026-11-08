@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const push = vi.fn();
 let search = "";
-let path = "/impact";
+let path = "/elsewhere";
 vi.mock("next/navigation", () => ({
   usePathname: () => path,
   useRouter: () => ({ push }),
@@ -33,7 +33,7 @@ const ai = () => screen.queryByLabelText("AI assistant", { selector: "aside" });
 beforeEach(() => {
   push.mockClear();
   search = "";
-  path = "/impact";
+  path = "/elsewhere";
   document.cookie = "sidebar_state=; max-age=0; path=/";
 });
 afterEach(cleanup);
@@ -62,7 +62,7 @@ describe("customer switcher", () => {
     await userEvent.click(trigger());
     await userEvent.click(await screen.findByRole("menuitemradio", { name: /Other Co/ }));
     const url = new URL(push.mock.calls[0][0], "http://x");
-    expect(url.pathname).toBe("/impact");
+    expect(url.pathname).toBe("/elsewhere");
     expect(Object.fromEntries(url.searchParams)).toEqual({ baseline: "B_HOME", sensitivity: "low", priorities: "water,cost", foo: "bar", customer: "CUST002" });
   });
   it("is hidden on the game and shown elsewhere", () => {
@@ -178,7 +178,7 @@ describe("sidebar items", () => {
     path = "/story";
     search = "customer=CUST002&baseline=B_HOME&sensitivity=low&priorities=cost,hygiene";
     shell();
-    expect(href("Impact World")).toBe("/impact?customer=CUST002&baseline=B_HOME&sensitivity=low&priorities=cost%2Chygiene");
+    expect(href("Impact World")).toBe("/world?customer=CUST002&baseline=B_HOME&sensitivity=low&priorities=cost%2Chygiene");
     expect(nav().getAllByRole("link").some((l) => l.getAttribute("href") === "#chapter-methodology")).toBe(true); // anchors leave the query untouched
   });
   it("dashboard sections keep customer, baseline, sensitivity and view; leaving keeps view only", () => {
@@ -191,7 +191,7 @@ describe("sidebar items", () => {
     search = "customer=CUST002&view=customer";
     path = "/story";
     shell();
-    expect(href("Impact World")).toBe("/impact?customer=CUST002&view=customer");
+    expect(href("Impact World")).toBe("/world?customer=CUST002&view=customer");
   });
   it("collapsed, every link keeps an accessible name", () => {
     path = "/dashboard";
@@ -206,8 +206,8 @@ describe("view and theme toggles in the sidebar footer", () => {
   it("the toggle sets and clears ?view= and keeps other params", () => {
     search = "customer=CUST002";
     shell();
-    expect(screen.getByRole("link", { name: "Customer" }).getAttribute("href")).toBe("/impact?customer=CUST002&view=customer");
-    expect(screen.getByRole("link", { name: "KAM" }).getAttribute("href")).toBe("/impact?customer=CUST002");
+    expect(screen.getByRole("link", { name: "Customer" }).getAttribute("href")).toBe("/elsewhere?customer=CUST002&view=customer");
+    expect(screen.getByRole("link", { name: "KAM" }).getAttribute("href")).toBe("/elsewhere?customer=CUST002");
   });
   it("marks the mode from the URL; an unknown view is KAM", () => {
     search = "view=customer";
@@ -297,7 +297,7 @@ describe("scenario strip", () => {
 
 describe("header", () => {
   it("carries no baseline or estimate picker on any route", () => {
-    for (const p of ["/dashboard", "/impact"]) {
+    for (const p of ["/dashboard", "/world"]) {
       path = p;
       const { unmount } = shell();
       for (const name of ["Baseline", "Estimate"]) expect(screen.queryByRole("combobox", { name })).toBeNull();
@@ -345,7 +345,12 @@ describe("AI sidebar", () => {
     expect(aside.previousElementSibling?.className).toMatch(/\bhidden\b.*\bmd:block\b/);
     expect(container.querySelector('button[aria-label$="AI sidebar"]')?.className).toMatch(/\bhidden\b.*\bmd:inline-flex\b/);
   });
-  it("starts collapsed on the game only, and the user's toggle then wins", async () => {
+  it("starts collapsed on the world page", () => {
+    path = "/world";
+    shell();
+    expect(ai()).toBeNull();
+  });
+  it("starts collapsed on the game and the world page only, and the user's toggle then wins", async () => {
     path = "/story/game";
     const { unmount } = shell();
     expect(ai()).toBeNull();
@@ -389,7 +394,7 @@ describe("app sidebar and the AI sidebar (ADR 0025)", () => {
     expect(sidebar().getAttribute("data-state")).toBe("expanded");
   });
   it("a manual collapse is remembered in the cookie and survives closing the AI sidebar", async () => {
-    path = "/impact";
+    path = "/world";
     shell();
     await userEvent.click(screen.getByRole("button", { name: "Collapse sidebar" }));
     expect(sidebar().getAttribute("data-state")).toBe("collapsed");

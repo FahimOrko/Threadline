@@ -38,7 +38,7 @@ The page SHALL open with one header block using the Story header surface (accent
 - **THEN** the address holds the new `baseline`, all other params stay, and every figure on the page follows it
 
 ### Requirement: Hub of equal segments
-The hub SHALL be one circle of six segments of equal size, in the order Trees, Water, Air, Energy, Circularity, Delivery, and no segment SHALL be sized, ordered or ranked by data. Each segment SHALL show the zone's icon, name and headline figure, taken from an engine Fact named in the zone registry, with a provenance chip and Show math. A zone not yet built SHALL keep its place and read "Coming soon" in words with a glyph and SHALL NOT be a link. A built zone SHALL be a keyboard-focusable link to `?zone=<id>`. The hub centre SHALL name the customer and carry an "Illustration" label.
+The hub SHALL be one circle of six segments of equal size, in the order Trees, Water, Air, Energy, Circularity, Delivery, and no segment SHALL be sized, ordered or ranked by data. Each segment SHALL show the zone's icon, name and headline figure, taken from an engine Fact named in the zone registry, with a provenance chip and Show math. The Air segment SHALL have no headline Fact in this change: it SHALL show only its icon, name and "Coming soon", with no figure, chip or Show math, until `world-zones` defines its own framing. A zone not yet built SHALL keep its place and read "Coming soon" in words with a glyph and SHALL NOT be a link. A built zone SHALL be a keyboard-focusable link to `?zone=<id>`. The hub centre SHALL name the customer and carry an "Illustration" label.
 
 #### Scenario: Six equal segments
 - **WHEN** the hub is shown
@@ -46,7 +46,7 @@ The hub SHALL be one circle of six segments of equal size, in the order Trees, W
 
 #### Scenario: Coming soon
 - **WHEN** the hub is shown before the other zones exist
-- **THEN** Water, Air, Energy, Circularity and Delivery read "Coming soon" and are not links, and still show their headline figure and provenance
+- **THEN** Water, Air, Energy, Circularity and Delivery read "Coming soon" and are not links; Water, Energy, Circularity and Delivery still show their headline figure and provenance, and Air shows no figure
 
 #### Scenario: Figure unset
 - **WHEN** a headline Fact has no value

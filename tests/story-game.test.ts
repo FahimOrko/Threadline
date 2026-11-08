@@ -223,8 +223,21 @@ describe("consequences", () => {
   });
 });
 
-describe("impact world slot", () => {
-  it("is empty until the Impact World change sets it", () => expect(IMPACT_WORLD_HREF).toBeNull());
+describe("impact world link", () => {
+  it("points to /world and the exit keeps view and unknown params", () => {
+    expect(IMPACT_WORLD_HREF).toBe("/world");
+    const href = exitHref(IMPACT_WORLD_HREF, { view: "customer", x: "1", scene: "end", beat: "2" }, { customer: "CUST002", baseline: "B_HOME", sensitivity: "low", priorities: [] });
+    const u = new URL(href, "http://x");
+    expect(u.pathname).toBe("/world");
+    expect([u.searchParams.get("view"), u.searchParams.get("x"), u.searchParams.get("customer"), u.searchParams.get("scene")]).toEqual(["customer", "1", "CUST002", null]);
+  });
+  it("opens the game with a why-it-matters line and the world afterwards, in both views", () => {
+    for (const intro of [SCENES[0].intro, CUSTOMER_VIEW_INTRO]) {
+      const text = intro.map((l) => l.text).join(" ");
+      expect(text).toContain("matters");
+      expect(text).toContain("how it impacts the world");
+    }
+  });
 });
 
 describe("the one sensitivity label map", () => {

@@ -79,6 +79,16 @@ export const EXPLAIN: Record<string, Template> = {
   // Sites
   "chart:heatmap-utilization": ["Each cell is a site in a month. Highlighted cells are months when fewer garments were in use than were set aside.", "It shows where and when garments were under-used."],
   "chart:heatmap-repairs": ["Each cell is a site in a month. Highlighted cells are months when repairs jumped well above the site's usual level.", "It shows where and when repairs spiked."],
+  // Impact World (ADR 0031). `zone:` keys are the "i" text, `text:` keys are shown on the page. Every figure is an illustration, never audit-ready reporting.
+  "zone:trees": [
+    "A young tree takes in a known amount of carbon over ten years. Here the emissions are turned into the number of young trees that would take in the same amount.",
+    { text: "{Comparison} would need {{fact:trees_comparison}}. The Lindström service, delivery included, needs {{fact:trees_service}}. The difference is {{fact:trees_saved}} saved.", ifMissing: "The tree figures can be shown once the carbon figures are available." },
+    "It is an illustration to make a carbon figure easier to picture, not a measurement and not audit-ready reporting.",
+  ],
+  "text:world-hub": ["Pick a part of the world to see what the Lindström service changed compared with {comparison}.", "The pictures illustrate the figures. They are not audit-ready reporting."],
+  "text:trees-saving": ["{Comparison} would need {{fact:trees_comparison}} to take in its emissions. The Lindström service needs {{fact:trees_service}}, so {{fact:trees_saved}} are saved."],
+  "text:trees-more": ["The Lindström service needs {{fact:trees_service}} to take in its emissions, which is more than the {{fact:trees_comparison}} {comparison} would need. With this comparison there is no saving in trees."],
+  "text:trees-needs-input": ["The tree figures cannot be shown yet because a carbon figure is missing."],
   // Story only
   "chart:requests-trend": ["Requests the customer made to Lindström, month by month.", "It shows whether the customer needed more help as the year went on."],
   "finding:crosscheck": ["A check on the data found rows that did not agree with each other.", "They are counted and handled in the build and reported here, so the figures can be trusted."],

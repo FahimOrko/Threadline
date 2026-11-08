@@ -13,7 +13,7 @@ describe("assumptionRows", () => {
     expect(t1.value).toBe("Needs input");
   });
   it("lists T002 as set with its value and unit", () => expect(rows.find((r) => r.id === "T002")!.value).toBe("0.2 of each comparison factor"));
-  it("lists every T id once, T001 to T010", () => expect(rows.map((r) => r.id)).toEqual(["T001", "T002", "T003", "T004", "T005", "T006", "T007", "T008", "T009", "T010"]));
+  it("lists every T id once, T001 to T011", () => expect(rows.map((r) => r.id)).toEqual(["T001", "T002", "T003", "T004", "T005", "T006", "T007", "T008", "T009", "T010", "T011"]));
 });
 
 describe("closing text", () => {

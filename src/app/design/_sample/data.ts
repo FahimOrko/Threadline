@@ -137,3 +137,17 @@ export const sampleSiteLinks = [
   { siteId: "X1", siteName: "Sample site A", href: "#" },
   { siteId: "X2", siteName: "Sample site B", href: "#" },
 ];
+
+// Impact World samples: labelled sample data, never engine output. Icon counts follow the engine's rules (service + saved = comparison, at most 300).
+const tree = (id: string, value: number | null, unit = "trees"): Fact => ({ ...sampleFact, id, label: id, value, unit, methods: ["ILLUSTRATIVE"], source: "PUBLIC_REFERENCE", assumptionIds: ["T011"], range: { low: null, base: value, high: null } });
+export const sampleTrees = {
+  comparison: tree("trees_comparison", 9600),
+  service: tree("trees_service", 2400),
+  saved: tree("trees_saved", 7200),
+  scale: tree("tree_icon_scale", 50, "trees per icon"),
+  more: { comparison: tree("trees_comparison", 120), service: tree("trees_service", 180), saved: tree("trees_saved", -60), scale: tree("tree_icon_scale", 1, "trees per icon") },
+  missing: { comparison: tree("trees_comparison", null), service: tree("trees_service", null), saved: tree("trees_saved", null), scale: tree("tree_icon_scale", null, "trees per icon") },
+  stage: { perIcon: 50, comparisonIcons: 192, serviceIcons: 48, savedIcons: 144, extraIcons: 0 },
+  stageMore: { perIcon: 1, comparisonIcons: 120, serviceIcons: 180, savedIcons: 0, extraIcons: 60 },
+};
+export const sampleHubFacts: Fact[] = [tree("trees_saved", 7200), { ...tree("water_saved", 1200000, "L"), methods: ["ALLOCATED"], source: "SYNTHETIC" }, tree("energy_saved", null, "kWh"), tree("recycling_reuse_share", 62.5, "%"), tree("delivery_footprint", 18000, "kgCO2e")];

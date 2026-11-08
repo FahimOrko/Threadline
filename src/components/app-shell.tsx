@@ -8,13 +8,15 @@ import type { ShellBaseline, ShellCustomer } from "@/components/param-selects";
 import { Separator } from "@/components/ui/separator";
 import { SIDEBAR_COOKIE, SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { GAME_PATH } from "@/lib/story/game";
+import { WORLD_PATH } from "@/lib/world";
 
 type ShellProps = { children: React.ReactNode; customers: ShellCustomer[]; baselines: ShellBaseline[] };
 
 // `pathname` is undefined in the Suspense fallback, which shows the default sidebar with no active item.
 function Frame({ children, customers, baselines, pathname }: ShellProps & { pathname?: string }) {
   // The game is the only place its choices are made, so its AI sidebar starts collapsed; once the user toggles, their choice wins on every route.
-  const isGame = pathname === GAME_PATH;
+  // Impact World is a full-width stage, so its AI sidebar starts collapsed too (ADR 0031).
+  const isGame = pathname === GAME_PATH || pathname === WORLD_PATH;
   const [userAiOpen, setUserAiOpen] = useState<boolean | null>(null);
   const aiOpen = userAiOpen ?? !isGame;
   const onDashboard = pathname !== undefined && (pathname === "/dashboard" || pathname.startsWith("/dashboard/"));

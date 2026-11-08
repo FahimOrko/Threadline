@@ -31,8 +31,8 @@ describe("active item", () => {
   it("Story is active on the game and report routes", () => {
     for (const p of ["/story", "/story/game"]) expect(active(p)).toEqual(["story"]);
   });
-  it("Impact World is active on /impact", () => {
-    expect(active("/impact")).toEqual(["impact"]);
+  it("Impact World is active on /world", () => {
+    expect(active("/world")).toEqual(["impact"]);
   });
   it("nothing is active before the pathname is known", () => {
     expect(active("")).toEqual([]);
@@ -47,10 +47,10 @@ describe("links", () => {
   });
   it("leaving the dashboard keeps view only", () => {
     expect(navHref(item("story"), "/dashboard/costs", params)).toBe("/story/game?view=customer");
-    expect(navHref(item("impact"), "/dashboard", new URLSearchParams("customer=CUST002"))).toBe("/impact");
+    expect(navHref(item("impact"), "/dashboard", new URLSearchParams("customer=CUST002"))).toBe("/world");
   });
   it("inside Story the picks travel", () => {
-    expect(navHref(item("impact"), "/story", new URLSearchParams("customer=CUST002"))).toBe("/impact?customer=CUST002");
+    expect(navHref(item("impact"), "/story", new URLSearchParams("customer=CUST002"))).toBe("/world?customer=CUST002");
   });
 });
 
@@ -65,7 +65,7 @@ describe("breadcrumb", () => {
   });
   it("other views show their own name", () => {
     expect(breadcrumbFor("/story/game")).toEqual([{ label: "Story" }]);
-    expect(breadcrumbFor("/impact")).toEqual([{ label: "Impact World" }]);
+    expect(breadcrumbFor("/world")).toEqual([{ label: "Impact World" }]);
   });
   it("links every crumb except the current page", () => {
     for (const p of ["/dashboard", "/dashboard/costs", "/dashboard/sites", "/dashboard/sites/S1"]) {
@@ -82,7 +82,7 @@ describe("breadcrumb", () => {
 describe("story group rows", () => {
   const labels = (path: string, picks: Parameters<typeof storyChildren>[1] = []) => storyChildren(path, picks).map((c) => c.label);
   it("has Review only off the report page", () => {
-    for (const p of ["/story/game", "/impact", "/dashboard"]) expect(labels(p)).toEqual(["Review"]);
+    for (const p of ["/story/game", "/world", "/dashboard"]) expect(labels(p)).toEqual(["Review"]);
   });
   it("lists the chapters on /story, then the two closing chapters, with anchors", () => {
     const rows = storyChildren("/story", []);

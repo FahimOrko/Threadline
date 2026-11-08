@@ -7,7 +7,7 @@ import { NEEDS_INPUT } from "./index";
 export const DATA_SOURCES = [
   "The Lindström hackathon data pack: synthetic customers, sites, products, repairs, service activity, service cycles, waste and circularity, laundry resources and comparison laundries. Nothing here is real customer data.",
   "Team assumptions, listed in the table below. They are modelling choices or unknowns, always shown as assumed.",
-  "Public references are not in the pack. Equivalences such as trees, bathtubs or car kilometres are not shown.",
+  "Public references are not in the pack. Equivalences such as trees appear in Impact World as labelled illustrations, each with its public source in Show math. They are not audit-ready reporting.",
 ];
 
 export const BASELINE_CAVEAT =
@@ -52,6 +52,7 @@ const PLAIN: Record<string, { label: string; meaning: string; unit: string }> = 
   T008: { label: "Repair spike ratio", meaning: "A month is a repair spike when repairs reach this multiple of the site's usual level.", unit: "times the usual level" },
   T009: { label: "Months behind the usual repair level", meaning: "How many earlier months set a site's usual repair level.", unit: "months" },
   T010: { label: "Smallest repair spike", meaning: "A spike also needs at least this many repairs above the usual level, so a small site is not flagged for a few repairs.", unit: "repairs" },
+  T011: { label: "Carbon one tree absorbs", meaning: "A published figure for a young tree grown for ten years, used only for the tree illustration in Impact World.", unit: "tCO2e per tree" },
 };
 
 /** Every team assumption (T001 onwards), set with its value and plain unit or unset as "Needs input". Only a table cell shows the T id. */

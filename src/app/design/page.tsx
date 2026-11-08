@@ -30,9 +30,17 @@ import { EmptyState, ErrorState, StatCardSkeleton } from "@/components/states";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Tooltip } from "@/components/tooltip";
 import { METHODS, SOURCES } from "@/lib/provenance";
-import { SAMPLE_LABEL, sampleFact, sampleNeedsInputFact, sampleMathWorstCase, sampleObservations, sampleSiteLinks, sampleStats, sampleSiteTable, stressChip } from "./_sample/data";
+import { TreesStage } from "@/components/trees-stage";
+import { WorldHub } from "@/components/world-hub";
+import { WorldHeader } from "@/components/world-header";
+import { ZoneLayout } from "@/components/zone-layout";
+import { CompanyPicker } from "@/components/company-picker";
+import { FigurePanel } from "@/components/figure-panel";
+import { PartBar, Ring } from "@/components/charts-simple";
+import { ZONES } from "@/lib/world";
+import { SAMPLE_LABEL, sampleHubFacts, sampleTrees, sampleFact, sampleNeedsInputFact, sampleMathWorstCase, sampleObservations, sampleSiteLinks, sampleStats, sampleSiteTable, stressChip } from "./_sample/data";
 
-const sections = ["Tokens", "Provenance", "Data display", "Controls", "States", "Effects"];
+const sections = ["Tokens", "Provenance", "Data display", "Controls", "States", "Effects", "Impact World"];
 const tokenNames = [
   "background", "card", "muted", "primary", "certain", "uncertain", "border", "destructive",
 ];
@@ -418,6 +426,58 @@ export default function DesignPage() {
             <DeltaBadge delta={{ value: -7.68, unit: "kg", direction: "down" }} />
             <DeltaBadge delta={{ value: 3.2, unit: "%", direction: "up" }} />
             <DeltaBadge delta={{ value: 0, unit: "kg", direction: "none" }} />
+          </div>
+        </div>
+      </section>
+      <Separator />
+
+      <section id="impact-world" className="space-y-4">
+        <SectionHeader title="Impact World" />
+        <p className="max-w-[65ch] text-sm text-muted-foreground">
+          The hub, the shared zone layout and the Trees stage (ADR 0031). Everything here is a labelled illustration with sample values; motion plays only when the system allows it, and the picture otherwise shows its end state.
+        </p>
+        <div className="space-y-2">
+          <h3 className="text-sm font-medium">WorldHeader and CompanyPicker</h3>
+          <p className="max-w-[65ch] text-sm text-muted-foreground">The header strip reuses the scenario controls. The picker is the customer view&apos;s &quot;Which company are you from?&quot; on pages outside the game.</p>
+          <Suspense fallback={null}>
+            <WorldHeader customerName="Sample Co" period="2025" baselines={[{ baseline_id: "B_LOCAL", name: "local laundry" }, { baseline_id: "B_HOME", name: "home washing" }]} changeHref="/design" />
+          </Suspense>
+          <CompanyPicker question="Which company are you from?" options={["First Co", "Second Co", "Third Co"].map((label) => ({ id: label, label, href: "/design" }))} />
+        </div>
+        <div className="space-y-2">
+          <h3 className="text-sm font-medium">WorldHub</h3>
+          <p className="max-w-[65ch] text-sm text-muted-foreground">Six equal wedges in fixed order. One built zone (Trees) is a link; the others keep their place and read &quot;Coming soon&quot;. Air has no figure yet. An unset figure reads &quot;Needs input&quot;, never 0.</p>
+          <WorldHub zones={ZONES} facts={sampleHubFacts} customerName="Sample Co" hrefFor={() => "/design#impact-world"} />
+        </div>
+        <div className="space-y-2">
+          <h3 className="text-sm font-medium">ZoneLayout with TreesStage: trees saved</h3>
+          <p className="max-w-[65ch] text-sm text-muted-foreground">Explanation top-left, stage left, compact card right, a way back to the hub. Replay restarts the fall.</p>
+          <ZoneLayout
+            name="Trees"
+            text="A sample explanation in plain words, with no figures."
+            info="A sample explanation for the i."
+            mathFact={sampleTrees.saved}
+            backHref="/design#impact-world"
+            stage={<TreesStage stage={sampleTrees.stage} comparison={sampleTrees.comparison} service={sampleTrees.service} saved={sampleTrees.saved} scale={sampleTrees.scale} comparisonName="local laundry" />}
+            card={
+              <FigurePanel
+                title="Trees"
+                hero={{ fact: sampleTrees.saved, label: "Trees saved" }}
+                aside={<Ring percent={75} label="Share of the comparison's trees saved" />}
+                visual={<PartBar label="Trees needed with Lindström and trees not needed" parts={[{ label: "Needed with Lindström", value: 2400, unit: "trees" }, { label: "Not needed", value: 7200, unit: "trees" }]} />}
+                stats={[{ fact: sampleTrees.comparison, label: "Needed for local laundry" }, { fact: sampleTrees.service, label: "Needed with Lindström" }]}
+              />
+            }
+          />
+        </div>
+        <div className="grid gap-4 lg:grid-cols-2">
+          <div className="space-y-2">
+            <h3 className="text-sm font-medium">TreesStage: Lindström needs more</h3>
+            <TreesStage stage={sampleTrees.stageMore} {...sampleTrees.more} comparisonName="home washing" />
+          </div>
+          <div className="space-y-2">
+            <h3 className="text-sm font-medium">TreesStage: needs input</h3>
+            <TreesStage stage={null} {...sampleTrees.missing} comparisonName="local laundry" />
           </div>
         </div>
       </section>

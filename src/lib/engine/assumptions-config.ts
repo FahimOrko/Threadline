@@ -7,6 +7,8 @@ export type TeamAssumption = {
   unit: string;
   note: string;
   certainty: "assumed";
+  /** A published figure rather than a team guess: its Facts carry PUBLIC_REFERENCE instead of ASSUMPTION (ADR 0032). */
+  source?: "PUBLIC_REFERENCE";
   /** Dormant tier rows only: days above which a pickup gap is Watch, Risk or Critical (null = no Critical tier). */
   tiers?: { watch: number; risk: number; critical: number | null };
 };
@@ -79,6 +81,15 @@ export const TEAM_ASSUMPTIONS = {
     unit: "repairs above the trailing mean",
     note: "Team modelling choice: a spike also needs at least 10 repairs more than the trailing mean, so a few repairs at a small site are not a spike.",
     certainty: "assumed",
+  },
+  // A published figure, not a team guess (ADR 0032). Illustrative equivalence only.
+  treeSeedlingSequestration: {
+    id: "T011",
+    value: 0.06,
+    unit: "tCO2e per tree",
+    note: "US EPA Greenhouse Gas Equivalencies Calculator: one urban tree seedling grown for 10 years absorbs 0.060 metric tons of CO2 (https://www.epa.gov/energy/greenhouse-gases-equivalencies-calculator-calculations-and-references). It is a CO2 factor applied here to CO2e as an approximation. An illustration, not a measurement.",
+    certainty: "assumed",
+    source: "PUBLIC_REFERENCE",
   },
 } as const satisfies Record<string, TeamAssumption>;
 

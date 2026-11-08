@@ -25,6 +25,7 @@ export function teamAssumptionInputs(name: string, a: TeamAssumption): Inputs {
       ? { label: `${a.id} ${name}`, value: "not set" }
       : { label: `${a.id} ${name}`, value: a.value, unit: a.unit },
     { label: `${a.id} note`, note: true, value: a.note },
+    ...(a.source ? [{ label: `${a.id} source`, value: a.source }] : []),
   ];
 }
 

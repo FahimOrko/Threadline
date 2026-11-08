@@ -1,3 +1,5 @@
+export { treeFacts, iconScale, MAX_TREE_ICONS } from "./equivalences";
+export type { TreeStage } from "./equivalences";
 export { factScope, inScope, requireValue } from "./fact";
 export { repairsPer100Garments, siteComparison, siteFacts } from "./site";
 export type { SiteComparison, SiteScope } from "./site";

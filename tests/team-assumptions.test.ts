@@ -42,3 +42,12 @@ describe("garment signal assumptions (T003 to T010)", () => {
     expect(DORMANT_SITE_TYPE_TIERS.map["Central Laundry Hub"]).toBeUndefined();
   });
 });
+
+describe("T011 tree factor", () => {
+  it("is the EPA figure, a public reference with a source URL and the CO2 approximation stated", () => {
+    const t = TEAM_ASSUMPTIONS.treeSeedlingSequestration;
+    expect([t.id, t.value, t.unit, t.source]).toEqual(["T011", 0.06, "tCO2e per tree", "PUBLIC_REFERENCE"]);
+    expect(t.note).toContain("https://www.epa.gov/");
+    expect(t.note).toContain("CO2 factor applied here to CO2e as an approximation");
+  });
+});
