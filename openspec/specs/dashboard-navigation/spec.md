@@ -39,7 +39,7 @@ When `?view=customer`, the navigation SHALL NOT offer the dashboard, and a reque
 - **THEN** the dashboard is shown
 
 ### Requirement: Leaving the dashboard starts fresh
-A link from the dashboard to Story or Impact World SHALL carry `view` only; `customer`, `baseline`, `sensitivity` and `priorities` SHALL be dropped. Within Story, the game, report and print links SHALL keep sharing params as before.
+A link from the dashboard to Story or Impact World SHALL carry `view` only; `customer`, `baseline`, `sensitivity` and `priorities` SHALL be dropped. Within Story, the game and report links SHALL keep sharing params as before.
 
 #### Scenario: Dashboard to Story
 - **WHEN** the KAM, on `/dashboard?customer=CUST002&baseline=home&sensitivity=high`, selects "Story"

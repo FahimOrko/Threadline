@@ -44,7 +44,7 @@ The reader SHALL be able to pick two priorities from water, cost, emissions, cir
 
 #### Scenario: Invalid picks
 - **WHEN** the address holds an unknown priority, a duplicate, or more than two values
-- **THEN** only the first valid distinct values up to two are used and a notice names the rejected value; the notice is marked as screen-only so a print layout can hide it
+- **THEN** only the first valid distinct values up to two are used and a notice names the rejected value
 
 #### Scenario: Picks survive other selections
 - **WHEN** the reader changes the customer, baseline or sensitivity from the header
@@ -55,7 +55,7 @@ The reader SHALL be able to pick two priorities from water, cost, emissions, cir
 - **THEN** the picks are still in the address
 
 ### Requirement: Methodology chapter
-The story SHALL end with a "How we calculated this" chapter. A short summary SHALL always be visible: it names the data sources, states that the CO2e saved figure rests on an illustrative comparison laundry, frames the estimate range as the team's declared spread and not a measured range, and states that values are rounded only for display. The chapter SHALL NOT repeat the net CO2e saved cards. The team assumptions (each with its T id, a plain-language label, and its value and unit or "Needs input" when unset) and the data pack assumptions SHALL be in collapsibles.
+The story SHALL end with a "How we calculated this" chapter. A short summary SHALL always be visible: it names the data sources, states that the CO2e saved figure rests on an illustrative comparison laundry, frames the estimate range as the team's declared spread and not a measured range, and states that values are rounded only for display. The chapter SHALL NOT repeat the net CO2e saved cards. The team assumptions (each with its T id, a plain-language label, and its value and unit or "Needs input" when unset) and the data pack assumptions SHALL be in collapsibles; the data pack table SHALL keep the pack's own text and carry one plain note saying the wording is the pack's own and what its "starting" or "default" comparison means.
 
 #### Scenario: Unset assumption
 - **WHEN** T001 has no value
@@ -74,7 +74,7 @@ The story SHALL end with a "How we calculated this" chapter. A short summary SHA
 - **THEN** the headings and summary are visible and the two assumption tables are inside collapsed sections
 
 ### Requirement: Data-readiness chapter
-The story SHALL include a "Data readiness" chapter after the methodology chapter. It SHALL always show a short plain summary, any reported cross-check finding (such as out-of-order scans) with its count and provenance, the known data gaps and the open questions for Lindström: what `washing_pct` measures, a typical weekly rental fee per piece, whether a labelled CO2-per-tree illustration is acceptable, average route kilometres, and whether the illustrative comparison laundry's process factor should be reviewed. Per-source rows of invalid or unmapped rows and the team assumptions that still read "Needs input" SHALL be in a collapsible. When no source has invalid or unmapped rows, the summary SHALL say so in one line; otherwise it SHALL name the sources with a count.
+The story SHALL include a "Data readiness" chapter after the methodology chapter. It SHALL always show a short plain summary, any reported cross-check finding (such as out-of-order scans) with its count and provenance, and the known data gaps. It SHALL NOT list the open questions for Lindström; those are in the export. Each cross-check finding SHALL carry a plain-language label (for example "Scans out of order"), never a raw check id; the raw id stays in its Show math. Per-source rows of invalid or unmapped rows and the team assumptions that still read "Needs input" SHALL be in a collapsible. When no source has invalid or unmapped rows, the summary SHALL say so in one line; otherwise it SHALL name the sources with a count.
 
 #### Scenario: Counts from the report
 - **WHEN** the report lists 1,107 out-of-order scans
@@ -92,6 +92,14 @@ The story SHALL include a "Data readiness" chapter after the methodology chapter
 - **WHEN** one source has invalid rows
 - **THEN** the summary names that source with its count, and its row, with chip and Show math, is in the collapsible
 
+#### Scenario: Plain finding label
+- **WHEN** the out-of-order scans finding renders
+- **THEN** its label is plain language, its Fact id is unchanged and the raw check id is in Show math
+
+#### Scenario: No open questions
+- **WHEN** the chapter renders
+- **THEN** it holds no open-questions section
+
 ### Requirement: Needs input is never a number
 Wherever a Fact has a null value because a team assumption is unset, a figure SHALL read "Needs input" with a plain hint and SHALL NOT show 0, a blank or a placeholder number. A chapter sentence whose figure can be unset SHALL carry a separate missing-case sentence and SHALL NOT contain "Needs input" mid-sentence, following the dashboard's rule.
 
@@ -102,91 +110,6 @@ Wherever a Fact has a null value because a team assumption is unset, a figure SH
 #### Scenario: Any figure unset
 - **WHEN** any single Fact in a chapter line is null
 - **THEN** no chapter line contains "Needs input"
-
-### Requirement: Print-safe layout
-The story SHALL render every chapter's text, summaries and figures fully visible as one continuous document, with no tabs, steppers, carousels or hover-only content. Only detail tables MAY sit in collapsibles on the Story page, closed by default; the print route SHALL render them expanded. Show math triggers MAY stay popovers, and the "i" explainers MAY be popovers, but no chapter text SHALL depend on opening them.
-
-#### Scenario: All content present on load
-- **WHEN** the Story page loads with no interaction
-- **THEN** all chapters, their sentences and summaries are in the document and only detail tables are collapsed
-
-#### Scenario: Collapsibles print open
-- **WHEN** the print route renders
-- **THEN** every collapsible is expanded and its table is in the document
-
-### Requirement: Print route for the story
-The system SHALL provide a print route that renders the same story as the Story page, built from the same chapter builder, template text and Facts, with no separate copy of chapter logic or text. It SHALL read `?customer=`, `?baseline=`, `?sensitivity=` and `?priorities=` with the same resolvers, defaults and fallback notices as the Story page.
-
-#### Scenario: Same story as the screen
-- **WHEN** the print route and the Story page are opened with identical params
-- **THEN** they show the same chapters in the same order with the same text and numbers
-
-#### Scenario: Params honored
-- **WHEN** the print route is opened with `?customer=X&baseline=Y&sensitivity=high&priorities=cost,hygiene`
-- **THEN** the document is for customer X against baseline Y at high sensitivity, and the cost and risk chapters follow the cover in that order
-
-#### Scenario: Unknown value
-- **WHEN** the print route is opened with `?baseline=NOPE`
-- **THEN** local laundry is used, a notice names "NOPE", and the document still renders
-
-### Requirement: Export PDF action
-The Story page SHALL offer an "Export PDF" action that opens the print route with the current customer, baseline, sensitivity and priorities. The print route SHALL offer a "Print / Save as PDF" control that opens the browser print dialog; the document SHALL NOT print automatically on load.
-
-#### Scenario: Params carried over
-- **WHEN** the reader has `?customer=X&sensitivity=low&priorities=water,cost` on the Story page and chooses Export PDF
-- **THEN** the print route opens with those same values
-
-#### Scenario: No priorities picked
-- **WHEN** the Story page has no `?priorities=` and the reader chooses Export PDF
-- **THEN** the print route opens without `?priorities=` and shows the default chapter order
-
-### Requirement: Print layout
-The print route SHALL lay out on A4, use the light theme regardless of the app theme, and show no app shell, header pickers, view links, AI sidebar or priority picker. Each chapter SHALL start on a new page. A card, table row or observation SHALL NOT be split across pages where avoidable. Elements marked `data-print="hide"` SHALL NOT print. Chapter text, the methodology chapter and the data-readiness chapter SHALL always print in full.
-
-#### Scenario: Dark app theme
-- **WHEN** the reader's app theme is dark and the print route is printed
-- **THEN** the output uses the light theme
-
-#### Scenario: Dropped priorities notice
-- **WHEN** the address holds an invalid priority
-- **THEN** the screen shows the notice and the printed output does not
-
-#### Scenario: Chapter pages
-- **WHEN** the document is printed
-- **THEN** each chapter begins at the top of a page and its text is fully present
-
-### Requirement: Show math printed inline
-On the print route every Show math SHALL be printed expanded in place, next to its figure, showing formula, inputs, assumption IDs, baseline and range, with no popover or click needed.
-
-#### Scenario: Figure with Show math
-- **WHEN** a chapter containing a figure with Show math is printed
-- **THEN** the formula, inputs, assumption IDs, baseline and range appear under that figure
-
-#### Scenario: Needs input
-- **WHEN** a Fact has a null value because a team assumption is unset
-- **THEN** the print shows "Needs input" and its expanded Show math, never a number
-
-### Requirement: Cover block
-The print route SHALL open with a cover block stating the customer name, the chosen priorities in pick order (or that none were chosen), the baseline, the sensitivity level, the period, and the generation date.
-
-#### Scenario: Two priorities
-- **WHEN** the print route is opened with `?priorities=cost,hygiene`
-- **THEN** the cover lists Cost and Hygiene in that order
-
-#### Scenario: Generation date
-- **WHEN** the document is generated
-- **THEN** the cover shows the date it was generated, labelled as the generation date and not as a data date
-
-### Requirement: Play the review link
-The Story header (not the print route) SHALL offer a "Play the review" link to `/story/game` that preserves every query param, including unknown ones.
-
-#### Scenario: Params preserved
-- **WHEN** `/story` is opened with `?customer=CUST002&baseline=B_HOME&view=customer&x=1`
-- **THEN** "Play the review" opens `/story/game` with the same four params unchanged
-
-#### Scenario: Not printed
-- **WHEN** the print route is rendered
-- **THEN** no "Play the review" link is shown
 
 ### Requirement: Chapter structure follows the dashboard
 Each chapter after the cover SHALL show one hero figure, at most one chart reused from the dashboard, and two to three supporting figures. Every figure SHALL keep its provenance chip and Show math and, where its meaning is not obvious, an "i" explainer from the registry. The chart SHALL be drawn from the same engine outputs the dashboard uses, and the story SHALL NOT compute a number for it.
@@ -202,17 +125,6 @@ Each chapter after the cover SHALL show one hero figure, at most one chart reuse
 #### Scenario: Data the engine does not expose
 - **WHEN** a chapter has no engine series for its hero
 - **THEN** it shows no chart for that hero rather than computing one in the page
-
-### Requirement: Story header
-The Story page SHALL open with one header area holding the title, the customer and period, "Play the review", "Export PDF" and the two-priority picker, laid out as one block. All three functions SHALL keep their behaviour and query params.
-
-#### Scenario: Controls together
-- **WHEN** the Story page loads
-- **THEN** Play the review, Export PDF and the priority choices are inside the header area and none sits in the cover chapter
-
-#### Scenario: Print route
-- **WHEN** the print route renders
-- **THEN** the header controls are not shown
 
 ### Requirement: Text and cards share one layout
 Chapter text, figures, charts and tables SHALL share one container width and left edge, so the page reads as one layout at 1230px and 1280px wide, in light and dark.
@@ -232,8 +144,26 @@ No story text (chapter titles, lines, captions, hints, explainers, summaries) SH
 - **WHEN** any story sentence names the comparison laundry
 - **THEN** it says "comparison" and never "baseline"
 
-### Requirement: Report header matches the scenario strip
-The Story page's header block (customer name, period line, "Play the review", "Export PDF" and the priority picker) SHALL use the dashboard scenario strip's surface: the same accent-tinted border and background. The six priority chips SHALL be a segmented-style group like the strip's toggles, every option visible, the picked ones filled and still carrying "(selected)" for screen readers. The block SHALL keep its controls, links, wording and behaviour, and SHALL stay hidden in print.
+### Requirement: Readable layout
+The story SHALL render every chapter's text, summaries and figures fully visible as one continuous document, with no tabs, steppers, carousels or hover-only content. Only detail tables MAY sit in collapsibles, closed by default. Show math triggers and "i" explainers MAY be popovers, but no chapter text SHALL depend on opening them.
+
+#### Scenario: All content present on load
+- **WHEN** the Story page loads with no interaction
+- **THEN** all chapters, their sentences and summaries are in the document and only detail tables are collapsed
+
+### Requirement: Report header controls
+The Story page SHALL open with one header area holding the title, the customer and period, "Play the review", "Export" and the two-priority picker, laid out as one block. "Play the review" SHALL link to `/story/game` keeping every query param, including unknown ones; "Export" SHALL scroll to the export card.
+
+#### Scenario: Controls together
+- **WHEN** the Story page loads
+- **THEN** Play the review, Export and the priority choices are inside the header area and none sits in the cover chapter
+
+#### Scenario: Params preserved
+- **WHEN** `/story` is opened with `?customer=CUST002&baseline=B_HOME&view=customer&x=1`
+- **THEN** "Play the review" opens `/story/game` with the same four params unchanged
+
+### Requirement: Report header surface
+The Story page's header block SHALL use the dashboard scenario strip's surface: the same accent-tinted border and background. The six priority chips SHALL be a segmented-style group like the strip's toggles, every option visible, the picked ones filled and still carrying "(selected)" for screen readers.
 
 #### Scenario: Same surface
 - **WHEN** the Story page and the Overview page are shown in the same theme
@@ -244,9 +174,5 @@ The Story page's header block (customer name, period line, "Play the review", "E
 - **THEN** the six priority chips sit in one segmented group with the picked chips filled
 
 #### Scenario: Behaviour unchanged
-- **WHEN** the reader activates a priority chip, "Play the review" or "Export PDF"
+- **WHEN** the reader activates a priority chip or "Play the review"
 - **THEN** each opens the same address as before this change
-
-#### Scenario: Not printed
-- **WHEN** the print route is rendered
-- **THEN** no header block is shown

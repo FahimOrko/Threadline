@@ -98,7 +98,7 @@ The scene, the dialogue step (beat) and every choice made SHALL be held in the a
 - **THEN** the question beat is shown instead
 
 ### Requirement: Ending scene
-After the last scene the game SHALL show an ending scene in which the KAM recaps each choice in order with its plain-language label, and buttons to `/story/print` and `/story` that carry the same `?customer=`, `?baseline=`, `?sensitivity=` and `?priorities=`. The ending SHALL contain a clearly marked slot for a later Impact World link that renders nothing until a target route is set, and SHALL NOT link to a route that does not exist.
+After the last scene the game SHALL show an ending scene in which the KAM recaps each choice in order with its plain-language label, and buttons to the report's export card (`/story#export`, labelled "Download the data") and `/story` that carry the same `?customer=`, `?baseline=`, `?sensitivity=` and `?priorities=`. The ending SHALL contain a clearly marked slot for a later Impact World link that renders nothing until a target route is set, and SHALL NOT link to a route that does not exist.
 
 #### Scenario: Links keep params
 - **WHEN** the reader ends a game with `?customer=CUST002&baseline=B_HOME&sensitivity=high&priorities=cost`
@@ -109,7 +109,7 @@ After the last scene the game SHALL show an ending scene in which the KAM recaps
 - **THEN** no Impact World button or link is rendered
 
 ### Requirement: Links preserve existing query params
-Every link the game produces (dialogue next, choices, ending buttons, `/story` and `/story/print`) SHALL preserve all existing query params, including ones the game does not know, and SHALL change only `scene`, `beat` and the lever params that the step sets.
+Every link the game produces (dialogue next, choices, ending buttons, `/story` and `/story#export`) SHALL preserve all existing query params, including ones the game does not know, and SHALL change only `scene`, `beat` and the lever params that the step sets.
 
 #### Scenario: Unknown param
 - **WHEN** the address holds `?view=customer&x=1` and the reader advances, chooses or opens `/story`
@@ -139,7 +139,7 @@ The game SHALL resolve a view with a single resolver whose default is the KAM be
 - **THEN** the picker marks that company as chosen and the reader can change it
 
 ### Requirement: Existing routes unchanged
-`/story` and the print route SHALL behave as before; the game SHALL NOT alter their chapters, text or params.
+`/story` SHALL behave as before except as the story-export capability changes it; the game SHALL NOT alter their chapters, text or params.
 
 #### Scenario: Story unaffected
 - **WHEN** `/story` is opened with the same params as a finished game
@@ -183,7 +183,7 @@ The game SHALL show a "Start over" control at the top left, beside the page titl
 - **THEN** Start over is enabled
 
 ### Requirement: Link to the full report
-The game header SHALL show a "Read the full report" control beside "Start over", in the same place on every beat. It SHALL be disabled on every beat until the ending, with the visible hint "Finish the review to open your report", and SHALL be active on the ending, opening `/story` with every query param kept (only `scene` and `beat` dropped). The ending's own "Read the full report" and "Open PDF version" buttons SHALL stay as they are.
+The game header SHALL show a "Read the full report" control beside "Start over", in the same place on every beat. It SHALL be disabled on every beat until the ending, with the visible hint "Finish the review to open your report", and SHALL be active on the ending, opening `/story` with every query param kept (only `scene` and `beat` dropped). The ending's own "Read the full report" and "Download the data" buttons SHALL stay in the same place.
 
 #### Scenario: Before the ending
 - **WHEN** the reader is on any beat before the ending
@@ -322,7 +322,7 @@ Until `?customer=` holds a customer, the right panel's net CO2e line SHALL show 
 - **THEN** the net CO2e line shows the figure for that customer with its chip and Show math
 
 ### Requirement: Game links keep the view
-Every link in the game and every link from the report back into the app SHALL carry `?view=` unchanged (ADR 0023): the company picker choices, Previous, Next, Start over, "Read the full report", "Open PDF version", the priority chips and the site links.
+Every link in the game and every link from the report back into the app SHALL carry `?view=` unchanged (ADR 0023): the company picker choices, Previous, Next, Start over, "Read the full report", "Download the data", the priority chips and the site links.
 
 #### Scenario: Picker keeps the customer view
 - **WHEN** the reader in the customer view chooses a company
