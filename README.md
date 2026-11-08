@@ -1,36 +1,88 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+<p align="center">
+  <img src="src/app/icon.svg" alt="Threadline logo" width="96" />
+</p>
 
-## Getting Started
+# Threadline
 
-First, run the development server:
+Threadline turns a year of Lindström workwear service into a customer value review. An account manager (KAM) can open a customer's dashboard, check where every figure comes from, and walk the customer through a short story game and report. A customer can run the same review on their own. Every number comes from one calculation engine and carries its source.
+
+> Built for the Lindström x Since AI Hackathon 2026. All data is synthetic and the app is not audit-ready reporting.
+
+## Features
+
+- **Landing page** to pick a role: account manager or customer.
+- **Dashboard** for the KAM: Overview, Garments and utilization, Costs, Environmental footprint, Signals and Sites, with a page per site.
+- **Story review**: a short guided game that sets the comparison, the estimate level and your priorities, then a report.
+- **Export** of the report data as Markdown or JSON.
+- **Impact World**: the customer's impact as a picture. The Trees zone is built; more zones are coming.
+- **Provenance everywhere**: every figure shows its source, with "Show math" and plain-language "i" explainers.
+
+## Tech stack
+
+Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS 4, shadcn/ui on Base UI, Recharts, Motion, Zod, Zustand, Vitest. Data is static CSV turned into JSON at build time, with no database.
+
+## Getting started
+
+Prerequisites: Node.js 20.9 or newer (the minimum Next.js 16 needs; there is no `.nvmrc`) and npm.
 
 ```bash
+git clone <repository-url>
+cd lindstrom-value-review
+npm install
+cp .env.example .env.local   # optional, see below
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+`npm run dev` builds `data/generated/` from `data/raw/` first, so there is no extra data step.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Environment
 
-## Learn More
+The app runs without any environment variables today. `.env.example` lists the three variables reserved for the AI guide, which is not built yet: `OPENROUTER_API_KEY`, `OPENROUTER_MODELS` and `AI_MAX_TOOL_STEPS`. Keep real values in `.env.local`, never in a file you commit, and never prefix them with `NEXT_PUBLIC_`.
 
-To learn more about Next.js, take a look at the following resources:
+## Scripts
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+| Script | What it does |
+| --- | --- |
+| `npm run dev` | Builds the data, then starts the dev server. |
+| `npm run build` | Builds the data, then makes a production build. |
+| `npm start` | Serves the production build. |
+| `npm test` | Runs the Vitest suite once. |
+| `npm run lint` | Runs ESLint. |
+| `npm run data:build` | Turns the CSVs in `data/raw/` into JSON in `data/generated/`. Fails if a file does not match its sheet. |
+| `npm run check:contrast` | Checks colour contrast of the theme tokens. |
+| `npm run check:design-imports` | Checks that components are imported the way the design system expects. |
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Project structure
 
-## Deploy on Vercel
+```
+src/app/          Routes: landing, dashboard, story, world, design
+src/components/   Reusable components (also shown on /design)
+src/lib/engine/   The one calculation engine: every number comes from here
+src/lib/story/    Story game script, report and export
+src/lib/data/     Data loading and schemas
+data/raw/         Source CSVs (synthetic data pack)
+data/generated/   JSON built from the CSVs (not committed)
+docs/             User guide, conventions, design, ADRs, runbooks
+openspec/         Specs of what is built, and change proposals
+tests/            Vitest tests
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Learn more
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- [User guide](docs/user-guide.md): how to use Threadline as an account manager or a customer.
+- [Conventions](docs/conventions.md): code, copy voice and testing rules.
+- [Design](docs/design.md): design system and component list.
+- [Decisions](docs/adr/README.md): architecture decision records.
+- [OpenSpec](openspec/specs): what is built, as specs.
+
+## Data and status
+
+All data is synthetic. No row stands for a real customer, wearer or laundry result. The app is a prototype, not audit-ready reporting.
+
+## License
+
+The code is released under the [MIT License](LICENSE).
+
+The hackathon data pack in `data/raw/` (and the JSON built from it) is not covered by this license. It is the "Lindström x Since AI Hackathon 2026 Customer Value & Sustainability Review" synthetic data pack, and it belongs to its provider.
