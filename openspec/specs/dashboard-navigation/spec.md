@@ -61,7 +61,7 @@ Every breadcrumb segment except the current page SHALL be a link that keeps `cus
 - **THEN** its last segment is plain text marked `aria-current="page"`
 
 ### Requirement: Customer switcher
-The sidebar's top slot SHALL hold, below the Threadline wordmark row, a switcher row with an avatar showing the customer's initials, the customer's name, a subtitle with its industry and its site count (from the customer data and the delivery-sites Fact, never typed in) and a chevron. Activating it SHALL open a menu listing every customer, the current one checked; choosing one SHALL change only the `customer` param. When the sidebar is collapsed the row SHALL show the avatar alone with the customer's name as its tooltip and accessible name. In the customer view the row SHALL show the locked customer with no menu.
+The sidebar's top slot SHALL hold, below the Threadline wordmark row, a switcher row with an avatar showing the customer's initials, the customer's name, a subtitle with its industry and its site count (from the customer data and the delivery-sites Fact, never typed in) and a chevron. Activating it SHALL open a menu listing every customer, the current one checked; choosing one SHALL change only the `customer` param. When the sidebar is collapsed the row SHALL show the avatar alone with the customer's name as its tooltip and accessible name. In the customer view the row SHALL NOT be shown, because the reader picks their company in the game.
 
 #### Scenario: Change customer
 - **WHEN** the KAM opens the switcher and chooses another customer
@@ -73,7 +73,7 @@ The sidebar's top slot SHALL hold, below the Threadline wordmark row, a switcher
 
 #### Scenario: Customer view
 - **WHEN** the view is customer
-- **THEN** the switcher row shows the customer without a menu or chevron
+- **THEN** no switcher row is rendered, in the expanded or the collapsed sidebar
 
 ### Requirement: Scenario strip
 The Overview and Environmental footprint pages (the only pages whose figures depend on the baseline or estimate) SHALL show, above their title, a scenario strip. No other dashboard page, including site pages, SHALL show it with two labelled groups of segmented buttons with every option visible: "Comparing against" (the baseline display names: local laundry, home washing, in-house laundry) and "Estimate" (Cautious estimate, Standard estimate, Generous estimate). The strip SHALL be visually distinct from cards (tinted surface and accent border) and read as a control. Each option SHALL have a short plain-language tooltip; the estimate tooltips SHALL say the range is declared by the team (T002), not measured (ADR 0017). The strip SHALL carry one line: "These choices change the savings figures on this page." A choice SHALL change only its own URL param, and an unknown value SHALL show the default as checked. After a choice, every card or panel figure whose Fact value changed SHALL show a brief highlight, decided by comparing the Fact's value before and after; the highlight SHALL NOT appear with `prefers-reduced-motion: reduce` or on first load.
