@@ -79,6 +79,9 @@ export const EXPLAIN: Record<string, Template> = {
   // Sites
   "chart:heatmap-utilization": ["Each cell is a site in a month. Highlighted cells are months when fewer garments were in use than were set aside.", "It shows where and when garments were under-used."],
   "chart:heatmap-repairs": ["Each cell is a site in a month. Highlighted cells are months when repairs jumped well above the site's usual level.", "It shows where and when repairs spiked."],
+  // Story only
+  "chart:requests-trend": ["Requests the customer made to Lindström, month by month.", "It shows whether the customer needed more help as the year went on."],
+  "finding:crosscheck": ["A check on the data found rows that did not agree with each other.", "They are counted and handled in the build and reported here, so the figures can be trusted."],
   "chart:site-vs-customer": ["How this site compares with all the customer's sites on the main figures.", "It shows whether the site is typical."],
 };
 

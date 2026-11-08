@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { BANNED_ON_SCREEN } from "@/lib/explain";
 import { BASELINE_CAVEAT, DATA_GAPS, DATA_SOURCES, OPEN_QUESTIONS, ROUNDING_NOTE, assumptionRows, sensitivityNote } from "@/lib/story/closing";
 
 // Assumption ids (T001) and the formula CO2 are names, not figures.
@@ -11,7 +12,7 @@ describe("assumptionRows", () => {
     expect(t1.set).toBe(false);
     expect(t1.value).toBe("Needs input");
   });
-  it("lists T002 as set with its value and unit", () => expect(rows.find((r) => r.id === "T002")!.value).toBe("0.2 share of each baseline factor"));
+  it("lists T002 as set with its value and unit", () => expect(rows.find((r) => r.id === "T002")!.value).toBe("0.2 of each comparison factor"));
   it("lists every T id once, T001 to T010", () => expect(rows.map((r) => r.id)).toEqual(["T001", "T002", "T003", "T004", "T005", "T006", "T007", "T008", "T009", "T010"]));
 });
 
@@ -19,16 +20,19 @@ describe("closing text", () => {
   it("asks all five questions for Lindström", () => {
     expect(OPEN_QUESTIONS).toHaveLength(5);
     const all = OPEN_QUESTIONS.join(" ");
-    for (const k of ["washing_pct", "rental fee", "CO2-per-tree", "route kilometres", "baseline process factor"]) expect(all).toContain(k);
+    for (const k of ["washing_pct", "rental fee", "CO2-per-tree", "route kilometres", "comparison laundry be reviewed"]) expect(all).toContain(k);
   });
   it("has no digit outside an assumption id", () => {
     for (const t of [...DATA_SOURCES, ...DATA_GAPS, ...OPEN_QUESTIONS, BASELINE_CAVEAT, ROUNDING_NOTE, sensitivityNote("high")]) expect(strip(t)).not.toMatch(/\d/);
   });
-  it("frames sensitivity as the declared T002 spread and names the level", () => {
+  it("frames sensitivity as the declared spread and names the level", () => {
     const n = sensitivityNote("high");
-    expect(n).toContain("high");
-    expect(n).toContain("T002");
+    expect(n).toContain("Generous estimate");
+    expect(n).toContain("declared spread");
     expect(n).toContain("not a measured range");
   });
-  it("calls the baseline illustrative", () => expect(BASELINE_CAVEAT).toContain("illustrative local laundry baseline"));
+  it("calls the comparison laundry illustrative", () => expect(BASELINE_CAVEAT).toContain("illustrative local laundry"));
+  it("keeps assumption ids and banned words out of the visible text", () => {
+    for (const t of [...DATA_SOURCES, ...DATA_GAPS, ...OPEN_QUESTIONS, BASELINE_CAVEAT, ROUNDING_NOTE, sensitivityNote("high"), ...assumptionRows().flatMap((r) => [r.label, r.meaning, r.value])]) expect(t).not.toMatch(BANNED_ON_SCREEN);
+  });
 });

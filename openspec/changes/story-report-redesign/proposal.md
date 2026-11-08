@@ -8,7 +8,7 @@ The story report at `/story` does not look like the dashboard. Chapters are a pa
 
 - Each chapter is one hero figure (`FigurePanel`), at most one chart reused from the dashboard, and 2 to 3 supporting figures. Every figure keeps chip and Show math, and gets an "i" from the registry where the label is not obvious.
 - Chart per chapter, all from engine outputs the dashboard already calls (nothing computed in the page):
-  - Water and carbon: net CO2e comparison (`footprintComparison`).
+  - Water and carbon: net CO2e comparison (`footprintComparison`). Hero is net CO2e saved; supporting cards are water saved, energy saved and delivery emissions. Percentages and delivery share stay in sentences and Show math.
   - Euros: avoided purchases by month (`monthlySeries`).
   - Circularity: textile waste by treatment (`footprintComparison.composition.waste`).
   - Service: service requests by month (`monthlySeries`).
@@ -21,6 +21,8 @@ The story report at `/story` does not look like the dashboard. Chapters are a pa
 - One header area replaces the stacked controls: title, "Play the review", "Export PDF" and the two-priority picker, laid out as one block.
 - Text column and card grid share one width and one grid.
 - `/story/print` keeps working on the same builder; collapsibles render expanded in print. Its redesign is a later change. Story game, sidebar and `src/proxy.ts` are untouched.
+- "i" explainers follow ADR 0028 exactly as the dashboard applies it: figures whose label is not obvious get one from the registry, obvious ones (delivery sites, active wearers, garments in circulation) get none, every chart title carries one.
+- `/story/print` is part of the final browser check: it must render without errors and its charts must show as their table fallback. No print redesign.
 - Desktop only. New reusable pieces (story header, collapsible) go in `/design` and `docs/design.md`.
 
 ## Capabilities
@@ -38,5 +40,5 @@ None.
 
 - Code: `src/app/story/_story-document.tsx`, `src/components/story-chapter.tsx`, `src/components/priority-picker.tsx`, `src/lib/story/index.ts` and `closing.ts`, `src/lib/explain.ts`, new small header and collapsible components, `/design` gallery, `docs/design.md`.
 - Tests: `tests/story.test.ts` (the "Needs input" sentence assertion changes), `story-closing`, `story-print`, `explainers`, `on-screen-wording` (add story files).
-- No engine, data, dependency or ADR-superseding change. ADR 0028 applies as written; a short new ADR is only needed if the T-id rule in the design is rejected.
+- No engine, data, dependency or ADR-superseding change. ADR 0028 applies as written. T ids appear only in the collapsed team-assumptions table (confirmed); no banned-list exception, no new ADR.
 - Risks: Recharts in the print route (see design); acceptance is a manual browser check at 1230px and 1280px, light and dark, after apply.

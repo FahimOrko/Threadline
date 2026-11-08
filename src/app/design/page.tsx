@@ -22,7 +22,9 @@ import { SectionHeader } from "@/components/section-header";
 import { PrintButton } from "@/components/print-button";
 import { ShowMathInlineProvider, ShowMathPopover } from "@/components/show-math";
 import { StatCard } from "@/components/stat-card";
+import { Collapsible } from "@/components/collapsible";
 import { StoryChapter } from "@/components/story-chapter";
+import { StoryHeader } from "@/components/story-header";
 import { EmptyState, ErrorState, StatCardSkeleton } from "@/components/states";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Tooltip } from "@/components/tooltip";
@@ -211,6 +213,21 @@ export default function DesignPage() {
             </StoryChapter>
             <StoryChapter id="design-sample-two" title="Sample chapter serving two picks" picked={["water", "emissions"]} lines={["Both badges show when one chapter serves both picks."]} />
           </div>
+        </div>
+        <div className="space-y-2">
+          <h3 className="text-sm font-medium">StoryHeader and Collapsible</h3>
+          <p className="max-w-[65ch] text-sm text-muted-foreground">
+            The Story page&apos;s one header block (customer and what the review covers, the actions, the priority picker beneath) and the closed-by-default detail section for tables only. The print route renders the section open.
+          </p>
+          <StoryHeader title="Sample customer" summary="Sample text, not engine output." actions={<span className="text-sm text-muted-foreground">Actions</span>}>
+            <p className="text-sm text-muted-foreground">The priority picker sits here.</p>
+          </StoryHeader>
+          <Collapsible title="Sample detail table">
+            <p className="text-sm">Closed by default; opens with a click, Enter or Space.</p>
+          </Collapsible>
+          <Collapsible title="Sample detail table, open" open>
+            <p className="text-sm">The same section as the print route shows it.</p>
+          </Collapsible>
         </div>
         <div className="space-y-2">
           <h3 className="text-sm font-medium">PriorityPicker</h3>

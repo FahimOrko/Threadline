@@ -13,7 +13,7 @@ export type ChartTable = { caption: string; head: string[]; rows: (string | numb
  * Every chart's frame (ADR 0024): the question as its title, a one-line caption, Show math for its series, a one-sentence summary and the same
  * numbers as a visually hidden table. The chart is a labelled group named by the summary; the hidden table is the text alternative (a chart that is itself a table, like the heatmap, omits it).
  */
-export function ChartFrame({ title, caption, summary, table, math, explain, children, className, fade = true }: { title: string; /** The "i" text (ADR 0028), resolved by the page. */ explain?: string; caption?: string; summary: string; table?: ChartTable; math?: ShowMathProps; children: React.ReactNode; className?: string; fade?: boolean }) {
+export function ChartFrame({ title, caption, summary, table, math, explain, children, className, fade = true, asTable = false }: { /** Print: the chart is replaced by its own table, shown. */ asTable?: boolean; title: string; /** The "i" text (ADR 0028), resolved by the page. */ explain?: string; caption?: string; summary: string; table?: ChartTable; math?: ShowMathProps; children: React.ReactNode; className?: string; fade?: boolean }) {
   const body = (
     <Panel data-slot="chart-frame" className={cn("space-y-3", className)}>
       <div className="space-y-0.5">
@@ -23,12 +23,14 @@ export function ChartFrame({ title, caption, summary, table, math, explain, chil
         </div>
         {caption && <p className="text-xs text-muted-foreground">{caption}</p>}
       </div>
-      <div role="group" aria-label={summary}>
-        {children}
-      </div>
+      {!(asTable && table) && (
+        <div role="group" aria-label={summary}>
+          {children}
+        </div>
+      )}
       {table && (
       // The wrapper clips: a table element ignores sr-only's 1px box and would widen the page.
-      <div className="sr-only">
+      <div className={asTable ? "text-xs [&_td]:px-2 [&_td]:py-1 [&_th]:px-2 [&_th]:py-1 [&_th]:text-left [&_thead]:border-b" : "sr-only"}>
       <table>
         <caption>{table.caption}</caption>
         <thead>
