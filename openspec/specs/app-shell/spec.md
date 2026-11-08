@@ -6,7 +6,7 @@ Gives users one frame around every view: a header, a way to switch between the t
 ## Requirements
 
 ### Requirement: Header placeholders
-The app SHALL show one thin header row on every view, holding only the sidebar trigger, a breadcrumb of the current location and the AI sidebar toggle. The customer switcher SHALL be in the sidebar's switcher slot, and the baseline and estimate choices SHALL be the scenario strip at the top of dashboard pages, never in the header. The theme toggle and the KAM/Customer view toggle SHALL be in the sidebar footer.
+The app SHALL show one thin header row on every view, holding only the sidebar trigger, a breadcrumb of the current location and the AI sidebar toggle. The customer switcher SHALL be in the sidebar's switcher slot, and the baseline and estimate choices SHALL be the scenario strip at the top of dashboard pages and the controls in the Impact World header block, never in the header row. The theme toggle and the KAM/Customer view toggle SHALL be in the sidebar footer.
 
 #### Scenario: Header on the dashboard
 - **WHEN** the user opens a dashboard route
@@ -14,7 +14,7 @@ The app SHALL show one thin header row on every view, holding only the sidebar t
 
 #### Scenario: Header visible on all views
 - **WHEN** the user opens Impact World
-- **THEN** the header shows the trigger, breadcrumb and AI toggle, and no baseline or estimate control is shown
+- **THEN** the header row shows the trigger, breadcrumb and AI toggle, and the baseline and estimate controls are in the page's own header block
 
 #### Scenario: Switch theme from header
 - **WHEN** the user activates the theme toggle in the sidebar footer
@@ -25,7 +25,7 @@ The app SHALL show one thin header row on every view, holding only the sidebar t
 - **THEN** the selection changes as described in the customer-selection capability
 
 ### Requirement: View switching
-The app SHALL offer navigation to Dashboard sections, Impact World and Story through the sidebar, and SHALL show the page of the chosen item with that item marked active. In the customer view the sidebar SHALL omit the Dashboard group. Links to Story and Impact World SHALL carry only `view`.
+The app SHALL offer navigation to Dashboard sections, Impact World (`/world`) and Story through the sidebar, and SHALL show the page of the chosen item with that item marked active. In the customer view the sidebar SHALL omit the Dashboard group. Links to Story and Impact World from the dashboard SHALL carry only `view`.
 
 #### Scenario: Switch view
 - **WHEN** the user selects "Story" in the sidebar
@@ -36,7 +36,7 @@ The app SHALL offer navigation to Dashboard sections, Impact World and Story thr
 - **THEN** the Dashboard view is shown
 
 #### Scenario: Direct link
-- **WHEN** the user opens the Impact World address directly
+- **WHEN** the user opens `/world` directly
 - **THEN** the Impact World page is shown with "Impact World" active
 
 #### Scenario: Customer view
@@ -51,7 +51,7 @@ Each view SHALL render an empty page that shows its own name and no data.
 - **THEN** the page shows its title and no numbers or charts
 
 ### Requirement: Collapsible AI sidebar
-The app SHALL provide an empty AI sidebar on the right that the user can collapse and expand, and that stays available while switching views. It SHALL be collapsed by default on `/story/game` and open by default on other routes; once the user toggles it, the user's choice wins. When open it SHALL take space from the layout instead of overlaying it. Below the `md` breakpoint the sidebar and its toggle SHALL NOT be shown, so it never overlays or narrows the main area; at `md` and above it behaves as described here. This narrow-screen rule is a stopgap until the AI sidebar slice provides a small-screen overlay.
+The app SHALL provide an empty AI sidebar on the right that the user can collapse and expand, and that stays available while switching views. It SHALL be collapsed by default on `/story/game` and `/world` and open by default on other routes; once the user toggles it, the user's choice wins. When open it SHALL take space from the layout instead of overlaying it. Below the `md` breakpoint the sidebar and its toggle SHALL NOT be shown, so it never overlays or narrows the main area; at `md` and above it behaves as described here. This narrow-screen rule is a stopgap until the AI sidebar slice provides a small-screen overlay.
 
 #### Scenario: Collapse sidebar
 - **WHEN** the user collapses the open sidebar
@@ -63,6 +63,10 @@ The app SHALL provide an empty AI sidebar on the right that the user can collaps
 
 #### Scenario: Default on the game
 - **WHEN** `/story/game` is opened without a prior toggle
+- **THEN** the sidebar is collapsed
+
+#### Scenario: Default on the world page
+- **WHEN** `/world` is opened without a prior toggle
 - **THEN** the sidebar is collapsed
 
 #### Scenario: Default elsewhere
@@ -113,19 +117,19 @@ The sidebar's "Shared" section SHALL show Story as a collapsible group: a parent
 - **THEN** Story is one icon link to `/story/game` with a tooltip, and no sub-row is shown
 
 ### Requirement: Header pickers hidden on the game
-The customer switcher SHALL NOT be shown on `/story/game`, where the game is the only place those choices are made, and SHALL NOT be shown anywhere in the customer view, where the reader picks their company in the game. It SHALL stay where defined on all other routes in the KAM view, and the scenario strip belongs to Overview and Environmental footprint only.
+The customer switcher SHALL NOT be shown on `/story/game`, where the game is the only place those choices are made, and SHALL NOT be shown anywhere in the customer view, where the reader picks their company in the game or on the world page. It SHALL stay where defined on all other routes in the KAM view, including `/world`, and the scenario strip belongs to Overview and Environmental footprint only (Impact World has its own header block).
 
 #### Scenario: On the game
 - **WHEN** the route is `/story/game`
 - **THEN** no customer switcher is rendered
 
 #### Scenario: Customer view elsewhere
-- **WHEN** `?view=customer` and the route is `/story` or `/impact`
+- **WHEN** `?view=customer` and the route is `/story` or `/world`
 - **THEN** no customer switcher is rendered
 
 #### Scenario: Elsewhere
-- **WHEN** the route is `/dashboard`
-- **THEN** the customer switcher is shown in the sidebar and the scenario strip above the page title (Overview and Environmental footprint)
+- **WHEN** the route is `/dashboard` or `/world` in the KAM view
+- **THEN** the customer switcher is shown in the sidebar
 
 ### Requirement: App sidebar
 The app SHALL show a left navigation sidebar on every view. It SHALL collapse to an icon column and expand again by a trigger in the header and by `Ctrl+B`, and SHALL show a label tooltip on each icon when collapsed. Its group "Dashboard" SHALL list Overview, Garments and utilization, Costs, Environmental footprint, Signals and Sites; its group "Shared" SHALL list the Story group (see its requirement) and Impact World. The active item SHALL be marked `aria-current="page"`. The chosen state SHALL persist in a cookie and SHALL NOT be a URL param. Every item SHALL use a Phosphor icon, and the active and hovered item SHALL show an indicator that glides between items; under `prefers-reduced-motion: reduce` it SHALL be a static fill. The wordmark SHALL be its own row above the customer switcher. The sidebar's footer SHALL hold the KAM / Customer view links and the theme toggle. There SHALL be no top tab bar.

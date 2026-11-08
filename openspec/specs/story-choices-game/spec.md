@@ -97,17 +97,6 @@ The scene, the dialogue step (beat) and every choice made SHALL be held in the a
 - **WHEN** the address asks for a reaction beat but holds no choice for that scene's lever
 - **THEN** the question beat is shown instead
 
-### Requirement: Ending scene
-After the last scene the game SHALL show an ending scene in which the KAM recaps each choice in order with its plain-language label, and buttons to the report's export card (`/story#export`, labelled "Download the data") and `/story` that carry the same `?customer=`, `?baseline=`, `?sensitivity=` and `?priorities=`. The ending SHALL contain a clearly marked slot for a later Impact World link that renders nothing until a target route is set, and SHALL NOT link to a route that does not exist.
-
-#### Scenario: Links keep params
-- **WHEN** the reader ends a game with `?customer=CUST002&baseline=B_HOME&sensitivity=high&priorities=cost`
-- **THEN** both buttons open with those values unchanged
-
-#### Scenario: Impact World slot empty
-- **WHEN** no Impact World route has been set
-- **THEN** no Impact World button or link is rendered
-
 ### Requirement: Links preserve existing query params
 Every link the game produces (dialogue next, choices, ending buttons, `/story` and `/story#export`) SHALL preserve all existing query params, including ones the game does not know, and SHALL change only `scene`, `beat` and the lever params that the step sets.
 
@@ -331,3 +320,25 @@ Every link in the game and every link from the report back into the app SHALL ca
 #### Scenario: Report links
 - **WHEN** `/story?view=customer` is open
 - **THEN** every priority chip and site link holds `view=customer`, and the export link is unchanged
+
+### Requirement: Opening explanation
+Scene 1 SHALL open, before any other line and in both views, with short plain lines saying why the review matters, what the reader and the KAM do in it (four short choices, each showing what it changes) and that after the review the reader will see how it affects the world. The lines SHALL name no customer and no customer data, contain no digit and no banned word, and be fixed template text.
+
+#### Scenario: First beats
+- **WHEN** the game opens on scene 1, beat 0, in the KAM view or the customer view
+- **THEN** the first lines explain why the review matters, what happens in it and that the world view follows
+
+#### Scenario: Wording scan
+- **WHEN** the tests scan all dialogue templates
+- **THEN** the new lines contain no digit, "baseline", "sensitivity" or "Fact"
+
+### Requirement: Ending scene with the Impact World link
+After the last scene the game SHALL show an ending scene in which the KAM recaps each choice in order with its plain-language label, and buttons to the report's export card (`/story#export`, "Download the data"), `/story` ("Read the full report") and `/world` ("See your impact on the world", the primary button). Every button SHALL carry `?customer=`, `?baseline=`, `?sensitivity=`, `?priorities=` and every other query param, including `view`. The ending text SHALL NOT mention a PDF.
+
+#### Scenario: Links keep params
+- **WHEN** the reader ends a game with `?customer=CUST002&baseline=B_HOME&sensitivity=high&priorities=cost&view=customer`
+- **THEN** all three buttons open with those values unchanged
+
+#### Scenario: Impact World button
+- **WHEN** the ending is shown
+- **THEN** "See your impact on the world" opens `/world` with the same params and `scene` and `beat` dropped
