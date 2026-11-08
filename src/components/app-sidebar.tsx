@@ -199,7 +199,12 @@ export function SidebarView({ customers, baselines, pathname, params: given = ""
     <Sidebar aria-label="Main" className={className}>
       <SidebarHeader>
         <Wordmark />
-        {showCustomer && <CustomerSwitcher customers={customers} baselines={baselines} collapsed={state === "collapsed"} />}
+        {showCustomer && (
+          // The switcher reads the URL, so it suspends in a static prerender (/design); the placeholder keeps the row height (p-1 + size-8).
+          <Suspense fallback={<div aria-hidden className="h-10" />}>
+            <CustomerSwitcher customers={customers} baselines={baselines} collapsed={state === "collapsed"} />
+          </Suspense>
+        )}
       </SidebarHeader>
       <SidebarContent>
         <nav aria-label="Sections">
