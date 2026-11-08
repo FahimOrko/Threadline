@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { breadcrumbFor, isActive, navGroupsFor, navHref, type NavItem } from "@/lib/nav";
+import { breadcrumbFor, isActive, navGroupsFor, navHref, storyChapters, storyChildren, type NavItem } from "@/lib/nav";
+import { buildStory } from "@/lib/story";
 
 const all = navGroupsFor("kam").flatMap((g) => g.items);
 const item = (key: string) => all.find((i) => i.key === key) as NavItem;
@@ -75,5 +76,26 @@ describe("breadcrumb", () => {
   });
   it("is empty before the pathname is known", () => {
     expect(breadcrumbFor(undefined)).toEqual([]);
+  });
+});
+
+describe("story group rows", () => {
+  const labels = (path: string, picks: Parameters<typeof storyChildren>[1] = []) => storyChildren(path, picks).map((c) => c.label);
+  it("has Review only off the report page", () => {
+    for (const p of ["/story/game", "/impact", "/dashboard"]) expect(labels(p)).toEqual(["Review"]);
+  });
+  it("lists the chapters on /story, then the two closing chapters, with anchors", () => {
+    const rows = storyChildren("/story", []);
+    expect(rows[0]).toMatchObject({ label: "Review", href: "/story/game" });
+    expect(rows.slice(1).every((r) => r.chapter && r.href === `#${r.key}`)).toBe(true);
+    expect(rows.slice(-2).map((r) => r.label)).toEqual(["How we calculated this", "Data readiness"]);
+  });
+  it("follows the picked priorities and differs for different picks", () => {
+    expect(labels("/story", ["cost", "hygiene"]).slice(1, 3)).toEqual(["What it means in euros", "Where we see risk"]);
+    expect(labels("/story", ["water"])[1]).toBe("Water and carbon");
+    expect(labels("/story", ["cost", "hygiene"])).not.toEqual(labels("/story", ["water"]));
+  });
+  it("matches the order of the sections the page builds", () => {
+    expect(storyChapters(["service"]).map((c) => c.id)).toEqual([...buildStory(["service"]).map((c) => c.id), "methodology", "data-readiness"]);
   });
 });

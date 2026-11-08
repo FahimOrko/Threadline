@@ -82,12 +82,15 @@ describe("customer switcher", () => {
     expect(t.textContent).toBe("NF");
     expect(t.getAttribute("aria-label")).toContain("NorthStar Foods Group");
   });
-  it("in customer view shows the locked customer with no menu", () => {
+  it("in customer view shows no switcher at all, on any route", () => {
     search = "view=customer&customer=CUST002";
+    const { unmount } = shell();
+    expect(screen.queryByRole("button", { name: /Switch customer/ })).toBeNull();
+    expect(screen.queryByRole("group", { name: /^Customer:/ })).toBeNull();
+    unmount();
+    path = "/story";
     shell();
     expect(screen.queryByRole("button", { name: /Switch customer/ })).toBeNull();
-    const row = screen.getByRole("group", { name: "Customer: Other Co" });
-    expect(row.textContent).toContain("Retail · 1 site");
   });
   it("keeps the wordmark in its own row above the switcher", () => {
     shell();
@@ -98,14 +101,18 @@ describe("customer switcher", () => {
 });
 
 describe("sidebar items", () => {
-  it("KAM sees the six sections, then Story and Impact World", () => {
+  const story = () => nav().getByRole("button", { name: "Story" });
+  const shared = () => within(nav().getByRole("list", { name: "Shared" })).getAllByRole("link");
+  it("KAM sees the six sections, the Story group, then Impact World", () => {
     shell();
-    expect(nav().getAllByRole("link").map((l) => l.textContent)).toEqual(["Overview", "Garments and utilization", "Costs", "Environmental footprint", "Signals", "Sites", "Story", "Impact World"]);
+    expect(nav().getAllByRole("link").map((l) => l.textContent)).toEqual(["Overview", "Garments and utilization", "Costs", "Environmental footprint", "Signals", "Sites", "Impact World"]);
+    expect(story().getAttribute("aria-expanded")).toBe("false");
   });
-  it("customer view shows only Story and Impact World", () => {
+  it("customer view shows only the Story group and Impact World", () => {
     search = "view=customer";
     shell();
-    expect(nav().getAllByRole("link").map((l) => l.textContent)).toEqual(["Story", "Impact World"]);
+    expect(nav().getAllByRole("link").map((l) => l.textContent)).toEqual(["Impact World"]);
+    expect(story()).toBeTruthy();
   });
   it("marks the current section and keeps Sites active on a site page", () => {
     path = "/dashboard/costs";
@@ -117,21 +124,54 @@ describe("sidebar items", () => {
     shell();
     expect(nav().getByRole("link", { name: "Sites" }).getAttribute("aria-current")).toBe("page");
   });
-  it.each(["/story", "/story/game"])("marks Story active on %s", (p) => {
-    path = p;
+  it("on the game the group is open, Review is the current page and no chapter row shows", () => {
+    path = "/story/game";
     shell();
-    expect(nav().getByRole("link", { name: "Story" }).getAttribute("aria-current")).toBe("page");
+    expect(story().getAttribute("aria-expanded")).toBe("true");
+    expect(nav().getByRole("link", { name: "Review" }).getAttribute("aria-current")).toBe("page");
+    expect(shared().map((l) => l.textContent)).toEqual(["Review", "Impact World"]);
     expect(nav().getByRole("link", { name: "Impact World" }).getAttribute("aria-current")).toBeNull();
   });
-  it("the Story link opens the game and stays clean without params", () => {
+  it("on the report the group lists the chapters in default order as anchors, the first one current", () => {
+    path = "/story";
     shell();
-    expect(href("Story")).toBe("/story/game");
+    const rows = shared();
+    expect(rows.map((l) => l.textContent)).toEqual(["Review", "Your year in numbers", "What we kept out of the bin", "Water and carbon", "What it means in euros", "Where we see risk", "Service and reliability", "How we calculated this", "Data readiness", "Impact World"]);
+    expect(rows[1].getAttribute("href")).toMatch(/^#chapter-/);
+    expect(rows[1].getAttribute("aria-current")).toBe("location");
+    expect(rows[2].getAttribute("aria-current")).toBeNull();
+  });
+  it("the chapter rows follow the picked priorities and two picks give two orders", () => {
+    path = "/story";
+    search = "priorities=cost,hygiene";
+    const { unmount } = shell();
+    const labels = () => shared().map((l) => l.textContent).slice(1, 4);
+    expect(labels()).toEqual(["What it means in euros", "Where we see risk", "Your year in numbers"]);
+    unmount();
+    search = "priorities=water";
+    shell();
+    expect(labels()[0]).toBe("Water and carbon");
+  });
+  it("the Story parent toggles the rows and the choice sticks", async () => {
+    shell();
+    await userEvent.click(story());
+    expect(story().getAttribute("aria-expanded")).toBe("true");
+    expect(href("Review")).toBe("/story/game");
+    await userEvent.click(story());
+    expect(nav().queryByRole("link", { name: "Review" })).toBeNull();
+  });
+  it("Review keeps the carried params", async () => {
+    search = "customer=CUST002&baseline=B_HOME&priorities=cost&view=customer";
+    shell();
+    await userEvent.click(story());
+    expect(href("Review")).toBe("/story/game?customer=CUST002&baseline=B_HOME&priorities=cost&view=customer");
   });
   it("Story and Impact World keep all params inside Story", () => {
     path = "/story";
     search = "customer=CUST002&baseline=B_HOME&sensitivity=low&priorities=cost,hygiene";
     shell();
     expect(href("Impact World")).toBe("/impact?customer=CUST002&baseline=B_HOME&sensitivity=low&priorities=cost%2Chygiene");
+    expect(nav().getAllByRole("link").some((l) => l.getAttribute("href") === "#chapter-methodology")).toBe(true); // anchors leave the query untouched
   });
   it("dashboard sections keep customer, baseline, sensitivity and view; leaving keeps view only", () => {
     path = "/dashboard";

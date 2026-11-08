@@ -17,7 +17,7 @@ export function StoryChapter({ id, title, picked = [], lines, children }: { id: 
     <section aria-labelledby={headingId} data-slot="story-chapter" className="space-y-4 break-inside-avoid">
       <div className="space-y-1.5">
         <div className="flex flex-wrap items-center gap-2">
-          <h2 id={headingId} className="text-base font-medium">
+          <h2 id={headingId} className="scroll-mt-16 text-base font-medium">
             {title}
           </h2>
           {picked.map((p) => (

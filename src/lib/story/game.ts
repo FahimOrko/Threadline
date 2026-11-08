@@ -190,13 +190,14 @@ export const SCENES: Scene[] = [
   },
 ];
 
-/** The customer view (later change) locks scene 1 to the resolved customer: a confirmation, not a choice. */
+/** The customer view's scene 1 (ADR 0029): two lines that name no customer, then the company picker. Nothing here may depend on a customer, because none is chosen yet. */
 export const CUSTOMER_VIEW_INTRO: Line[] = [
-  { speaker: "ops", text: "I am the ops lead at {company}. This is our year with the service, and I would like to go through it with you." },
-  { speaker: "kam", text: "Happy to. I will show what each choice changes, and every figure comes from the data pack." },
+  { speaker: "kam", text: "Welcome to the value review. We will make four choices together, and I will show what each one changes. Every figure comes from the data pack." },
+  { speaker: "ops", text: "Good. I would like to go through our own year with you." },
 ];
-export const CUSTOMER_VIEW_CONFIRM = "Ready when you are.";
-export const START_REVIEW_LABEL = "Start the review";
+export const CUSTOMER_VIEW_QUESTION = "Which company are you from?";
+/** The customer view's answer to scene 1: the card shows the company's figures as they stand, so it never says "against the starting customer". */
+export const CUSTOMER_VIEW_ANSWER = "For {company}, {{fact:delivery_sites}} were served for {{fact:active_wearers}}, with {{fact:garments_in_circulation}} in circulation. The card shows these figures as they stand.";
 
 export const END_LINES = {
   recap: "That is the review. This is the path we took, in order.",
@@ -218,8 +219,8 @@ export const slotTexts = (slot: Slot): string[] => [...(slot.rules ?? []).map((r
 export const ALL_TEMPLATES: string[] = [
   ...SCENES.flatMap((s) => [...s.intro.map((l) => l.text), ...s.explain.flatMap(slotTexts), s.question, s.react, s.answer, ...s.meaning.flatMap(slotTexts)]),
   ...CUSTOMER_VIEW_INTRO.map((l) => l.text),
-  CUSTOMER_VIEW_CONFIRM,
-  START_REVIEW_LABEL,
+  CUSTOMER_VIEW_QUESTION,
+  CUSTOMER_VIEW_ANSWER,
   ...Object.values(END_LINES),
   SUGGESTED_BADGE,
   ...Object.values(SUGGESTION_WHY),
@@ -236,14 +237,15 @@ export type Beat =
   | { kind: "recap" }
   | { kind: "actions" };
 
-/** The beats of a scene: intro lines, explain lines, the question, the reaction, the answer, then what it means. In the customer view scene 1 is intro, explain and one confirmation; the end scene is recap then actions. */
+/** The beats of a scene: intro lines, explain lines, the question, the reaction, the answer, then what it means. In the customer view scene 1 has two generic intro lines and no explain beats; the end scene is recap then actions. */
 export function beatsFor(scene: Scene | "end", view: View): Beat[] {
   if (scene === "end") return [{ kind: "line", line: { speaker: "kam", text: END_LINES.recap } }, { kind: "recap" }, { kind: "actions" }];
-  const locked = view === "customer" && scene.id === "customer";
-  const intro = (locked ? CUSTOMER_VIEW_INTRO : scene.intro).map((line): Beat => ({ kind: "line", line }));
-  const explain = scene.explain.map((slot): Beat => ({ kind: "explain", slot }));
+  // Customer view, scene 1: no customer is chosen yet, so no explain beat (those read the default customer's data).
+  const generic = view === "customer" && scene.id === "customer";
+  const intro = (generic ? CUSTOMER_VIEW_INTRO : scene.intro).map((line): Beat => ({ kind: "line", line }));
+  const explain = generic ? [] : scene.explain.map((slot): Beat => ({ kind: "explain", slot }));
   const meaning = scene.meaning.map((slot): Beat => ({ kind: "meaning", slot }));
-  return locked ? [...intro, ...explain, { kind: "ask" }] : [...intro, ...explain, { kind: "ask" }, { kind: "react" }, { kind: "answer" }, ...meaning];
+  return [...intro, ...explain, { kind: "ask" }, { kind: "react" }, { kind: "answer" }, ...meaning];
 }
 
 /** `?scene=` is 1 to 4 or `end`. Anything else shows scene 1 and names the value. */
@@ -466,9 +468,8 @@ export function suggest(scene: Scene, view: View, ctx: { customerIds: readonly s
 /** The row label without the comparison: "Water saved vs local laundry" reads "Water saved". Facts that name no baseline keep their label. */
 export const neutralLabel = (f: Pick<Fact, "label" | "baseline">): string => (f.baseline ? f.label.replace(/ vs [^,]+/, "") : f.label);
 
-/** Start over: scene, beat and the four levers go; `view` and unknown params stay, and in the customer view so does the locked customer. */
-export const startOverHref = (params: Params, view: View): string =>
-  gameHref(GAME_PATH, params, { scene: null, beat: null, baseline: null, sensitivity: null, priorities: null, ...(view === "customer" ? {} : { customer: null }) });
+/** Start over: scene, beat, the customer and the other levers go; `view` and unknown params stay. In the customer view this returns to the company picker. */
+export const startOverHref = (params: Params): string => gameHref(GAME_PATH, params, { scene: null, beat: null, customer: null, baseline: null, sensitivity: null, priorities: null });
 
 /** True on the very first beat of scene 1: no scene or beat past the start. */
 export function isFirstBeat(params: Params, view: View): boolean {
@@ -476,13 +477,17 @@ export function isFirstBeat(params: Params, view: View): boolean {
   return scene === 1 && resolveBeat(params.beat, beatsFor(SCENES[0], view).length).beat === 0;
 }
 
-/**
- * The Start over control: always shown, disabled only when pressing it would change nothing (the first beat with no lever chosen).
- * In the customer view the customer is locked, so it does not count as a choice.
- */
+/** The Start over control: always shown, disabled only when pressing it would change nothing (the first beat with no lever chosen). */
 export function startOverState(params: Params, view: View): { href: string; disabled: boolean } {
-  const levers: Lever[] = view === "customer" ? ["baseline", "sensitivity", "priorities"] : ["customer", "baseline", "sensitivity", "priorities"];
-  return { href: startOverHref(params, view), disabled: isFirstBeat(params, view) && !levers.some((l) => first(params[LEVER_KEY[l]]) !== undefined) };
+  const levers: Lever[] = ["customer", "baseline", "sensitivity", "priorities"];
+  return { href: startOverHref(params), disabled: isFirstBeat(params, view) && !levers.some((l) => first(params[LEVER_KEY[l]]) !== undefined) };
+}
+
+/** The Previous control's target from the beat now shown: the beat before it, or the last beat of the scene before (the ending steps back into the last scene). Null on the first beat of scene 1. Only `scene` and `beat` change, so every choice stays in the address. */
+export function previousHref(params: Params, view: View, scene: number | "end", beat: number): string | null {
+  if (beat > 0) return stepHref(params, scene, beat - 1);
+  const before = scene === "end" ? SCENES.length : scene - 1;
+  return before < 1 ? null : stepHref(params, before, beatsFor(SCENES[before - 1], view).length - 1);
 }
 
 export const REPORT_HINT = "Finish the review to open your report";

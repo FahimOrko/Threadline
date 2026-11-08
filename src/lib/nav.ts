@@ -1,10 +1,11 @@
 // The app sidebar's items (ADR 0025): pure data and selection, no numbers. Icons are named here and mapped in the component.
 import { SECTIONS, type SectionSlug } from "@/lib/dashboard";
-import { carryParams, type View } from "@/lib/selection";
+import { carryParams, type Priority, type View } from "@/lib/selection";
+import { buildStory } from "@/lib/story";
 import { GAME_PATH, STORY_PATH } from "@/lib/story/game";
 
 export type NavIcon = SectionSlug | "story" | "impact";
-export type NavItem = { key: string; href: string; /** Route prefix that marks the item active. */ match: string; label: string; icon: NavIcon };
+export type NavItem = { key: string; href: string; /** Route prefix that marks the item active. */ match: string; label: string; icon: NavIcon; /** Shows sub-rows (the Story group, ADR 0029). */ expandable?: boolean };
 export type NavGroup = { label: string; items: NavItem[] };
 
 const DASHBOARD: NavGroup = {
@@ -14,7 +15,7 @@ const DASHBOARD: NavGroup = {
 const SHARED: NavGroup = {
   label: "Shared",
   items: [
-    { key: "story", href: GAME_PATH, match: STORY_PATH, label: "Story", icon: "story" },
+    { key: "story", href: GAME_PATH, match: STORY_PATH, label: "Story", icon: "story", expandable: true },
     { key: "impact", href: "/impact", match: "/impact", label: "Impact World", icon: "impact" },
   ],
 };
@@ -46,3 +47,18 @@ export function breadcrumbFor(pathname: string | undefined, siteName?: string): 
   const item = navGroupsFor("kam").flatMap((g) => g.items).find((i) => isActive(i, pathname));
   return [{ label: item?.label ?? "Threadline" }];
 }
+
+export type NavChild = { key: string; label: string; href: string; /** A chapter anchor on `/story`; the rest are routes that carry params. */ chapter?: boolean };
+
+/** The report chapters in page order: the picked priorities lead (buildStory), then the two fixed closing chapters. Ids match the section headings (`chapter-<id>`). */
+export const storyChapters = (priorities: readonly Priority[]): { id: string; label: string }[] => [
+  ...buildStory(priorities).map((c) => ({ id: c.id, label: c.title })),
+  { id: "methodology", label: "How we calculated this" },
+  { id: "data-readiness", label: "Data readiness" },
+];
+
+/** The Story group's sub-rows (ADR 0029): Review always, the chapter anchors only on the report page. Pure data from the route and the picks, no state. */
+export const storyChildren = (pathname: string | undefined, priorities: readonly Priority[]): NavChild[] => [
+  { key: "review", label: "Review", href: GAME_PATH },
+  ...(pathname === STORY_PATH ? storyChapters(priorities).map((c) => ({ key: `chapter-${c.id}`, label: c.label, href: `#chapter-${c.id}`, chapter: true })) : []),
+];

@@ -7,6 +7,7 @@ import { observations as observationsFor } from "@/lib/engine";
 import {
   ALL_TEMPLATES,
   CUSTOMER_VIEW_INTRO,
+  previousHref,
   IMPACT_WORLD_HREF,
   SCENES,
   beatsFor,
@@ -151,9 +152,12 @@ describe("links keep every existing param", () => {
 });
 
 describe("customer view scene 1", () => {
-  it("is intro lines and one confirmation, with no reaction, answer or customer choice", () => {
+  it("is generic intro lines, no explain beats (they read the default customer), then the picker and the usual follow-up", () => {
     const beats = beatsFor(SCENES[0], "customer");
-    expect(beats.map((b) => b.kind)).toEqual([...CUSTOMER_VIEW_INTRO.map(() => "line"), ...SCENES[0].explain.map(() => "explain"), "ask"]);
+    expect(beats.map((b) => b.kind)).toEqual([...CUSTOMER_VIEW_INTRO.map(() => "line"), "ask", "react", "answer", ...SCENES[0].meaning.map(() => "meaning")]);
+  });
+  it("names no customer before one is chosen", () => {
+    for (const l of CUSTOMER_VIEW_INTRO) expect(l.text).not.toMatch(/\{company\}|\{\{fact:/);
   });
   it("is unchanged in the KAM view and in later scenes", () => {
     for (const [i, view] of [[0, "kam"], [1, "customer"]] as const) {
@@ -281,9 +285,9 @@ describe("start over state", () => {
     expect(st.disabled).toBe(false);
     expect(st.href).toBe("/story/game");
   });
-  it("does not count the locked customer as a choice in the customer view", () => {
-    expect(startOverState({ view: "customer", customer: "CUST002" }, "customer").disabled).toBe(true);
-    expect(startOverState({ view: "customer", customer: "CUST002", baseline: "B_HOME" }, "customer").disabled).toBe(false);
+  it("counts the customer as a choice in the customer view too", () => {
+    expect(startOverState({ view: "customer" }, "customer").disabled).toBe(true);
+    expect(startOverState({ view: "customer", customer: "CUST002" }, "customer").disabled).toBe(false);
   });
 });
 
@@ -291,13 +295,13 @@ describe("start over", () => {
   const q = (h: string) => new URLSearchParams(h.split("?")[1]);
   const params = { view: "customer", x: "1", customer: "CUST002", baseline: "B_HOME", sensitivity: "high", priorities: "cost", scene: "3", beat: "2" };
   it("clears scene, beat and the four levers and keeps view and unknown params", () => {
-    const h = q(startOverHref(params, "kam"));
+    const h = q(startOverHref(params));
     expect([...h.keys()].sort()).toEqual(["view", "x"]);
-    expect(startOverHref(params, "kam").startsWith("/story/game?")).toBe(true);
+    expect(startOverHref(params).startsWith("/story/game?")).toBe(true);
   });
-  it("keeps the locked customer in the customer view", () => {
-    const h = q(startOverHref(params, "customer"));
-    expect(h.get("customer")).toBe("CUST002");
+  it("clears the customer in the customer view too, so the picker returns", () => {
+    const h = q(startOverHref(params));
+    expect(h.has("customer")).toBe(false);
     expect(h.get("view")).toBe("customer");
     expect(["baseline", "sensitivity", "priorities", "scene", "beat"].some((k) => h.has(k))).toBe(false);
   });
@@ -431,5 +435,24 @@ describe("suggested choices", () => {
   it("pre-selects nothing: options carry no selected flag", async () => {
     const data = await generatedSource.load();
     for (const s of SCENES) for (const o of optionsFor(s, data, labels)) expect(Object.keys(o)).not.toContain("suggested");
+  });
+});
+
+describe("previous step", () => {
+  const q = (h: string | null) => Object.fromEntries(new URLSearchParams((h ?? "").split("?")[1]));
+  it("steps back one beat inside a scene and keeps every other param", () => {
+    expect(q(previousHref({ view: "customer", x: "1", baseline: "B_HOME" }, "kam", 2, 5))).toEqual({ view: "customer", x: "1", baseline: "B_HOME", scene: "2", beat: "4" });
+  });
+  it("goes to the last beat of the scene before from a scene's first beat", () => {
+    const last = beatsFor(SCENES[1], "kam").length - 1;
+    expect(q(previousHref({}, "kam", 3, 0))).toEqual({ scene: "2", beat: String(last) });
+  });
+  it("goes from the ending into the last scene", () => {
+    const last = beatsFor(SCENES[SCENES.length - 1], "kam").length - 1;
+    expect(q(previousHref({}, "kam", "end", 0))).toEqual({ scene: String(SCENES.length), beat: String(last) });
+  });
+  it("is null on the first beat of scene 1", () => expect(previousHref({}, "kam", 1, 0)).toBeNull());
+  it("uses the customer view's beat count when crossing scenes", () => {
+    expect(q(previousHref({ view: "customer" }, "customer", 2, 0)).beat).toBe(String(beatsFor(SCENES[0], "customer").length - 1));
   });
 });

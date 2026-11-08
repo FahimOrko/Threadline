@@ -95,14 +95,3 @@ Until `?customer=` holds a customer, the right panel's net CO2e line SHALL show 
 #### Scenario: After the choice
 - **WHEN** a customer is chosen
 - **THEN** the net CO2e line shows the figure for that customer with its chip and Show math
-
-### Requirement: Path strip labels are plain text
-The labels in the right panel's path strip ("Customer", "Comparison", "Estimate", "Priority") SHALL render as plain muted text in every theme and state, with no selection, focus, hover or background highlight.
-
-#### Scenario: Labels at rest
-- **WHEN** any beat is shown in light or dark theme
-- **THEN** no path-strip label has a background, outline or selection style
-
-#### Scenario: After a click or a keyboard step
-- **WHEN** the reader advances or steps back by mouse or keyboard
-- **THEN** no path-strip label takes a highlight

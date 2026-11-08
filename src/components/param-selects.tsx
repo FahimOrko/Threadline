@@ -53,9 +53,9 @@ function Avatar({ name }: { name: string }) {
 
 /**
  * The customer switcher row at the top of the sidebar (sidebar-07 style): avatar, name, industry and site count, chevron, and a menu of customers.
- * Collapsed it is the avatar alone with the name as a tooltip. `locked` (customer view) shows the customer with no menu.
+ * Collapsed it is the avatar alone with the name as a tooltip.
  */
-export function CustomerSwitcher({ customers, baselines, collapsed, locked }: { customers: ShellCustomer[]; baselines: ShellBaseline[]; collapsed?: boolean; locked?: boolean }) {
+export function CustomerSwitcher({ customers, baselines, collapsed }: { customers: ShellCustomer[]; baselines: ShellBaseline[]; collapsed?: boolean }) {
   const { customer } = useSelection(customers, baselines);
   const setParam = useSetParam();
   const current = customers.find((c) => c.customer_id === customer.customer_id) ?? customers[0];
@@ -71,13 +71,6 @@ export function CustomerSwitcher({ customers, baselines, collapsed, locked }: { 
     </>
   );
   const row = "flex w-full items-center gap-2 rounded-md p-1 text-sidebar-foreground";
-  if (locked) {
-    return (
-      <div className={cn(row, collapsed && "justify-center")} aria-label={`Customer: ${current.name}`} role="group">
-        {body}
-      </div>
-    );
-  }
   const trigger = (
     <DropdownMenuTrigger aria-label={`Customer: ${current.name}. Switch customer`} className={cn(row, "outline-none hover:bg-sidebar-accent focus-visible:ring-2 focus-visible:ring-sidebar-ring data-popup-open:bg-sidebar-accent", collapsed && "justify-center")}>
       {body}

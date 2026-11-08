@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { motion, useReducedMotion } from "motion/react";
-import { Suspense, useState } from "react";
-import { BookOpen, Buildings, Bell, Coins, Eye, Globe, Leaf, SquaresFour, TShirt, UserCircle } from "@phosphor-icons/react";
+import { Suspense, useEffect, useState } from "react";
+import { BookOpen, Buildings, Bell, CaretRight, Coins, Eye, Globe, Leaf, SquaresFour, TShirt, UserCircle } from "@phosphor-icons/react";
 import { CustomerSwitcher, type ShellBaseline, type ShellCustomer } from "@/components/param-selects";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Tooltip } from "@/components/tooltip";
@@ -19,12 +19,15 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
   SidebarSeparator,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { isActive, navGroupsFor, navHref, type NavGroup, type NavIcon } from "@/lib/nav";
-import { resolveView, type View } from "@/lib/selection";
-import { GAME_PATH } from "@/lib/story/game";
+import { isActive, navGroupsFor, navHref, storyChapters, storyChildren, type NavGroup, type NavIcon, type NavItem } from "@/lib/nav";
+import { carryParams, resolvePriorities, resolveView, type View } from "@/lib/selection";
+import { GAME_PATH, STORY_PATH } from "@/lib/story/game";
 import { cn } from "@/lib/utils";
 
 const ICONS: Record<NavIcon, React.ElementType> = {
@@ -38,11 +41,58 @@ const ICONS: Record<NavIcon, React.ElementType> = {
   impact: Globe,
 };
 
+// The chapter whose heading last passed the line a third down the viewport; the first chapter before any has. Scroll listener in the capture phase, so it works whichever element scrolls.
+function useActiveChapter(ids: string[], enabled: boolean) {
+  const [active, setActive] = useState<string | null>(null);
+  const key = ids.join(",");
+  useEffect(() => {
+    if (!enabled) return;
+    const list = key.split(",");
+    const update = () => {
+      let current = list[0];
+      for (const id of list) {
+        const el = document.getElementById(`chapter-${id}`);
+        if (el && el.getBoundingClientRect().top <= window.innerHeight * 0.3) current = id;
+      }
+      setActive(current);
+    };
+    const frame = requestAnimationFrame(update);
+    document.addEventListener("scroll", update, { capture: true, passive: true });
+    window.addEventListener("resize", update);
+    return () => {
+      cancelAnimationFrame(frame);
+      document.removeEventListener("scroll", update, { capture: true });
+      window.removeEventListener("resize", update);
+    };
+  }, [key, enabled]);
+  return enabled ? (active ?? ids[0]) : null;
+}
+
+// The Story group (ADR 0029, sidebar-07 nested pattern): the parent row toggles Review and, on the report page, the chapter anchors. Open follows the route until the reader toggles it; not persisted.
+function StoryChildren({ pathname, params, activeChapter }: { pathname?: string; params: URLSearchParams; activeChapter?: string | null }) {
+  const priorities = resolvePriorities(params.get("priorities") ?? undefined).priorities;
+  return (
+    <SidebarMenuSub aria-label="Story">
+      {storyChildren(pathname, priorities).map((c) => {
+        const current = c.chapter ? activeChapter === c.key.replace("chapter-", "") : pathname === GAME_PATH;
+        return (
+          <SidebarMenuSubItem key={c.key}>
+            <SidebarMenuSubButton render={<Link href={c.chapter ? c.href : `${c.href}${carryParams(pathname ?? STORY_PATH, c.href, params)}`} aria-current={current ? (c.chapter ? "location" : "page") : undefined} />} isActive={current}>
+              <span>{c.label}</span>
+            </SidebarMenuSubButton>
+          </SidebarMenuSubItem>
+        );
+      })}
+    </SidebarMenuSub>
+  );
+}
+
 // The hover and active indicators glide between items (ADR 0025's motion list). Under reduced motion they are plain static fills: no layout animation.
-function Items({ groups, pathname, href }: { groups: NavGroup[]; pathname?: string; href: (item: NavGroup["items"][number]) => string }) {
+function Items({ groups, pathname, params, activeChapter, href }: { groups: NavGroup[]; pathname?: string; params: URLSearchParams; activeChapter?: string | null; href: (item: NavItem) => string }) {
   const { state } = useSidebar();
   const reduced = useReducedMotion();
   const [hover, setHover] = useState<string | null>(null);
+  const [toggled, setToggled] = useState<boolean | null>(null);
   return groups.map((g, i) => (
     <div key={g.label}>
       {i > 0 && <SidebarSeparator />}
@@ -52,19 +102,38 @@ function Items({ groups, pathname, href }: { groups: NavGroup[]; pathname?: stri
           {g.items.map((item) => {
             const Icon = ICONS[item.icon];
             const active = isActive(item, pathname);
-            const link = (
-              <SidebarMenuButton render={<Link href={href(item)} aria-current={active ? "page" : undefined} aria-label={item.label} />} isActive={active}>
+            const group = item.expandable && state !== "collapsed";
+            const open = toggled ?? active;
+            const inner = (
+              <>
                 <Icon aria-hidden />
                 <span>{item.label}</span>
+                {group && <CaretRight aria-hidden className={cn("ml-auto size-3.5! transition-transform motion-reduce:transition-none", open && "rotate-90")} />}
+              </>
+            );
+            const link = group ? (
+              <SidebarMenuButton render={<button type="button" aria-expanded={open} aria-controls="story-subrows" onClick={() => setToggled(!open)} />} isActive={active}>
+                {inner}
+              </SidebarMenuButton>
+            ) : (
+              <SidebarMenuButton render={<Link href={href(item)} aria-current={active ? "page" : undefined} aria-label={item.label} />} isActive={active}>
+                {inner}
               </SidebarMenuButton>
             );
             return (
-              <SidebarMenuItem key={item.key} onPointerEnter={() => setHover(item.key)} onPointerLeave={() => setHover(null)} onFocus={() => setHover(item.key)} onBlur={() => setHover(null)}>
-                {hover === item.key && !active && (
-                  <motion.span aria-hidden data-indicator="hover" layoutId={reduced ? undefined : "nav-hover"} transition={{ duration: 0.18, ease: "easeOut" }} className="absolute inset-0 rounded-md bg-sidebar-accent/70" />
+              <SidebarMenuItem key={item.key}>
+                <div className="relative" onPointerEnter={() => setHover(item.key)} onPointerLeave={() => setHover(null)} onFocus={() => setHover(item.key)} onBlur={() => setHover(null)}>
+                  {hover === item.key && !active && (
+                    <motion.span aria-hidden data-indicator="hover" layoutId={reduced ? undefined : "nav-hover"} transition={{ duration: 0.18, ease: "easeOut" }} className="absolute inset-0 rounded-md bg-sidebar-accent/70" />
+                  )}
+                  {active && <motion.span aria-hidden data-indicator="active" layoutId={reduced ? undefined : "nav-active"} transition={{ duration: 0.22, ease: "easeOut" }} className="absolute inset-0 rounded-md bg-sidebar-accent" />}
+                  {state === "collapsed" ? <Tooltip label={item.label}>{link}</Tooltip> : link}
+                </div>
+                {group && open && (
+                  <div id="story-subrows">
+                    <StoryChildren pathname={pathname} params={params} activeChapter={activeChapter} />
+                  </div>
                 )}
-                {active && <motion.span aria-hidden data-indicator="active" layoutId={reduced ? undefined : "nav-active"} transition={{ duration: 0.22, ease: "easeOut" }} className="absolute inset-0 rounded-md bg-sidebar-accent" />}
-                {state === "collapsed" ? <Tooltip label={item.label}>{link}</Tooltip> : link}
               </SidebarMenuItem>
             );
           })}
@@ -111,21 +180,23 @@ function Wordmark() {
   return <span className={cn("px-2 font-semibold", state === "collapsed" && "text-center px-0")}>{state === "collapsed" ? "T" : "Threadline"}</span>;
 }
 
-type Props = { customers: ShellCustomer[]; baselines: ShellBaseline[]; pathname?: string; params?: URLSearchParams };
+/** `params` may be a query string, so a server page (the /design gallery) can pass it across the client boundary. */
+type Props = { customers: ShellCustomer[]; baselines: ShellBaseline[]; pathname?: string; params?: URLSearchParams | string };
 
 /** The app navigation (ADR 0025): wordmark, customer switcher, the groups for the view, and the view and theme toggles in the footer. */
-export function SidebarView({ customers, baselines, pathname, params = new URLSearchParams(), showCustomer = true, className }: Props & { showCustomer?: boolean; className?: string }) {
+export function SidebarView({ customers, baselines, pathname, params: given = "", showCustomer = true, activeChapter, className }: Props & { showCustomer?: boolean; activeChapter?: string | null; className?: string }) {
   const { state } = useSidebar();
+  const params = new URLSearchParams(given.toString());
   const view = resolveView(params.get("view") ?? undefined);
   return (
     <Sidebar aria-label="Main" className={className}>
       <SidebarHeader>
         <Wordmark />
-        {showCustomer && <CustomerSwitcher customers={customers} baselines={baselines} collapsed={state === "collapsed"} locked={view === "customer"} />}
+        {showCustomer && <CustomerSwitcher customers={customers} baselines={baselines} collapsed={state === "collapsed"} />}
       </SidebarHeader>
       <SidebarContent>
         <nav aria-label="Sections">
-          <Items groups={navGroupsFor(view)} pathname={pathname} href={(item) => navHref(item, pathname ?? "/dashboard", params)} />
+          <Items groups={navGroupsFor(view)} pathname={pathname} params={params} activeChapter={activeChapter} href={(item) => navHref(item, pathname ?? "/dashboard", params)} />
         </nav>
       </SidebarContent>
       <SidebarFooter>
@@ -141,7 +212,12 @@ export function SidebarView({ customers, baselines, pathname, params = new URLSe
 
 function Live(props: Props) {
   const pathname = usePathname();
-  return <SidebarView {...props} pathname={pathname} params={new URLSearchParams(useSearchParams().toString())} showCustomer={pathname !== GAME_PATH} />;
+  const params = new URLSearchParams(useSearchParams().toString());
+  const view = resolveView(params.get("view") ?? undefined);
+  const priorities = resolvePriorities(params.get("priorities") ?? undefined).priorities;
+  const activeChapter = useActiveChapter(storyChapters(priorities).map((c) => c.id), pathname === STORY_PATH);
+  // The customer switcher is hidden on the game and in the customer view, where the reader picks their company in the game (ADR 0029).
+  return <SidebarView {...props} pathname={pathname} params={params} showCustomer={pathname !== GAME_PATH && view === "kam"} activeChapter={activeChapter} />;
 }
 
 // useSearchParams suspends during prerender, so the fallback is the same sidebar for the default KAM view with no active item.

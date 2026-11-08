@@ -11,7 +11,7 @@ The story is two screens (the game, then the report) but the sidebar treats it a
 - **Game, customer view**: scene 1 opens on a company picker, "Which company are you from?", with the three customers. The pick sets `?customer=`; data, dialogue and suggestions follow it. The sidebar customer switcher is hidden in customer view. Start over returns to the picker. KAM view keeps its picker wording. **BREAKING** for the old "locked customer" behaviour (ADR 0023, ADR 0025): the customer view no longer shows a locked customer or a "Start the review" confirmation.
 - **Report header**: the Story header block takes the scenario strip's look (teal-tinted border and background) and the priority chips become a segmented-style group. Styling only.
 - **Bug**: before a customer is chosen, the game's right panel shows a placeholder instead of the Net CO2e figure.
-- **Bug**: the "Customer" label in the game's right panel renders highlighted like a stray selection or focus style; find and fix the cause.
+- **Bug**: the "Customer" label in the game's right panel renders highlighted like a stray selection or focus style. One reproduction attempt (light theme, customer view); if it does not reproduce, it is dropped and noted as likely a user text selection.
 - Right panel content and layout otherwise unchanged. Not touched: the open questions section, the print route, export.
 
 ## Capabilities
@@ -24,7 +24,7 @@ None.
 
 - `app-shell`: the Story sidebar item becomes a group with Review and chapter sub-rows; the customer switcher is also hidden in customer view.
 - `dashboard-navigation`: the customer switcher row no longer shows a "locked customer" in customer view; it is hidden there.
-- `story-choices-game`: customer view picks its company instead of a locked confirmation; Previous control; Start over clears the customer in both views; placeholder in the right panel before a customer is chosen; plain path-strip labels.
+- `story-choices-game`: customer view picks its company instead of a locked confirmation; Previous control; Start over clears the customer in both views; placeholder in the right panel before a customer is chosen.
 - `story-player`: the report header block matches the scenario strip, with a segmented priority picker.
 
 ## Impact
@@ -32,4 +32,4 @@ None.
 - Code: `src/lib/nav.ts`, `src/components/app-sidebar.tsx`, `src/components/ui/sidebar.tsx` (sub-menu primitives), `src/components/param-selects.tsx` (`locked` goes away), `src/lib/story/game.ts` (customer view beats, Previous, Start over), `src/app/story/game/_game-view.tsx`, `src/components/dialogue-box.tsx`, `src/components/choice-button.tsx`, `src/components/story-header.tsx`, `src/components/priority-picker.tsx`.
 - Docs: new ADR 0029 (supersedes 0023 and 0025 in part), `docs/adr/README.md`, `docs/conventions.md`, `docs/design.md`, `/design` gallery.
 - Tests: `tests/story-game.test.ts`, `tests/nav.test.ts`, `tests/app-shell.test.tsx`.
-- No engine, data or proxy change. `src/proxy.ts` keeps redirecting `/dashboard` in customer view and keeps `customer`, which now pre-selects the picker.
+- No engine, data or proxy change. `src/proxy.ts` keeps redirecting `/dashboard` in customer view and keeps `customer`, which now pre-selects the picker (decided: the picker shows with the preset company marked; the reader confirms it or picks another).

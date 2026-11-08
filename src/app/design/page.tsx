@@ -14,6 +14,7 @@ import { Panel } from "@/components/panel";
 import { PriorityPicker } from "@/components/priority-picker";
 import { ProvenanceChip } from "@/components/provenance-chip";
 import { SidebarView } from "@/components/app-sidebar";
+import { storyChapters } from "@/lib/nav";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { Suspense } from "react";
 import { ChartGallery } from "./_charts";
@@ -217,7 +218,7 @@ export default function DesignPage() {
         <div className="space-y-2">
           <h3 className="text-sm font-medium">StoryHeader and Collapsible</h3>
           <p className="max-w-[65ch] text-sm text-muted-foreground">
-            The Story page&apos;s one header block (customer and what the review covers, the actions, the priority picker beneath) and the closed-by-default detail section for tables only. The print route renders the section open.
+            The Story page&apos;s one header block, styled like the scenario strip (accent-tinted border and background; customer and what the review covers, the actions, the priority picker beneath) and the closed-by-default detail section for tables only. The print route renders the section open.
           </p>
           <StoryHeader title="Sample customer" summary="Sample text, not engine output." actions={<span className="text-sm text-muted-foreground">Actions</span>}>
             <p className="text-sm text-muted-foreground">The priority picker sits here.</p>
@@ -232,7 +233,7 @@ export default function DesignPage() {
         <div className="space-y-2">
           <h3 className="text-sm font-medium">PriorityPicker</h3>
           <p className="max-w-[65ch] text-sm text-muted-foreground">
-            Six priority chips as plain links. The picked chips are filled and announced as selected; a third pick replaces the oldest. Each link keeps the customer, baseline and sensitivity in the address. Shown with two picks.
+            Six priority chips as plain links in a segmented group like the scenario strip&apos;s toggles. The picked chips are filled and announced as selected; a third pick replaces the oldest. Each link keeps the customer, baseline and sensitivity in the address. Shown with two picks.
           </p>
           <PriorityPicker picks={["cost", "hygiene"]} params={{ customer: "CUST001", baseline: "B_LOCAL", sensitivity: "base" }} />
         </div>
@@ -293,7 +294,7 @@ export default function DesignPage() {
         <div className="space-y-2">
           <h3 className="text-sm font-medium">AppSidebar</h3>
           <p className="max-w-[65ch] text-sm text-muted-foreground">
-            The app navigation (ADR 0025), expanded and collapsed to icons: wordmark, customer switcher, the Dashboard and Shared groups, and the view and theme toggles. Sample customer; the active item follows this page&apos;s path, so none is marked here.
+            The app navigation (ADR 0025, 0029), expanded and collapsed to icons: wordmark, customer switcher, the Dashboard and Shared groups (Story is a group with Review and, on the report, the chapters), and the view and theme toggles. Sample customer; the active item follows this page&apos;s path, so none is marked here.
           </p>
           <div className="flex flex-wrap gap-4">
             {[true, false].map((open) => (
@@ -303,7 +304,11 @@ export default function DesignPage() {
                 </Suspense>
               </SidebarProvider>
             ))}
+            <SidebarProvider defaultOpen className="h-[32rem] min-h-0 w-auto overflow-hidden rounded-lg border">
+              <SidebarView className="h-full" pathname="/story" params="priorities=cost,hygiene" activeChapter={storyChapters(["cost", "hygiene"])[1].id} customers={[{ customer_id: "CUST001", name: "Sample customer", industry: "Sample industry", sites: 12 }]} baselines={[]} />
+            </SidebarProvider>
           </div>
+          <p className="max-w-[65ch] text-xs text-muted-foreground">Third sidebar: on the report page the Story group lists Review and the chapters in page order (here with cost and hygiene picked); the chapter in view has a static fill.</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Badge>Default</Badge>
@@ -394,14 +399,15 @@ export default function DesignPage() {
         <div className="space-y-2">
           <h3 className="text-sm font-medium">DialogueBox</h3>
           <p className="max-w-[65ch] text-sm text-muted-foreground">
-            A speaker name tag in words and one line. With a link the whole box advances (click, Enter or Space) and shows Next; without one it holds choices. A 150 ms fade plays when its key changes and is off under reduced motion.
+            A speaker name tag in words and one line. With a link the whole box advances (click, Enter or Space) and shows Next; without one it holds choices. A Previous link sits in the footer of every beat, disabled on the first beat of the game. A 150 ms fade plays when its key changes and is off under reduced motion.
           </p>
           <div className="grid gap-3 lg:grid-cols-2">
-            <DialogueBox speaker="kam" tag="Lindström KAM" text="A sample line from the guide. It carries no figures." href="/design" />
-            <DialogueBox speaker="ops" tag="Sample Co ops lead" text="A sample question, with the answers as choice buttons.">
+            <DialogueBox speaker="kam" tag="Lindström KAM" text="A sample line from the guide. It carries no figures." href="/design" previousHref="/design" />
+            <DialogueBox speaker="kam" tag="Lindström KAM" text="The first beat: Previous is shown disabled in the same place." href="/design" previousHref={null} />
+            <DialogueBox speaker="ops" tag="Sample Co ops lead" text="A sample question, with the answers as choice buttons." previousHref="/design">
               <div className="grid grid-cols-3 gap-2">
                 <ChoiceButton href="/design" label="First" />
-                <ChoiceButton href="/design" label="Second" />
+                <ChoiceButton href="/design" label="Second" selected />
                 <ChoiceButton href="/design" label="Third" />
               </div>
             </DialogueBox>
@@ -409,12 +415,13 @@ export default function DesignPage() {
         </div>
         <div className="space-y-2">
           <h3 className="text-sm font-medium">ChoiceButton</h3>
-          <p className="max-w-[65ch] text-sm text-muted-foreground">One answer as a plain link: label on one line, optional hint, or a single primary action.</p>
+          <p className="max-w-[65ch] text-sm text-muted-foreground">One answer as a plain link: label on one line, optional hint, or a single primary action. `selected` marks the answer already chosen when a reader steps back to the question, with the word &quot;Chosen&quot;.</p>
           <div className="flex flex-wrap gap-2">
             <ChoiceButton href="/design" label="Option" />
             <ChoiceButton href="/design" label="Option with a hint" hint="One short line that explains the option" />
             <ChoiceButton href="/design" label="Suggested option" suggested={{ badge: "Suggested for a first run", why: "One plain line on why this is the clearest first choice." }} />
-            <ChoiceButton primary href="/design" label="Start the review" />
+            <ChoiceButton href="/design" label="Chosen option" selected />
+            <ChoiceButton primary href="/design" label="Primary action" />
           </div>
         </div>
         <div className="space-y-2">

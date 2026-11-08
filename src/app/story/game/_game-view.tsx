@@ -12,12 +12,12 @@ import { formatCardValue } from "@/lib/format";
 import { SENSITIVITY_LABEL, resolveView } from "@/lib/selection";
 import { storyFacts } from "@/lib/story/facts";
 import {
-  CUSTOMER_VIEW_CONFIRM,
+  CUSTOMER_VIEW_ANSWER,
+  CUSTOMER_VIEW_QUESTION,
   END_LINES,
   IMPACT_WORLD_HREF,
   SCENES,
   SETTING_LABEL,
-  START_REVIEW_LABEL,
   STORY_PATH,
   SUGGESTED_BADGE,
   SUGGESTION_WHY,
@@ -33,6 +33,7 @@ import {
   neutralLabel,
   optionsFor,
   pickLine,
+  previousHref,
   renderLine,
   resolveBeat,
   resolveScene,
@@ -81,8 +82,9 @@ export async function GameView({ searchParams }: { searchParams: PageProps<"/sto
   const words = { baseline: st.short, sensitivity: estimate, estimate, comparison: comparisonPhrase(st.baseline, st.short), company: st.customer.customer_name, chapter: lead?.title, lead: lead?.lines[0], ...siteWords };
   const say = (text: string) => renderLine(text, facts, words);
 
-  // The ops lead is "Customer ops lead" only while scene 1 has not chosen a customer.
-  const customerUnset = scene !== "end" && scene.id === "customer" && view === "kam" && !hasChoice(scene, params);
+  // The ops lead is "Customer ops lead" only while no customer is chosen (the address holds none), in either view.
+  const customerChosen = hasChoice(SCENES[0], params);
+  const customerUnset = scene !== "end" && scene.id === "customer" && !customerChosen;
   const opsTag = customerUnset ? "Customer ops lead" : `${st.customer.customer_name} ops lead`;
   const tag = (who: "kam" | "ops") => (who === "kam" ? "Lindström KAM" : opsTag);
 
@@ -95,6 +97,9 @@ export async function GameView({ searchParams }: { searchParams: PageProps<"/sto
   if (scene !== "end" && (beat.kind === "react" || beat.kind === "answer" || beat.kind === "meaning")) {
     if (lead) {
       consequence = <ConsequenceCard heading="Facts in the leading chapter" against={`Compared with ${st.short}, using the ${estimate}. Priorities move no figure, so these stand as they are.`} standing={lead.cards.slice(0, 4).map(fact)} emptyText="No figures." />;
+    } else if (view === "customer" && scene.id === "customer") {
+      // The customer view never shows another customer's figures, so there is no before value: the chosen company's figures stand as they are.
+      consequence = <ConsequenceCard heading="Your year" against={`Compared with ${st.short}, using the ${estimate}.`} standing={(scene.cards ?? []).map(fact)} emptyText="No figures." />;
     } else if (scene.id !== "priority") {
       const before = resolveState(data, beforeParams(scene, params));
       const label = scene.id === "customer" ? before.customer.customer_name : scene.id === "baseline" ? before.short : SENSITIVITY_LABEL[before.sensitivity];
@@ -118,50 +123,48 @@ export async function GameView({ searchParams }: { searchParams: PageProps<"/sto
   };
 
   const key = `${sceneHref}-${index}`;
+  const previous = previousHref(params, view, sceneHref, index);
+  const customerView = view === "customer";
   let box: React.ReactNode;
   switch (beat.kind) {
     case "line":
-      box = <DialogueBox key={key} speaker={beat.line.speaker} tag={tag(beat.line.speaker)} text={say(beat.line.text)} href={next(index + 1)} />;
+      box = <DialogueBox key={key} speaker={beat.line.speaker} tag={tag(beat.line.speaker)} text={say(beat.line.text)} href={next(index + 1)} previousHref={previous} />;
       break;
     case "explain": {
       const line = pickLine(beat.slot, ctx);
-      box = <DialogueBox key={key} speaker={line.speaker} tag={tag(line.speaker)} text={say(line.text)} href={next(index + 1)} />;
+      box = <DialogueBox key={key} speaker={line.speaker} tag={tag(line.speaker)} text={say(line.text)} href={next(index + 1)} previousHref={previous} />;
       break;
     }
     case "ask": {
       const s = scene as Scene;
-      const locked = view === "customer" && s.id === "customer";
       const suggested = suggest(s, view, suggestCtx);
+      const chosen = s.id === "customer" ? st.customer.customer_id : s.id === "baseline" ? st.baseline.baseline_id : s.id === "sensitivity" ? st.sensitivity : st.priorities[0];
       box = (
-        <DialogueBox key={key} speaker="kam" tag={tag("kam")} text={locked ? CUSTOMER_VIEW_CONFIRM : s.question}>
-          {locked ? (
-            <ChoiceButton primary href={stepHref(params, 2, 0)} label={START_REVIEW_LABEL} />
-          ) : (
-            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3">
-              {optionsFor(s, data, PRIORITY_LABEL).map((o) => (
-                <ChoiceButton key={o.value} href={stepHref(params, sceneHref, askIndex + 1, { [s.lever]: o.value })} label={o.label} hint={o.hint} suggested={o.value === suggested ? { badge: SUGGESTED_BADGE, why: SUGGESTION_WHY[s.id] } : undefined} />
-              ))}
-            </div>
-          )}
+        <DialogueBox key={key} speaker="kam" tag={tag("kam")} text={customerView && s.id === "customer" ? CUSTOMER_VIEW_QUESTION : s.question} previousHref={previous}>
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3">
+            {optionsFor(s, data, PRIORITY_LABEL).map((o) => (
+              <ChoiceButton key={o.value} href={stepHref(params, sceneHref, askIndex + 1, { [s.lever]: o.value })} label={o.label} hint={o.hint} selected={hasChoice(s, params) && o.value === chosen} suggested={o.value === suggested ? { badge: SUGGESTED_BADGE, why: SUGGESTION_WHY[s.id] } : undefined} />
+            ))}
+          </div>
         </DialogueBox>
       );
       break;
     }
     case "react":
-      box = <DialogueBox key={key} speaker="ops" tag={tag("ops")} text={say((scene as Scene).react)} href={next(index + 1)} />;
+      box = <DialogueBox key={key} speaker="ops" tag={tag("ops")} text={say((scene as Scene).react)} href={next(index + 1)} previousHref={previous} />;
       break;
     case "answer":
-      box = <DialogueBox key={key} speaker="kam" tag={tag("kam")} text={say((scene as Scene).answer)} href={next(index + 1)} />;
+      box = <DialogueBox key={key} speaker="kam" tag={tag("kam")} text={say(customerView && (scene as Scene).id === "customer" ? CUSTOMER_VIEW_ANSWER : (scene as Scene).answer)} href={next(index + 1)} previousHref={previous} />;
       break;
     case "meaning": {
       const line = pickLine(beat.slot, ctx);
       const last = beats.findLastIndex((b) => b.kind === "meaning") === index;
-      box = <DialogueBox key={key} speaker={line.speaker} tag={tag(line.speaker)} text={say(line.text)} href={last ? stepHref(params, sceneNo === SCENES.length ? "end" : (sceneNo as number) + 1, 0) : next(index + 1)} />;
+      box = <DialogueBox key={key} speaker={line.speaker} tag={tag(line.speaker)} text={say(line.text)} href={last ? stepHref(params, sceneNo === SCENES.length ? "end" : (sceneNo as number) + 1, 0) : next(index + 1)} previousHref={previous} />;
       break;
     }
     case "recap":
       box = (
-        <DialogueBox key={key} speaker="kam" tag={tag("kam")} text={END_LINES.recap} href={next(index + 1)}>
+        <DialogueBox key={key} speaker="kam" tag={tag("kam")} text={END_LINES.recap} href={next(index + 1)} previousHref={previous}>
           <ol className="space-y-1 text-sm">
             {choiceLabels.map(({ s, label, chosen }) => (
               <li key={s.id}>
@@ -176,7 +179,7 @@ export async function GameView({ searchParams }: { searchParams: PageProps<"/sto
       break;
     case "actions":
       box = (
-        <DialogueBox key={key} speaker="kam" tag={tag("kam")} text={END_LINES.actions}>
+        <DialogueBox key={key} speaker="kam" tag={tag("kam")} text={END_LINES.actions} previousHref={previous}>
           <div className="flex flex-wrap gap-2">
             <ChoiceButton primary newTab href={exitHref(STORY_PRINT_PATH, params, exitState)} label="Open PDF version" />
             <ChoiceButton href={exitHref(STORY_PATH, params, exitState)} label="Read the full report" />
@@ -220,9 +223,15 @@ export async function GameView({ searchParams }: { searchParams: PageProps<"/sto
               </ol>
               <div className="flex flex-wrap items-center gap-2 text-sm">
                 <span className="text-muted-foreground">{neutralLabel(co2e)}</span>
-                <span className={co2e.value === null ? "text-muted-foreground" : "num font-medium"}>{co2e.value === null ? "Needs input" : `${formatCardValue(co2e.value, co2e.unit)} ${co2e.unit}`}</span>
-                <ProvenanceChip methods={co2e.methods} source={co2e.source} compact />
-                <ShowMathPopover {...factShowMath(co2e)} align="end" />
+                {customerChosen ? (
+                  <>
+                    <span className={co2e.value === null ? "text-muted-foreground" : "num font-medium"}>{co2e.value === null ? "Needs input" : `${formatCardValue(co2e.value, co2e.unit)} ${co2e.unit}`}</span>
+                    <ProvenanceChip methods={co2e.methods} source={co2e.source} compact />
+                    <ShowMathPopover {...factShowMath(co2e)} align="end" />
+                  </>
+                ) : (
+                  <span className="text-muted-foreground">Choose a customer to see this</span>
+                )}
               </div>
             </div>
             {consequence}

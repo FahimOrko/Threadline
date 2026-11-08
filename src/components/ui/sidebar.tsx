@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 
-// Ported from the shadcn base-nova `sidebar` item (ADR 0025): desktop only, so no mobile Sheet, input, skeleton, rail or sub-menus.
+// Ported from the shadcn base-nova `sidebar` item (ADR 0025): desktop only, so no mobile Sheet, input, skeleton or rail. Sub-menus (ADR 0029) are the sidebar-07 pattern without its collapsible: the Story group keeps its own open state.
 // The sidebar is sticky inside a flex row instead of fixed with a gap element, so it also works inside the /design gallery.
 export const SIDEBAR_COOKIE = "sidebar_state";
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
@@ -158,5 +158,24 @@ export function SidebarMenuButton({ render, isActive = false, className, ...prop
     props: mergeProps<"button">({ className: cn(menuButton, className) }, props),
     render,
     state: { slot: "sidebar-menu-button", active: isActive },
+  });
+}
+
+// The nested rows of a group (sidebar-07): indented under the parent with a hairline, hidden when the sidebar is collapsed to icons.
+export const SidebarMenuSub = ({ className, ...props }: React.ComponentProps<"ul">) => (
+  <ul data-slot="sidebar-menu-sub" className={cn("mx-3 mt-0.5 flex min-w-0 flex-col gap-0.5 border-l border-sidebar-border px-1.5 py-0.5 group-data-[collapsible=icon]/sidebar:hidden", className)} {...props} />
+);
+export const SidebarMenuSubItem = ({ className, ...props }: React.ComponentProps<"li">) => <li data-slot="sidebar-menu-sub-item" className={cn("relative", className)} {...props} />;
+
+const subButton =
+  "flex h-7 w-full min-w-0 items-center gap-2 overflow-hidden rounded-md px-2 text-left text-sm text-sidebar-foreground outline-hidden ring-sidebar-ring hover:bg-sidebar-accent/70 hover:text-sidebar-accent-foreground focus-visible:ring-2 data-active:bg-sidebar-accent data-active:font-medium data-active:text-sidebar-accent-foreground [&>span:last-child]:truncate";
+
+/** A sub-row link. `isActive` sets `data-active` (a static fill, no glide); pass `aria-current` yourself. */
+export function SidebarMenuSubButton({ render, isActive = false, className, ...props }: useRender.ComponentProps<"a"> & { isActive?: boolean }) {
+  return useRender({
+    defaultTagName: "a",
+    props: mergeProps<"a">({ className: cn(subButton, className) }, props),
+    render,
+    state: { slot: "sidebar-menu-sub-button", active: isActive },
   });
 }
