@@ -8,6 +8,16 @@ Threadline turns a year of Lindström workwear service into a customer value rev
 
 > Built for the Lindström x Since AI Hackathon 2026. All data is synthetic and the app is not audit-ready reporting.
 
+**[Try the live app](https://lindstrom-value-review.vercel.app/)** · **[Watch the demo video](https://youtu.be/wKhfGThETrM)**
+
+## Demo
+
+[![Threadline demo video](https://img.youtube.com/vi/wKhfGThETrM/maxresdefault.jpg)](https://youtu.be/wKhfGThETrM)
+
+Live app: [lindstrom-value-review.vercel.app](https://lindstrom-value-review.vercel.app/)
+
+Open the app on a desktop browser and pick a role on the landing page: **Step in as Lindström's account manager** for the dashboard, or **See it as a customer** for the story review. The [user guide](docs/user-guide.md) walks through both.
+
 ## Features
 
 - **Landing page** to pick a role: account manager or customer.
@@ -19,14 +29,14 @@ Threadline turns a year of Lindström workwear service into a customer value rev
 
 ## Tech stack
 
-Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS 4, shadcn/ui on Base UI, Recharts, Motion, Zod, Zustand, Vitest. Data is static CSV turned into JSON at build time, with no database.
+Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS 4, shadcn/ui on Base UI, Recharts, Motion, Zod, Vitest. Data is static CSV turned into JSON at build time, with no database. Deployed on Vercel.
 
 ## Getting started
 
 Prerequisites: Node.js 20.9 or newer (the minimum Next.js 16 needs; there is no `.nvmrc`) and npm.
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/FahimOrko/lindstrom-value-review.git
 cd lindstrom-value-review
 npm install
 cp .env.example .env.local   # optional, see below
