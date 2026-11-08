@@ -51,7 +51,7 @@ Each view SHALL render an empty page that shows its own name and no data.
 - **THEN** the page shows its title and no numbers or charts
 
 ### Requirement: Collapsible AI sidebar
-The app SHALL provide an empty AI sidebar on the right that the user can collapse and expand, and that stays available while switching views. It SHALL be collapsed by default on `/story/game` and `/world` and open by default on other routes; once the user toggles it, the user's choice wins. When open it SHALL take space from the layout instead of overlaying it. Below the `md` breakpoint the sidebar and its toggle SHALL NOT be shown, so it never overlays or narrows the main area; at `md` and above it behaves as described here. This narrow-screen rule is a stopgap until the AI sidebar slice provides a small-screen overlay.
+The app SHALL provide an empty AI sidebar on the right that the user can collapse and expand, and that stays available while switching views. It SHALL be collapsed by default on every route and in both views, and SHALL open only when the user activates its toggle; there SHALL be no per-route default that opens it. Once the user toggles it, the user's choice wins until reload. When open it SHALL take space from the layout instead of overlaying it. Below the `md` breakpoint the sidebar and its toggle SHALL NOT be shown, so it never overlays or narrows the main area; at `md` and above it behaves as described here. This narrow-screen rule is a stopgap until the AI sidebar slice provides a small-screen overlay.
 
 #### Scenario: Collapse sidebar
 - **WHEN** the user collapses the open sidebar
@@ -62,16 +62,16 @@ The app SHALL provide an empty AI sidebar on the right that the user can collaps
 - **THEN** the sidebar is still open
 
 #### Scenario: Default on the game
-- **WHEN** `/story/game` is opened without a prior toggle
+- **WHEN** `/story/game` is opened without a prior toggle, in either view
 - **THEN** the sidebar is collapsed
 
 #### Scenario: Default on the world page
-- **WHEN** `/world` is opened without a prior toggle
+- **WHEN** `/world` is opened without a prior toggle, in either view
 - **THEN** the sidebar is collapsed
 
 #### Scenario: Default elsewhere
-- **WHEN** another route is opened without a prior toggle
-- **THEN** the sidebar is open
+- **WHEN** the dashboard or `/story` is opened without a prior toggle, in either view
+- **THEN** the sidebar is collapsed
 
 #### Scenario: Open sidebar on the game
 - **WHEN** the user opens the sidebar on `/story/game`
@@ -132,11 +132,15 @@ The customer switcher SHALL NOT be shown on `/story/game`, where the game is the
 - **THEN** the customer switcher is shown in the sidebar
 
 ### Requirement: App sidebar
-The app SHALL show a left navigation sidebar on every view. It SHALL collapse to an icon column and expand again by a trigger in the header and by `Ctrl+B`, and SHALL show a label tooltip on each icon when collapsed. Its group "Dashboard" SHALL list Overview, Garments and utilization, Costs, Environmental footprint, Signals and Sites; its group "Shared" SHALL list the Story group (see its requirement) and Impact World. The active item SHALL be marked `aria-current="page"`. The chosen state SHALL persist in a cookie and SHALL NOT be a URL param. Every item SHALL use a Phosphor icon, and the active and hovered item SHALL show an indicator that glides between items; under `prefers-reduced-motion: reduce` it SHALL be a static fill. The wordmark SHALL be its own row above the customer switcher. The sidebar's footer SHALL hold the KAM / Customer view links and the theme toggle. There SHALL be no top tab bar.
+The app SHALL show a left navigation sidebar on every view except the landing page at `/`. It SHALL be expanded by default, SHALL collapse to an icon column and expand again by a trigger in the header and by `Ctrl+B`, and SHALL show a label tooltip on each icon when collapsed. The chosen state SHALL persist in a cookie and SHALL NOT be a URL param; with no cookie it is expanded. Its group "Dashboard" SHALL list Overview, Garments and utilization, Costs, Environmental footprint, Signals and Sites; its group "Shared" SHALL list the Story group (see its requirement) and Impact World. The active item SHALL be marked `aria-current="page"`. Every item SHALL use a Phosphor icon, and the active and hovered item SHALL show an indicator that glides between items; under `prefers-reduced-motion: reduce` it SHALL be a static fill. The wordmark SHALL be its own row above the customer switcher and SHALL link to `/` with no params. The sidebar's footer SHALL hold the KAM / Customer view links and the theme toggle. There SHALL be no top tab bar.
 
 #### Scenario: Collapse
 - **WHEN** the user activates the trigger
 - **THEN** the sidebar shrinks to icons, the main area takes the space, and each icon still has an accessible name and a tooltip
+
+#### Scenario: Open on first load
+- **WHEN** the dashboard, `/story`, `/story/game` or `/world` is opened with no saved choice
+- **THEN** the sidebar is expanded
 
 #### Scenario: Persisted
 - **WHEN** the user collapsed it and reloads
@@ -146,8 +150,16 @@ The app SHALL show a left navigation sidebar on every view. It SHALL collapse to
 - **WHEN** the route is `/dashboard/costs`
 - **THEN** only "Costs" is marked active
 
+#### Scenario: Wordmark
+- **WHEN** the user activates the wordmark
+- **THEN** `/` opens with no query string
+
+#### Scenario: Landing has no sidebar
+- **WHEN** `/` is opened
+- **THEN** no app sidebar, header or AI sidebar is rendered
+
 ### Requirement: AI sidebar collapses the app sidebar
-On dashboard routes, while the AI sidebar is open, the app sidebar SHALL show collapsed to icons unless the user has toggled the app sidebar since the AI sidebar last opened or closed. When the AI sidebar closes, the app sidebar SHALL return to the state the user had chosen. An automatic collapse SHALL NOT change the persisted preference. Outside the dashboard the app sidebar is unaffected.
+On dashboard routes, while the AI sidebar is open, the app sidebar SHALL show collapsed to icons unless the user has toggled the app sidebar since the AI sidebar last opened or closed. When the AI sidebar closes, the app sidebar SHALL return to expanded unless the user collapsed it by hand. Outside the dashboard the app sidebar is unaffected. Because the AI sidebar starts closed, this applies only after the user opens it.
 
 #### Scenario: AI opens
 - **WHEN** the app sidebar is expanded and the user opens the AI sidebar on a dashboard route
@@ -163,7 +175,7 @@ On dashboard routes, while the AI sidebar is open, the app sidebar SHALL show co
 
 #### Scenario: Not on the dashboard
 - **WHEN** the AI sidebar is open on Impact World
-- **THEN** the app sidebar keeps the user's chosen state
+- **THEN** the app sidebar keeps the state the user gave it
 
 ### Requirement: Report chapters in the sidebar
 While the route is `/story`, the Story group SHALL list one in-page anchor sub-row per report chapter below "Review", in the order the chapters have on the page (picked priorities first, the rest in default order, then "How we calculated this" and "Data readiness"). The chapter in view SHALL be marked active with a static fill and `aria-current="location"`. The sub-rows SHALL NOT appear on any other route.
